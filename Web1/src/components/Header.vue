@@ -12,7 +12,15 @@ const toggleMobileMenu = () => {
 }
 
 const toggleDropdown = (dropdown: string) => {
-  isDropdownOpen.value[dropdown] = !isDropdownOpen.value[dropdown]
+  const wasOpen = isDropdownOpen.value[dropdown]
+  // Close all dropdowns first
+  Object.keys(isDropdownOpen.value).forEach((key) => {
+    isDropdownOpen.value[key] = false
+  })
+  // Only open if it was closed (toggle behavior)
+  if (!wasOpen) {
+    isDropdownOpen.value[dropdown] = true
+  }
 }
 
 defineOptions({

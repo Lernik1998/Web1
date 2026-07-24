@@ -47,6 +47,26 @@ const router = createRouter({
       name: 'pedir-cita',
       component: () => import('../views/PedirCitaView.vue'),
     },
+    {
+      path: '/contacto',
+      name: 'contacto',
+      component: () => import('../views/legal/ContactaConNosotrosView.vue'),
+    },
+    {
+      path: '/politica-privacidad',
+      name: 'politica-privacidad',
+      component: () => import('../views/legal/PoliticaPrivacidadView.vue'),
+    },
+    {
+      path: '/aviso-legal',
+      name: 'aviso-legal',
+      component: () => import('../views/legal/AvisoLegalView.vue'),
+    },
+    {
+      path: '/politica-cookies',
+      name: 'politica-cookies',
+      component: () => import('../views/legal/PoliticaCookiesView.vue'),
+    },
   ],
 })
 

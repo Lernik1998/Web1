@@ -1,0 +1,208 @@
+/* Import fonts */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600&display=swap');
+
+/* CSS Variables for typography */
+:root {
+  /* Font families */
+  --font-family-fraunces: 'Fraunces', serif;
+  --font-family-inter: 'Inter', sans-serif;
+  
+  /* Font weights */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  
+  /* Font sizes */
+  --font-size-h1-desktop: 40px;
+  --font-size-h1-mobile: 28px;
+  --font-size-h2-desktop: 28px;
+  --font-size-h2-mobile: 24px;
+  --font-size-h3: 20px;
+  --font-size-body: 16px;
+  --font-size-secondary: 14px;
+  --font-size-secondary-small: 13px;
+  --font-size-button: 15px;
+  --font-size-nav: 15px;
+  --font-size-quote: 20px;
+  --font-size-footer: 13px;
+  --font-size-footer-small: 12px;
+  
+  /* Line heights */
+  --line-height-tight: 1.3;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.6;
+  --line-height-generous: 1.7;
+}
+
+/* Base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family-inter);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-generous);
+  color: #333;
+  background-color: #FCFAF6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography styles */
+h1 {
+  font-family: var(--font-family-fraunces);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-h1-desktop);
+  line-height: var(--line-height-tight);
+  color: #323D44;
+}
+
+h2 {
+  font-family: var(--font-family-fraunces);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-h2-desktop);
+  line-height: var(--line-height-tight);
+  color: #323D44;
+}
+
+h3 {
+  font-family: var(--font-family-fraunces);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-h3);
+  line-height: var(--line-height-normal);
+  color: #323D44;
+}
+
+h4,
+h5,
+h6 {
+  font-family: var(--font-family-fraunces);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  color: #323D44;
+}
+
+p {
+  font-family: var(--font-family-inter);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-generous);
+  color: #333;
+}
+
+/* Secondary text */
+.text-secondary {
+  font-family: var(--font-family-inter);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-secondary);
+  line-height: var(--line-height-normal);
+  color: #8B9399;
+}
+
+.text-secondary-small {
+  font-family: var(--font-family-inter);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-secondary-small);
+  line-height: var(--line-height-normal);
+  color: #8B9399;
+}
+
+/* Buttons */
+button,
+.btn {
+  font-family: var(--font-family-inter);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-button);
+  line-height: var(--line-height-normal);
+}
+
+/* Navigation */
+nav,
+.nav-link {
+  font-family: var(--font-family-inter);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-nav);
+  line-height: var(--line-height-normal);
+}
+
+/* Quotes / Testimonials */
+blockquote,
+.quote {
+  font-family: var(--font-family-fraunces);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-quote);
+  line-height: var(--line-height-relaxed);
+  font-style: italic;
+  color: #3E4C55;
+}
+
+/* Footer */
+footer,
+.footer-text {
+  font-family: var(--font-family-inter);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-footer);
+  line-height: var(--line-height-normal);
+  color: #333;
+}
+
+.footer-text-small {
+  font-family: var(--font-family-inter);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-footer-small);
+  line-height: var(--line-height-normal);
+  color: #333;
+}
+
+/* Responsive typography */
+@media (max-width: 768px) {
+  h1 {
+    font-size: var(--font-size-h1-mobile);
+  }
+  
+  h2 {
+    font-size: var(--font-size-h2-mobile);
+  }
+}
+
+/* Links */
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: #987575;
+}
+
+/* Lists */
+ul,
+ol {
+  list-style: none;
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Forms */
+input,
+textarea,
+select,
+button {
+  font-family: inherit;
+  font-size: inherit;
+}
