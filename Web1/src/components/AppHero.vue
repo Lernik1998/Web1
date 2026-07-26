@@ -2,37 +2,36 @@
   <section class="kb-hero">
     <div class="kb-hero__inner">
       <div class="kb-hero__content">
-        <p class="kb-hero__eyebrow text-secondary">Psicóloga en Dénia</p>
+        <p class="kb-hero__eyebrow text-secondary"></p>
 
         <h1 class="kb-hero__title text-h1">
-          Centro de psicología en Dénia especializado en el acompañamiento
-          emocional y terapéutico a lo largo de las distintas etapas de la
-          vida
+         
         </h1>
 
         <p class="kb-hero__lead text-body">
-          Un espacio para niños, adultos y parejas que buscan sentirse mejor,
-          en Dénia o allá donde estés.
+         
         </p>
 
         <div class="kb-hero__actions">
-          <a href="/pedir-cita" class="kb-hero__cta text-cta">Pedir cita</a>
+          <a href="/pedir-cita" class="kb-hero__cta text-cta">
+          <!-- Pedir cita -->
+          </a>
           <a href="#terapias" class="kb-hero__link text-cta">
-            Ver tipos de terapia
+            <!-- Ver tipos de terapia -->
             <ArrowIcon />
           </a>
         </div>
 
         <p class="kb-hero__note text-secondary">
-          Consulta presencial en Dénia · Sesiones online en toda España
+    
         </p>
       </div>
 
       <div class="kb-hero__media">
         <div class="kb-hero__blob" aria-hidden="true"></div>
         <img
-          src="/images/psicologa-denia-hero.jpg"
-          alt="Psicóloga en Dénia de Kanbouri Psicología, sonriendo en su consulta"
+          src=""
+          alt=""
           class="kb-hero__image"
         />
       </div>
