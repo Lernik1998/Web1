@@ -1,0 +1,54 @@
+/**
+ * Tokens de diseño — Kanbouri Psicología
+ * Fuente: paleta oficial (beige cálido / rosa empolvado / gris azulado).
+ * Se cargan UNA sola vez en main.ts. Los componentes solo consumen estas
+ * variables, nunca redefinen colores propios.
+ */
+
+:root {
+  /* ---------- Beige cálido ---------- */
+  --color-paper: #fcfaf6;       /* fondo de página */
+  --color-paper-alt: #f7f3ec;   /* fondo base / secciones alternas */
+  --color-line: #e8e0d2;        /* bordes, tarjetas, separadores */
+
+  /* ---------- Rosa empolvado ---------- */
+  --color-rose-soft: #d8bebe;   /* fondos suaves: citas, badges, testimonios */
+  --color-rose: #be9292;        /* botón / acento en reposo */
+  --color-rose-hover: #987575;  /* botón / acento en hover-activo */
+  --color-rose-soft-wash: rgba(216, 190, 190, 0.35); /* fondo suave sobre --color-paper (hover de listas, filas) */
+
+  /* ---------- Gris azulado ---------- */
+  --color-secondary: #8b9399;   /* texto secundario: fechas, etiquetas, apoyo */
+  --color-ink: #3e4c55;         /* texto principal / párrafos */
+  --color-heading: #323d44;     /* encabezados con más peso visual */
+
+  /* ---------- Texto sobre color ---------- */
+  --color-on-rose: #ffffff;     /* texto sobre botones/acentos rosa, siempre blanco */
+
+  /* ---------- Radios ---------- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* ---------- Sombras ---------- */
+  --shadow-popover:
+    0 24px 48px -24px rgba(50, 61, 68, 0.22),
+    0 6px 16px -8px rgba(50, 61, 68, 0.08);
+  --shadow-cta: 0 10px 24px -10px rgba(151, 117, 117, 0.5);
+  --shadow-cta-hover: 0 14px 28px -10px rgba(151, 117, 117, 0.55);
+  --shadow-panel-mobile: -24px 0 48px -24px rgba(50, 61, 68, 0.25); /* paneles a pantalla completa (menú móvil) */
+
+  /* ---------- Overlays ---------- */
+  --overlay-scrim: rgba(50, 61, 68, 0.35); /* fondo oscurecido tras un panel/menú móvil abierto */
+
+  /* ---------- Movimiento ---------- */
+  --ease-base: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 180ms;
+  --dur-base: 320ms;
+  --dur-slow: 460ms;
+
+  /* ---------- Layout ---------- */
+  --content-max-width: 1280px;
+  --header-height: 76px;
+}

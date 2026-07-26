@@ -8,35 +8,18 @@ defineOptions({
   <footer class="the-footer">
     <div class="footer-content">
       <div class="brand-section">
-        <div class="logo-icon">
-          <svg viewBox="0 0 100 100" class="brain-logo">
-            <path
-              d="M50 10 C30 10 15 25 15 45 C15 55 20 65 30 72 C25 78 25 85 30 90 C35 95 45 95 50 90 C55 95 65 95 70 90 C75 85 75 78 70 72 C80 65 85 55 85 45 C85 25 70 10 50 10 Z"
-              fill="currentColor"
-            />
-            <path
-              d="M35 30 C35 28 37 26 40 26 C43 26 45 28 45 30 C45 32 43 34 40 34 C37 34 35 32 35 30 Z"
-              fill="#fce4ec"
-            />
-            <path
-              d="M55 30 C55 28 57 26 60 26 C63 26 65 28 65 30 C65 32 63 34 60 34 C57 34 55 32 55 30 Z"
-              fill="#fce4ec"
-            />
-            <path
-              d="M40 45 C40 43 42 41 45 41 C48 41 50 43 50 45 C50 47 48 49 45 49 C42 49 40 47 40 45 Z"
-              fill="#fce4ec"
-            />
-            <path
-              d="M50 55 C50 53 52 51 55 51 C58 51 60 53 60 55 C60 57 58 59 55 59 C52 59 50 57 50 55 Z"
-              fill="#fce4ec"
-            />
-          </svg>
+        <div class="footer-brand">
+          <span class="footer-brand__name">Kanbouri</span>
+          <span class="footer-brand__tag">Psicología</span>
         </div>
-        <p class="brand-name">MARÍA B. KANBOURI</p>
-        <div class="contact-info">
+
+        <p class="footer-person text-secondary">María B. Kanbouri</p>
+
+        <div class="contact-info text-secondary">
           <p>Psicología Clínica</p>
           <p>Terapia Online</p>
         </div>
+
         <div class="social-icons">
           <a href="#" aria-label="Facebook" class="social-link">
             <svg viewBox="0 0 24 24" fill="currentColor" class="social-icon">
@@ -61,7 +44,7 @@ defineOptions({
       </div>
 
       <div class="legal-links">
-        <h3 class="legal-title">Legal</h3>
+        <h3 class="legal-title text-secondary">Legal</h3>
         <ul>
           <li><router-link to="/contacto">Contacto</router-link></li>
           <li><router-link to="/politica-privacidad">Política de privacidad</router-link></li>
@@ -70,132 +53,166 @@ defineOptions({
         </ul>
       </div>
 
-      <div class="placeholder-box"></div>
+      <div class="placeholder-box" aria-hidden="true"></div>
+    </div>
+
+    <div class="footer-bottom text-footer">
+      © {{ new Date().getFullYear() }} Kanbouri Psicología · Dénia
     </div>
   </footer>
 </template>
 
 <style scoped>
 .the-footer {
-  background-color: #fce4ec;
-  padding: 3rem 2rem;
-  color: #333;
-  font-family: 'Georgia', serif;
+  background: var(--color-paper-alt);
+  border-top: 1px solid var(--color-line);
+  padding: clamp(48px, 7vw, 72px) clamp(20px, 4vw, 48px) 28px;
+  font-family: var(--font-body);
 }
 
 .footer-content {
-  max-width: 1200px;
+  max-width: var(--content-max-width);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 2rem;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: clamp(32px, 5vw, 64px);
   align-items: start;
 }
 
+/* ---------- Marca ---------- */
 .brand-section {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 }
 
-.logo-icon {
-  width: 60px;
-  height: 60px;
-  color: #1a1a1a;
-  margin-bottom: 0.5rem;
+.footer-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
-.brain-logo {
-  width: 100%;
-  height: 100%;
-}
-
-.brand-name {
-  font-size: 1.25rem;
+.footer-brand__name {
+  font-family: var(--font-display);
   font-weight: 600;
-  margin: 0.5rem 0;
-  letter-spacing: 1px;
+  font-size: 20px;
+  color: var(--color-heading);
+  letter-spacing: -0.01em;
+}
+
+.footer-brand__tag {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-rose-hover);
+}
+
+.footer-person {
+  margin: 0 0 14px;
 }
 
 .contact-info {
-  margin: 1rem 0;
-  font-size: 0.9rem;
+  margin: 0 0 18px;
   line-height: 1.6;
 }
 
 .contact-info p {
-  margin: 0.25rem 0;
+  margin: 0.2rem 0;
 }
 
 .social-icons {
   display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: 12px;
 }
 
 .social-link {
-  color: #1a1a1a;
-  transition: color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-rose-soft-wash);
+  color: var(--color-rose-hover);
+  transition: background-color var(--dur-base) var(--ease-base),
+    color var(--dur-base) var(--ease-base), transform var(--dur-base) var(--ease-base);
 }
 
 .social-link:hover {
-  color: #4a4a4a;
+  background: var(--color-rose);
+  color: var(--color-on-rose);
+  transform: translateY(-2px);
 }
 
 .social-icon {
-  width: 24px;
-  height: 24px;
+  width: 16px;
+  height: 16px;
 }
 
+/* ---------- Enlaces legales ---------- */
 .legal-links {
   display: flex;
   flex-direction: column;
 }
 
 .legal-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  margin-top: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin: 0 0 16px;
 }
 
 .legal-links ul {
   list-style: none;
   padding: 0;
   margin: 0;
-}
-
-.legal-links li {
-  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .legal-links a {
   text-decoration: none;
-  color: #333;
-  font-size: 0.9rem;
-  transition: color 0.3s;
+  color: var(--color-ink);
+  font-size: 14px;
+  transition: color var(--dur-base) var(--ease-base);
 }
 
 .legal-links a:hover {
-  color: #1a1a1a;
-  text-decoration: underline;
+  color: var(--color-rose-hover);
 }
 
+/* ---------- Placeholder (espacio reservado para más contenido) ---------- */
 .placeholder-box {
-  background-color: #f8bbd0;
+  background: var(--color-paper);
+  border: 1px dashed var(--color-line);
+  border-radius: var(--radius-lg);
   height: 150px;
-  border-radius: 8px;
+}
+
+/* ---------- Línea inferior ---------- */
+.footer-bottom {
+  max-width: var(--content-max-width);
+  margin: clamp(32px, 5vw, 48px) auto 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-line);
+  text-align: center;
 }
 
 @media (max-width: 768px) {
   .footer-content {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: 40px;
+    text-align: center;
   }
 
   .brand-section {
     align-items: center;
-    text-align: center;
+  }
+
+  .footer-brand {
+    justify-content: center;
   }
 
   .legal-links {

@@ -1,6 +1,6 @@
 <template>
   <div class="inicio-view">
-    <AppHero />
+    
     <h1>Inicio</h1>
 
     <div v-if="loading" class="loading">Cargando datos de WordPress...</div>
@@ -32,7 +32,7 @@ import { processWordPressContent } from '../utils/contentProcessor'
 import type { WordPressPage } from '../types/api'
 
 // Componentes
-import AppHero from '@/components/AppHero.vue'
+
 
 defineOptions({
   name: 'InicioView',

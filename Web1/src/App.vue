@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import MainHeader from './components/Header.vue'
+import AppHeader from "./components/AppHeader.vue";
 import Footer from './components/Footer.vue';
 </script>
 
 <template>
-  <MainHeader />
+  <AppHeader />
   <main>
     <router-view />
   </main>
