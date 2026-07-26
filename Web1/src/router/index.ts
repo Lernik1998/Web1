@@ -6,7 +6,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'inicio',
-      component: () => import('../views/InicioView.vue'),
+      component: () => import('../views/HomeView.vue/index.js'),
     },
     {
       path: '/sobre-nosotras',
@@ -50,22 +50,22 @@ const router = createRouter({
     {
       path: '/contacto',
       name: 'contacto',
-      component: () => import('../views/legal/ContactaConNosotrosView.vue'),
+      component: () => import('../views/Legal/ContactaConNosotrosView.vue'),
     },
     {
       path: '/politica-privacidad',
       name: 'politica-privacidad',
-      component: () => import('../views/legal/PoliticaPrivacidadView.vue'),
+      component: () => import('../views/Legal/PoliticaPrivacidadView.vue'),
     },
     {
       path: '/aviso-legal',
       name: 'aviso-legal',
-      component: () => import('../views/legal/AvisoLegalView.vue'),
+      component: () => import('../views/Legal/AvisoLegalView.vue'),
     },
     {
       path: '/politica-cookies',
       name: 'politica-cookies',
-      component: () => import('../views/legal/PoliticaCookiesView.vue'),
+      component: () => import('../views/Legal/PoliticaCookiesView.vue'),
     },
   ],
 })

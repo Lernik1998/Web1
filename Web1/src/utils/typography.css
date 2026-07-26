@@ -1,0 +1,103 @@
+/**
+ * Sistema tipográfico — Kanbouri Psicología
+ * Fraunces (serif) para títulos y momentos "de voz" (citas).
+ * Inter (sans) para todo lo funcional: navegación, botones, cuerpo de texto.
+ *
+ * Regla general: la serif solo aparece en títulos y testimonios.
+ * Nunca en menús, botones ni párrafos largos.
+ *
+ * Preferible cargar las fuentes con <link rel="preconnect"> + <link> en
+ * index.html (más rápido que @import). Deja este bloque solo si prefieres
+ * mantener las fuentes junto al resto de tokens CSS.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap');
+
+:root {
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ---------- Encabezados (Fraunces) ---------- */
+
+.text-h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(26px, 4vw, 40px);
+  line-height: 1.15;
+  color: var(--color-heading);
+  letter-spacing: -0.01em;
+}
+
+.text-h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(24px, 3vw, 28px);
+  line-height: 1.2;
+  color: var(--color-heading);
+  letter-spacing: -0.01em;
+}
+
+/* Título de tarjeta/bloque pequeño. Por defecto en regular para no competir
+   con un H1/H2 en semibold ya presente en la misma sección. */
+.text-h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 19px;
+  line-height: 1.3;
+  color: var(--color-heading);
+}
+
+/* Modificador: usar cuando el H3 debe destacar más (sin H1/H2 semibold cerca) */
+.text-h3--strong {
+  font-weight: 600;
+}
+
+/* Testimonios / citas destacadas */
+.text-quote {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(18px, 2vw, 20px);
+  line-height: 1.5;
+  color: var(--color-heading);
+}
+
+/* ---------- Texto funcional (Inter) ---------- */
+
+.text-body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--color-ink);
+}
+
+.text-secondary {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--color-secondary);
+}
+
+.text-nav {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--color-ink);
+}
+
+.text-cta {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+}
+
+.text-footer {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 12.5px;
+  color: var(--color-secondary);
+}
