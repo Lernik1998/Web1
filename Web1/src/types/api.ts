@@ -56,6 +56,21 @@ export interface WordPressApiResponse {
 
 // Page slug constants
 export const PAGE_SLUGS = {
+  HOME: 'home',
+  ABOUT_ME: 'about-me',
+  TEAM: 'team',
+  ONLINE_THERAPY: 'onlinetherpy',
+  INFANTIL: 'infantil',
+  ADOLESCENTES: 'adolescentes',
+  ADULTOS: 'adultos',
+  ANSIEDAD: 'ansiedad',
+  DEPRESION: 'depresion',
+  AUTOESTIMA: 'autoestima',
+  DUELO: 'duelo',
+  PADRES: 'padres',
+  FOR_PSICOLOGOS: 'forpsicologs',
+  BLOG: 'blog',
+  PEDIR_CITA: 'pedircita',
   INICIO: 'inicio',
   CONTACTO: 'contacto',
   AVISO_LEGAL: 'aviso-legal',
@@ -67,7 +82,6 @@ export const PAGE_SLUGS = {
   TERAPIA_ONLINE: 'terapia-online',
   COMO_FUNCIONA: 'como-funciona',
   SERVICIOS: 'servicios',
-  PEDIR_CITA: 'pedir-cita',
 } as const
 
 export type PageSlug = (typeof PAGE_SLUGS)[keyof typeof PAGE_SLUGS]

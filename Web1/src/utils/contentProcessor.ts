@@ -3,6 +3,7 @@
  */
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://kanbouripsicologia.com'
+import { parseVCShortcodes } from './vcShortcodeParser'
 
 /**
  * Process WordPress HTML content to fix image URLs and other media
@@ -13,7 +14,10 @@ export const processWordPressContent = (html: string): string => {
 
   let processedHtml = html
 
-  // Fix image src attributes
+  // First, parse Visual Composer shortcodes
+  processedHtml = parseVCShortcodes(processedHtml)
+
+  // Fix image src attributes - handle multiple patterns
   processedHtml = processedHtml.replace(
     /<img([^>]*?)src=["']([^"']*)["']([^>]*?)>/gi,
     (match, before, src, after) => {
@@ -79,23 +83,36 @@ export const processWordPressContent = (html: string): string => {
 const makeAbsoluteUrl = (url: string): string => {
   if (!url) return url
 
+  // Clean up the URL
+  const cleanUrl = url.trim()
+
+  // Handle URLs with query parameters (like ?id=380)
+  const hasQueryParams = cleanUrl.includes('?')
+  const urlParts = cleanUrl.split('?')
+  const baseUrl = urlParts[0] || ''
+  const queryParams = urlParts.length > 1 ? `?${urlParts.slice(1).join('?')}` : ''
+
   // If it's already absolute, return as is
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-    return url
+  if (
+    baseUrl.startsWith('http://') ||
+    baseUrl.startsWith('https://') ||
+    baseUrl.startsWith('data:')
+  ) {
+    return cleanUrl
   }
 
   // If it starts with //, add the protocol
-  if (url.startsWith('//')) {
-    return `${API_BASE_URL.split('://')[0]}:${url}`
+  if (baseUrl.startsWith('//')) {
+    return `${API_BASE_URL.split('://')[0]}:${baseUrl}${queryParams}`
   }
 
   // If it's a relative path, prepend the API base URL
-  if (url.startsWith('/')) {
-    return `${API_BASE_URL}${url}`
+  if (baseUrl.startsWith('/')) {
+    return `${API_BASE_URL}${baseUrl}${queryParams}`
   }
 
   // If it's a relative path without leading slash
-  return `${API_BASE_URL}/${url}`
+  return `${API_BASE_URL}/${baseUrl}${queryParams}`
 }
 
 /**

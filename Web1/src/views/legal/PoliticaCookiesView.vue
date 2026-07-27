@@ -21,7 +21,6 @@ onMounted(async () => {
   try {
     const response = await fetchPoliticaCookiesPage()
     pageData.value = response
-    console.log('Política de Cookies Response:', response)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Error desconocido'
     console.error('Error fetching política de cookies:', err)
@@ -33,8 +32,6 @@ onMounted(async () => {
 
 <template>
   <div class="legal-view">
-    <h1>Política de Cookies</h1>
-
     <div v-if="loading" class="loading">Cargando política de cookies...</div>
 
     <div v-else-if="error" class="error">
