@@ -247,3 +247,115 @@ button {
   gap: 12px;
   margin: 16px 0;
 }
+
+/* Prosa de contenido WordPress (v-html): el reset global deja los <p>, <h2>,
+   listas y enlaces sin márgenes ni viñetas, así que cualquier bloque de
+   contenido largo (legal, blog...) usa esta clase para leerse bien. */
+.kb-prose {
+  color: var(--color-ink);
+}
+
+.kb-prose > *:first-child {
+  margin-top: 0;
+}
+
+.kb-prose > *:last-child {
+  margin-bottom: 0;
+}
+
+.kb-prose p {
+  margin: 0 0 1.1em;
+  line-height: var(--line-height-generous);
+}
+
+.kb-prose h1,
+.kb-prose h2,
+.kb-prose h3,
+.kb-prose h4 {
+  margin: 1.8em 0 0.6em;
+}
+
+.kb-prose h2 {
+  font-size: clamp(21px, 2.4vw, 24px);
+}
+
+.kb-prose h3 {
+  font-size: 18px;
+}
+
+.kb-prose ul,
+.kb-prose ol {
+  margin: 0 0 1.1em;
+  padding-left: 1.4em;
+}
+
+.kb-prose ul {
+  list-style: disc;
+}
+
+.kb-prose ol {
+  list-style: decimal;
+}
+
+.kb-prose li {
+  margin-bottom: 0.45em;
+  line-height: var(--line-height-generous);
+}
+
+.kb-prose li::marker {
+  color: var(--color-rose-hover);
+}
+
+.kb-prose a {
+  color: var(--color-rose-hover);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.kb-prose a:hover {
+  color: var(--color-rose);
+}
+
+.kb-prose strong {
+  font-weight: 600;
+  color: var(--color-heading);
+}
+
+.kb-prose blockquote {
+  margin: 1.5em 0;
+  padding: 0.2em 0 0.2em 1.2em;
+  border-left: 3px solid var(--color-rose);
+  color: var(--color-secondary);
+  font-style: italic;
+}
+
+.kb-prose img {
+  border-radius: var(--radius-md);
+  margin: 1.5em 0;
+}
+
+.kb-prose figcaption {
+  margin-top: 0.5em;
+  font-size: 13px;
+  color: var(--color-secondary);
+  text-align: center;
+}
+
+.kb-prose table {
+  width: 100%;
+  margin: 1.5em 0;
+  border-collapse: collapse;
+}
+
+.kb-prose th,
+.kb-prose td {
+  padding: 0.6em 0.9em;
+  border: 1px solid var(--color-line);
+  text-align: left;
+}
+
+.kb-prose hr {
+  margin: 2em 0;
+  border: none;
+  border-top: 1px solid var(--color-line);
+}

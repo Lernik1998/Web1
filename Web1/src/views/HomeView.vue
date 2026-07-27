@@ -10,7 +10,8 @@
     <div v-else-if="pageData" class="data">
       <h3>{{ pageData.title.rendered }}</h3>
       <div ref="contentEl" class="content">
-        <AppHero  />
+        <Hero />
+        <TherapyCards />
       </div>
       <details class="debug">
         <summary>Ver datos crudos de WordPress</summary>
@@ -33,7 +34,8 @@ import type { WordPressPage } from '../types/api'
 import { useInternalLinks } from '../composables/useInternalLinks'
 
 // Componentes
-import AppHero from '../components/AppHero.vue'
+import Hero from '../components/Hero.vue'
+import TherapyCards from '../components/TherapyCards.vue'
 
 defineOptions({
   name: 'InicioView',
