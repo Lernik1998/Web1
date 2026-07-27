@@ -6,6 +6,17 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://kanbouripsico
 import { parseVCShortcodes } from './vcShortcodeParser'
 
 /**
+ * Los bloques de botón de WordPress ("wp-block-button") llegan sin href,
+ * solo con el texto visible. Aquí mapeamos el texto (normalizado) a la
+ * ruta interna correspondiente. Añadir aquí cualquier texto nuevo que
+ * deba enlazar a una ruta de la SPA.
+ */
+const WP_BUTTON_TEXT_TO_ROUTE: Record<string, string> = {
+  'pedir cita': '/pedir-cita',
+  'ver tipos de terapia': '/terapia-online',
+}
+
+/**
  * Process WordPress HTML content to fix image URLs and other media
  * Converts relative URLs to absolute URLs
  */
@@ -71,6 +82,18 @@ export const processWordPressContent = (html: string): string => {
       // Convert relative URLs to absolute
       const absoluteHref = makeAbsoluteUrl(href)
       return `<a${before}href="${absoluteHref}"${after}>`
+    },
+  )
+
+  // Fix wp-block-button links: WordPress renders them without href, only
+  // with the visible text, so we resolve the href from the known text map.
+  processedHtml = processedHtml.replace(
+    /<a([^>]*class="[^"]*wp-block-button__link[^"]*"[^>]*)>([\s\S]*?)<\/a>/gi,
+    (match, attrs, text) => {
+      if (/\shref\s*=/i.test(attrs)) return match
+      const route = WP_BUTTON_TEXT_TO_ROUTE[text.trim().toLowerCase()]
+      if (!route) return match
+      return `<a${attrs} href="${route}">${text}</a>`
     },
   )
 

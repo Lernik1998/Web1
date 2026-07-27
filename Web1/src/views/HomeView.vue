@@ -9,7 +9,9 @@
 
     <div v-else-if="pageData" class="data">
       <h3>{{ pageData.title.rendered }}</h3>
-      <div class="content" v-html="processedContent"></div>
+      <div ref="contentEl" class="content">
+        <AppHero  />
+      </div>
       <details class="debug">
         <summary>Ver datos crudos de WordPress</summary>
         <pre>{{ JSON.stringify(pageData, null, 2) }}</pre>
@@ -28,10 +30,16 @@ import { fetchHomePage } from '../services/dataService'
 import { processWordPressContent } from '../utils/contentProcessor'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import type { WordPressPage } from '../types/api'
+import { useInternalLinks } from '../composables/useInternalLinks'
+
+// Componentes
+import AppHero from '../components/AppHero.vue'
 
 defineOptions({
   name: 'InicioView',
 })
+const contentEl = ref<HTMLElement | null>(null)
+useInternalLinks(contentEl)
 
 const pageData = ref<WordPressPage | null>(null)
 const loading = ref(true)

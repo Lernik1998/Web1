@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { processWordPressContent } from '../../utils/contentProcessor'
+import { useInternalLinks } from '../../composables/useInternalLinks'
 import { fetchPoliticaCookiesPage } from '../../services/dataService'
 import type { WordPressPage } from '../../types/api'
 
@@ -11,6 +12,9 @@ defineOptions({
 const pageData = ref<WordPressPage | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
+const contentEl = ref<HTMLElement | null>(null)
+
+useInternalLinks(contentEl)
 
 const processedContent = computed(() => {
   if (!pageData.value) return ''
@@ -40,7 +44,7 @@ onMounted(async () => {
 
     <div v-else-if="pageData" class="content">
       <h2>{{ pageData.title.rendered }}</h2>
-      <div v-html="processedContent"></div>
+      <div ref="contentEl" v-html="processedContent"></div>
     </div>
 
     <div v-else class="no-data">
