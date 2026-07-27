@@ -1,7 +1,6 @@
 <template>
   <div class="inicio-view">
-    
-    <div v-if="loading" class="loading">Cargando datos de WordPress...</div>
+    <LoadingSpinner v-if="loading" message="Cargando..." />
 
     <div v-else-if="error" class="error">
       <p>Error: {{ error }}</p>
@@ -18,17 +17,17 @@
     </div>
 
     <div v-else class="no-data">
-      <p>No se encontró la página con slug 'inicio'</p>
+      <p>No se encontró la página con slug 'home'</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { fetchInicioPage } from '../services/dataService'
+import { fetchHomePage } from '../services/dataService'
 import { processWordPressContent } from '../utils/contentProcessor'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
 import type { WordPressPage } from '../types/api'
-
 
 defineOptions({
   name: 'InicioView',
@@ -46,7 +45,7 @@ const processedContent = computed(() => {
 onMounted(async () => {
   try {
     // Fetch WordPress page by slug
-    const response = await fetchInicioPage()
+    const response = await fetchHomePage()
     pageData.value = response
     console.log('WordPress Page Response:', response)
   } catch (err) {
@@ -63,11 +62,6 @@ onMounted(async () => {
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
-}
-
-.loading {
-  color: #666;
-  font-style: italic;
 }
 
 .error {
