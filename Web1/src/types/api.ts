@@ -54,6 +54,18 @@ export interface WordPressApiResponse {
   error?: string
 }
 
+// WordPress REST API Post type (artículos del blog).
+// Se pide con `_embed` para traer la imagen destacada y las categorías ya resueltas.
+export interface WordPressPost extends WordPressPage {
+  _embedded?: {
+    'wp:featuredmedia'?: Array<{
+      source_url: string
+      alt_text?: string
+    }>
+    'wp:term'?: Array<Array<{ id: number; name: string; slug: string; taxonomy: string }>>
+  }
+}
+
 // Page slug constants
 export const PAGE_SLUGS = {
   HOME: 'home',

@@ -1,79 +1,167 @@
-<template>
-  <section id="equipo" class="kb-page">
-    <LoadingSpinner v-if="loading" message="Cargando contenido..." />
-
-    <div v-else-if="error" class="error">
-      <p>Error: {{ error }}</p>
-    </div>
-
-    <div v-else-if="pageData" class="kb-page__content">
-      <div ref="contentEl" v-html="processedContent"></div>
-    </div>
-
-    <div v-else class="no-data">
-      <p>No se encontró la página 'team'</p>
-    </div>
-  </section>
-</template>
-
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { fetchTeamPage } from '../services/dataService'
-import { processWordPressContent } from '../utils/contentProcessor'
-import { useInternalLinks } from '../composables/useInternalLinks'
-import LoadingSpinner from '../components/LoadingSpinner.vue'
-import type { WordPressPage } from '../types/api'
+import { team } from '../data/team'
 
 defineOptions({
   name: 'EquipoView',
 })
-
-const pageData = ref<WordPressPage | null>(null)
-const loading = ref(true)
-const error = ref<string | null>(null)
-const contentEl = ref<HTMLElement | null>(null)
-
-useInternalLinks(contentEl)
-
-const processedContent = computed(() => {
-  if (!pageData.value) return ''
-  return processWordPressContent(pageData.value.content.rendered)
-})
-
-onMounted(async () => {
-  try {
-    const response = await fetchTeamPage()
-    pageData.value = response
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Error desconocido'
-    console.error('Error fetching equipo:', err)
-  } finally {
-    loading.value = false
-  }
-})
 </script>
 
+<template>
+  <section class="kb-team">
+    <div class="kb-team__header">
+      <h1 class="kb-team__title text-h1">Nuestro equipo</h1>
+      <p class="kb-team__lead text-body">
+        Un equipo de psicólogas cercano y diverso, con un objetivo común:
+        acompañarte con calidez y profesionalidad en cada etapa.
+      </p>
+    </div>
+
+    <div class="kb-team__grid">
+      <article v-for="member in team" :key="member.slug" class="kb-team-card">
+        <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__media">
+          <img
+            :src="member.image"
+            :alt="member.name"
+            class="kb-team-card__image"
+            :style="{
+              '--img-scale': member.imageScale ?? 1,
+              objectPosition: member.imagePosition,
+            }"
+          />
+        </router-link>
+        <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__name-link">
+          <h3 class="kb-team-card__name text-h3">{{ member.name }}</h3>
+        </router-link>
+        <p class="kb-team-card__role text-secondary">Psicóloga</p>
+
+        <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__link text-cta">
+          Más sobre {{ member.name.split(' ')[0] }}
+        </router-link>
+      </article>
+    </div>
+  </section>
+</template>
+
 <style scoped>
-.kb-page {
-  background: var(--color-paper);
-  padding: 2rem;
-  max-width: 1200px;
+.kb-team {
+  background: var(--color-paper-alt);
+  padding: clamp(56px, 8vw, 96px) clamp(20px, 4vw, 48px);
+}
+
+.kb-team__header {
+  max-width: 640px;
+  margin: 0 auto 48px;
+  text-align: center;
+}
+
+.kb-team__title {
+  margin-bottom: 14px;
+}
+
+.kb-team__lead {
+  color: var(--color-ink);
+}
+
+.kb-team__grid {
+  max-width: var(--content-max-width);
   margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
 }
 
-.error {
-  color: #d32f2f;
-  padding: 1rem;
-  background-color: #ffebee;
-  border-radius: 4px;
+.kb-team-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: transform var(--dur-base) var(--ease-base),
+    box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
 }
 
-.kb-page__content {
-  line-height: 1.6;
+.kb-team-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-popover);
+  border-color: transparent;
 }
 
-.no-data {
-  color: #666;
-  font-style: italic;
+.kb-team-card__media {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+}
+
+.kb-team-card__image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  object-position: center 20%;
+  transform: scale(var(--img-scale, 1));
+  transition: transform var(--dur-slow) var(--ease-base);
+}
+
+.kb-team-card:hover .kb-team-card__image {
+  transform: scale(calc(var(--img-scale, 1) * 1.05));
+}
+
+.kb-team-card__name-link {
+  text-decoration: none;
+}
+
+.kb-team-card__name {
+  margin: 22px 0 4px;
+  transition: color var(--dur-base) var(--ease-base);
+}
+
+.kb-team-card__name-link:hover .kb-team-card__name {
+  color: var(--color-rose-hover);
+}
+
+.kb-team-card__role {
+  margin-bottom: 22px;
+}
+
+.kb-team-card__link {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 26px;
+  padding: 11px 24px;
+  border-radius: var(--radius-pill);
+  background: var(--color-rose);
+  color: var(--color-on-rose);
+  text-decoration: none;
+  box-shadow: var(--shadow-cta);
+  transition: background-color var(--dur-base) var(--ease-base),
+    transform var(--dur-base) var(--ease-base), box-shadow var(--dur-base) var(--ease-base);
+}
+
+.kb-team-card__link:hover {
+  background: var(--color-rose-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-cta-hover);
+}
+
+.kb-team-card__link:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: var(--shadow-cta);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 860px) {
+  .kb-team__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .kb-team__grid {
+    grid-template-columns: 1fr;
+    max-width: 360px;
+  }
 }
 </style>

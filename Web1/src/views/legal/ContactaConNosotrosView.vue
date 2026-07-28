@@ -38,7 +38,6 @@ onMounted(async () => {
 <template>
   <section class="kb-legal">
     <div class="kb-legal__header">
-      <p class="kb-legal__eyebrow text-secondary">Contacto</p>
       <h1 class="kb-legal__title text-h1">Contacta con Nosotros</h1>
     </div>
 
@@ -71,13 +70,6 @@ onMounted(async () => {
   max-width: 760px;
   margin: 0 auto 40px;
   text-align: center;
-}
-
-.kb-legal__eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: var(--color-rose-hover);
-  margin-bottom: 12px;
 }
 
 .kb-legal__title {

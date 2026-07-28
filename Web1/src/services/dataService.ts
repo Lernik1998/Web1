@@ -1,5 +1,5 @@
 import apiClient from './api'
-import type { WordPressPage, PageSlug, PAGE_SLUGS } from '../types/api'
+import type { WordPressPage, WordPressPost, PageSlug, PAGE_SLUGS } from '../types/api'
 
 // Fetch WordPress page by slug
 export const fetchPageBySlug = async (slug: PageSlug): Promise<WordPressPage[]> => {
@@ -132,6 +132,20 @@ export const fetchForPsicologosPage = async (): Promise<WordPressPage | null> =>
 
 export const fetchBlogPage = async (): Promise<WordPressPage | null> => {
   return fetchPageBySlugProcessed('blog')
+}
+
+// Artículos del blog (WordPress posts, no páginas). `_embed` trae la imagen
+// destacada y las categorías ya resueltas para no hacer peticiones extra.
+export const fetchBlogPosts = async (page = 1, perPage = 9): Promise<WordPressPost[]> => {
+  const response = await apiClient.get<WordPressPost[]>(
+    `/wp-json/wp/v2/posts?_embed&per_page=${perPage}&page=${page}`,
+  )
+  return response.data
+}
+
+export const fetchBlogPostBySlug = async (slug: string): Promise<WordPressPost | null> => {
+  const response = await apiClient.get<WordPressPost[]>(`/wp-json/wp/v2/posts?slug=${slug}&_embed`)
+  return response.data.length > 0 ? (response.data[0] ?? null) : null
 }
 
 // Generic GET request for other WordPress endpoints

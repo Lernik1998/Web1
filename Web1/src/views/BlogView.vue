@@ -1,79 +1,101 @@
-<template>
-  <section id="blog" class="kb-page">
-    <LoadingSpinner v-if="loading" message="Cargando contenido..." />
-
-    <div v-else-if="error" class="error">
-      <p>Error: {{ error }}</p>
-    </div>
-
-    <div v-else-if="pageData" class="kb-page__content">
-      <div ref="contentEl" v-html="processedContent"></div>
-    </div>
-
-    <div v-else class="no-data">
-      <p>No se encontró la página 'blog'</p>
-    </div>
-  </section>
-</template>
-
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { fetchBlogPage } from '../services/dataService'
-import { processWordPressContent } from '../utils/contentProcessor'
-import { useInternalLinks } from '../composables/useInternalLinks'
+import { ref, onMounted } from 'vue'
+import { fetchBlogPosts } from '../services/dataService'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
-import type { WordPressPage } from '../types/api'
+import BlogCard from '../components/BlogCard.vue'
+import type { WordPressPost } from '../types/api'
 
 defineOptions({
   name: 'BlogView',
 })
 
-const pageData = ref<WordPressPage | null>(null)
+const posts = ref<WordPressPost[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
-const contentEl = ref<HTMLElement | null>(null)
-
-useInternalLinks(contentEl)
-
-const processedContent = computed(() => {
-  if (!pageData.value) return ''
-  return processWordPressContent(pageData.value.content.rendered)
-})
 
 onMounted(async () => {
   try {
-    const response = await fetchBlogPage()
-    pageData.value = response
+    posts.value = await fetchBlogPosts()
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Error desconocido'
-    console.error('Error fetching blog:', err)
+    console.error('Error fetching blog posts:', err)
   } finally {
     loading.value = false
   }
 })
 </script>
 
+<template>
+  <section class="kb-blog">
+    <div class="kb-blog__header">
+      <h1 class="kb-blog__title text-h1">Recursos y reflexiones</h1>
+      <p class="kb-blog__lead text-body">
+        Artículos sobre bienestar emocional, terapia y psicología, escritos
+        para acompañarte también fuera de la consulta.
+      </p>
+    </div>
+
+    <div class="kb-blog__inner">
+      <LoadingSpinner v-if="loading" message="Cargando artículos..." />
+
+      <div v-else-if="error" class="kb-blog__error">
+        <p>Error: {{ error }}</p>
+        <p class="text-secondary">Verifica que la API esté accesible.</p>
+      </div>
+
+      <div v-else-if="posts.length === 0" class="kb-blog__empty">
+        <p>Todavía no hay artículos publicados. ¡Vuelve pronto!</p>
+      </div>
+
+      <div v-else class="kb-blog__list">
+        <BlogCard v-for="post in posts" :key="post.id" :post="post" />
+      </div>
+    </div>
+  </section>
+</template>
+
 <style scoped>
-.kb-page {
-  background: var(--color-paper);
-  padding: 2rem;
-  max-width: 1200px;
+.kb-blog {
+  background: var(--color-paper-alt);
+  padding: clamp(56px, 8vw, 96px) clamp(20px, 4vw, 48px);
+}
+
+.kb-blog__header {
+  max-width: 640px;
+  margin: 0 auto 48px;
+  text-align: center;
+}
+
+.kb-blog__title {
+  margin-bottom: 14px;
+}
+
+.kb-blog__lead {
+  color: var(--color-ink);
+}
+
+.kb-blog__inner {
+  max-width: 880px;
   margin: 0 auto;
 }
 
-.error {
-  color: #d32f2f;
-  padding: 1rem;
-  background-color: #ffebee;
-  border-radius: 4px;
+.kb-blog__list {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
 }
 
-.kb-page__content {
-  line-height: 1.6;
+.kb-blog__error,
+.kb-blog__empty {
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  padding: clamp(28px, 5vw, 40px);
+  text-align: center;
 }
 
-.no-data {
-  color: #666;
-  font-style: italic;
+.kb-blog__error {
+  border-left: 3px solid #d32f2f;
+  color: #b23c3c;
 }
 </style>
