@@ -504,9 +504,21 @@ async function handleSubmit() {
   border-color: #d32f2f;
 }
 
+@keyframes kb-error-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .kb-field-error {
   color: #b23c3c;
   font-size: 13px;
+  animation: kb-error-fade-in 220ms var(--ease-base) both;
 }
 
 .kb-field-count {
@@ -598,6 +610,7 @@ async function handleSubmit() {
 .kb-appointment__error {
   color: #b23c3c;
   font-size: 14px;
+  animation: kb-error-fade-in 220ms var(--ease-base) both;
 }
 
 .kb-appointment__submit {

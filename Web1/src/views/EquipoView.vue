@@ -17,7 +17,13 @@ defineOptions({
     </div>
 
     <div class="kb-team__grid">
-      <article v-for="member in team" :key="member.slug" class="kb-team-card">
+      <article
+        v-for="(member, i) in team"
+        :key="member.slug"
+        class="kb-team-card"
+        v-animate-on-scroll
+        :style="{ transitionDelay: `${i * 100}ms` }"
+      >
         <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__media">
           <img
             :src="member.image"
@@ -45,17 +51,17 @@ defineOptions({
 <style scoped>
 .kb-team {
   background: var(--color-paper-alt);
-  padding: clamp(56px, 8vw, 96px) clamp(20px, 4vw, 48px);
+  padding: clamp(32px, 5vw, 64px) clamp(20px, 4vw, 48px);
 }
 
 .kb-team__header {
   max-width: 640px;
-  margin: 0 auto 48px;
+  margin: 0 auto 28px;
   text-align: center;
 }
 
 .kb-team__title {
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .kb-team__lead {
@@ -89,6 +95,24 @@ defineOptions({
   border-color: transparent;
 }
 
+.kb-team-card.kb-animate-onscroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 550ms var(--ease-base), transform 550ms var(--ease-base),
+    box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
+}
+
+.kb-team-card.kb-animate-onscroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.kb-team-card.kb-animate-onscroll.is-visible:hover {
+  transform: translateY(-4px);
+  transition: transform var(--dur-base) var(--ease-base),
+    box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
+}
+
 .kb-team-card__media {
   display: block;
   width: 100%;
@@ -98,7 +122,7 @@ defineOptions({
 .kb-team-card__image {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
   object-position: center 20%;
   transform: scale(var(--img-scale, 1));
@@ -114,7 +138,7 @@ defineOptions({
 }
 
 .kb-team-card__name {
-  margin: 22px 0 4px;
+  margin: 14px 0 2px;
   transition: color var(--dur-base) var(--ease-base);
 }
 
@@ -123,13 +147,13 @@ defineOptions({
 }
 
 .kb-team-card__role {
-  margin-bottom: 22px;
+  margin-bottom: 14px;
 }
 
 .kb-team-card__link {
   display: inline-flex;
   align-items: center;
-  margin-bottom: 26px;
+  margin-bottom: 18px;
   padding: 11px 24px;
   border-radius: var(--radius-pill);
   background: var(--color-rose);

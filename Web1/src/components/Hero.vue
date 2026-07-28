@@ -1,7 +1,7 @@
 <template>
   <section class="kb-hero">
     <div class="kb-hero__inner">
-      <div class="kb-hero__content">
+      <div class="kb-hero__content kb-hero__reveal" style="animation-delay: 0ms">
         <h1 class="kb-hero__title text-h1">{{ title }}</h1>
 
         <p
@@ -23,7 +23,7 @@
         </div>
       </div>
 
-      <div class="kb-hero__media">
+      <div class="kb-hero__media kb-hero__reveal" style="animation-delay: 120ms">
         <div class="kb-hero__blob" aria-hidden="true"></div>
         <img :src="imageUrl" :alt="title" class="kb-hero__image" />
       </div>
@@ -95,6 +95,21 @@ const ArrowIcon = defineComponent({
   grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
   align-items: center;
   gap: clamp(32px, 6vw, 80px);
+}
+
+@keyframes kb-hero-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.kb-hero__reveal {
+  animation: kb-hero-fade-in 700ms var(--ease-base) both;
 }
 
 /* ---------- Columna de texto ---------- */

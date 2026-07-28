@@ -48,7 +48,13 @@ onMounted(async () => {
       </div>
 
       <div v-else class="kb-blog__list">
-        <BlogCard v-for="post in posts" :key="post.id" :post="post" />
+        <BlogCard
+          v-for="(post, i) in posts"
+          :key="post.id"
+          :post="post"
+          v-animate-on-scroll
+          :style="{ transitionDelay: `${Math.min(i, 4) * 100}ms` }"
+        />
       </div>
     </div>
   </section>

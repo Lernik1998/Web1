@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import FaqAccordion from '../../../components/FaqAccordion.vue'
+
 defineOptions({
   name: 'DepresionView',
 })
@@ -9,6 +11,29 @@ const cuandoAyuda = [
   'Cambios en el sueño o el apetito',
   'Sensación de desmotivación o de «no avanzar»',
   'Dificultad para ver salida a la situación actual',
+]
+
+const beneficios = [
+  'Recuperar poco a poco energía y motivación',
+  'Entender qué hay detrás del malestar',
+  'Herramientas para el día a día',
+  'Un espacio de acompañamiento sin juicio',
+]
+
+const faqs = [
+  {
+    question: '¿Es normal no saber muy bien qué me pasa?',
+    answer: 'Sí, es habitual. Parte del trabajo en terapia es precisamente ir poniendo nombre a lo que sientes.',
+  },
+  {
+    question: '¿Cuánto dura el proceso?',
+    answer: 'Depende de cada persona y situación; lo iremos valorando juntas conforme avancemos.',
+  },
+  {
+    question: '¿Puedo empezar aunque no esté seguro/a de necesitarlo?',
+    answer:
+      'Por supuesto. La primera sesión sirve precisamente para conoceros y valorar juntas qué necesitas.',
+  },
 ]
 </script>
 
@@ -23,20 +48,34 @@ const cuandoAyuda = [
     </div>
 
     <div class="kb-therapy__card">
-      <div class="kb-therapy__block">
+      <div class="kb-therapy__block" v-animate-on-scroll>
         <h2 class="text-h2">¿Cuándo puede ayudar la terapia?</h2>
         <ul class="kb-therapy__list">
           <li v-for="item in cuandoAyuda" :key="item">{{ item }}</li>
         </ul>
       </div>
 
-      <div class="kb-therapy__block">
+      <div class="kb-therapy__block" v-animate-on-scroll>
         <h2 class="text-h2">Cómo trabajamos</h2>
         <p class="text-body">
           Acompañamos el proceso desde la escucha y sin juicio, ayudándote a
           entender qué está pasando y a recuperar, poco a poco, herramientas
           y espacios que te den bienestar.
         </p>
+      </div>
+
+      <div class="kb-therapy__block" v-animate-on-scroll>
+        <h2 class="text-h2">Qué te llevas del proceso</h2>
+        <ul class="kb-therapy__list">
+          <li v-for="item in beneficios" :key="item">{{ item }}</li>
+        </ul>
+      </div>
+
+      <div class="kb-therapy__block" v-animate-on-scroll>
+        <h2 class="text-h2">Preguntas frecuentes</h2>
+        <div class="kb-therapy__faq">
+          <FaqAccordion :items="faqs" />
+        </div>
       </div>
     </div>
 
@@ -74,18 +113,36 @@ const cuandoAyuda = [
 .kb-therapy__card {
   max-width: 760px;
   margin: 0 auto;
-  background: var(--color-paper);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-popover);
-  padding: clamp(28px, 5vw, 48px);
   display: flex;
   flex-direction: column;
-  gap: clamp(28px, 4vw, 40px);
 }
 
 .kb-therapy__block {
   text-align: center;
+  padding: clamp(28px, 4vw, 40px) 0;
+}
+
+.kb-therapy__block.kb-animate-onscroll {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 550ms var(--ease-base), transform 550ms var(--ease-base);
+}
+
+.kb-therapy__block.kb-animate-onscroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.kb-therapy__block + .kb-therapy__block {
+  border-top: 1px solid var(--color-line);
+}
+
+.kb-therapy__block:first-child {
+  padding-top: 0;
+}
+
+.kb-therapy__block:last-child {
+  padding-bottom: 0;
 }
 
 .kb-therapy__block h2 {
@@ -125,6 +182,11 @@ const cuandoAyuda = [
   height: 8px;
   border-radius: 50%;
   background: var(--color-rose);
+}
+
+.kb-therapy__faq {
+  max-width: 56ch;
+  margin: 0 auto;
 }
 
 .kb-therapy__final {

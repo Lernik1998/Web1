@@ -105,18 +105,25 @@ defineProps<{
   border-color: transparent;
 }
 
-/* Entrada al hacer scroll: elevación suave en vez del desplazamiento lateral
-   por defecto de la directiva (más natural para una fila de tarjetas). */
+/* Entrada al hacer scroll: fundido + desplazamiento vertical más marcado,
+   con transición propia (más lenta) para que se note bien la aparición. */
 .kb-card.kb-animate-onscroll {
-  transform: translateY(22px);
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 650ms var(--ease-base), transform 650ms var(--ease-base),
+    box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
 }
 
 .kb-card.kb-animate-onscroll.is-visible {
+  opacity: 1;
   transform: translateY(0);
 }
 
+/* Una vez visible, el hover recupera la velocidad rápida habitual. */
 .kb-card.kb-animate-onscroll.is-visible:hover {
   transform: translateY(-4px);
+  transition: transform var(--dur-base) var(--ease-base),
+    box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
 }
 
 .kb-card__media {

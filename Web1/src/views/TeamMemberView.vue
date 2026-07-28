@@ -116,12 +116,6 @@ const member = computed(() => team.find((m) => m.slug === props.slug) ?? null)
   animation: kb-profile-fade-in 750ms var(--ease-base) both;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .kb-profile__animate {
-    animation: none;
-  }
-}
-
 .kb-profile__header {
   display: grid;
   grid-template-columns: 220px 1fr;

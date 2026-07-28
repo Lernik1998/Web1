@@ -70,6 +70,24 @@ const excerpt = computed(() => extractTextFromHtml(props.post.excerpt.rendered, 
   border-color: transparent;
 }
 
+.kb-blog-card.kb-animate-onscroll {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 550ms var(--ease-base), transform 550ms var(--ease-base),
+    box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
+}
+
+.kb-blog-card.kb-animate-onscroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.kb-blog-card.kb-animate-onscroll.is-visible:hover {
+  transform: translateY(-3px);
+  transition: transform var(--dur-base) var(--ease-base),
+    box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
+}
+
 .kb-blog-card__media {
   display: block;
   overflow: hidden;

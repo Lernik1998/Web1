@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import FaqAccordion from '../../components/FaqAccordion.vue'
+
 defineOptions({
   name: 'InfantilView',
 })
@@ -9,6 +11,31 @@ const cuandoAyuda = [
   'Miedos, ansiedad o problemas de sueño',
   'Cambios importantes: hermanos, mudanzas, separación',
   'Duelo infantil',
+]
+
+const beneficios = [
+  'Aprende a identificar y expresar lo que siente',
+  'Gana herramientas para gestionar la frustración',
+  'Mejora la relación con la familia y el entorno',
+  'Recupera la confianza y la seguridad en sí mismo/a',
+]
+
+const faqs = [
+  {
+    question: '¿A partir de qué edad puede empezar terapia un niño o niña?',
+    answer:
+      'Trabajamos con niños y niñas desde los 4-5 años, adaptando siempre el lenguaje y las herramientas a su etapa de desarrollo.',
+  },
+  {
+    question: '¿Tengo que estar presente en las sesiones?',
+    answer:
+      'Depende de la edad y de lo que necesite cada caso. En general dejamos un espacio propio para el niño o la niña, y mantenemos sesiones periódicas con la familia para compartir el proceso.',
+  },
+  {
+    question: '¿Cuánto dura el proceso?',
+    answer:
+      'Varía mucho según cada situación. Lo iremos revisando juntos sesión a sesión, sin prisas ni plazos cerrados.',
+  },
 ]
 </script>
 
@@ -24,14 +51,14 @@ const cuandoAyuda = [
     </div>
 
     <div class="kb-therapy__card">
-      <div class="kb-therapy__block">
+      <div class="kb-therapy__block" v-animate-on-scroll>
         <h2 class="text-h2">¿Cuándo puede ayudar la terapia?</h2>
         <ul class="kb-therapy__list">
           <li v-for="item in cuandoAyuda" :key="item">{{ item }}</li>
         </ul>
       </div>
 
-      <div class="kb-therapy__block">
+      <div class="kb-therapy__block" v-animate-on-scroll>
         <h2 class="text-h2">Cómo trabajamos</h2>
         <p class="text-body">
           Trabajamos a través del juego y el lenguaje propio de cada edad,
@@ -39,6 +66,20 @@ const cuandoAyuda = [
           con libertad. Cuando es necesario, implicamos también a la familia
           para acompañar el proceso desde casa.
         </p>
+      </div>
+
+      <div class="kb-therapy__block" v-animate-on-scroll>
+        <h2 class="text-h2">Qué te llevas del proceso</h2>
+        <ul class="kb-therapy__list">
+          <li v-for="item in beneficios" :key="item">{{ item }}</li>
+        </ul>
+      </div>
+
+      <div class="kb-therapy__block" v-animate-on-scroll>
+        <h2 class="text-h2">Preguntas frecuentes</h2>
+        <div class="kb-therapy__faq">
+          <FaqAccordion :items="faqs" />
+        </div>
       </div>
     </div>
 
@@ -76,18 +117,36 @@ const cuandoAyuda = [
 .kb-therapy__card {
   max-width: 760px;
   margin: 0 auto;
-  background: var(--color-paper);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-popover);
-  padding: clamp(28px, 5vw, 48px);
   display: flex;
   flex-direction: column;
-  gap: clamp(28px, 4vw, 40px);
 }
 
 .kb-therapy__block {
   text-align: center;
+  padding: clamp(28px, 4vw, 40px) 0;
+}
+
+.kb-therapy__block.kb-animate-onscroll {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 550ms var(--ease-base), transform 550ms var(--ease-base);
+}
+
+.kb-therapy__block.kb-animate-onscroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.kb-therapy__block + .kb-therapy__block {
+  border-top: 1px solid var(--color-line);
+}
+
+.kb-therapy__block:first-child {
+  padding-top: 0;
+}
+
+.kb-therapy__block:last-child {
+  padding-bottom: 0;
 }
 
 .kb-therapy__block h2 {
@@ -127,6 +186,11 @@ const cuandoAyuda = [
   height: 8px;
   border-radius: 50%;
   background: var(--color-rose);
+}
+
+.kb-therapy__faq {
+  max-width: 56ch;
+  margin: 0 auto;
 }
 
 .kb-therapy__final {
