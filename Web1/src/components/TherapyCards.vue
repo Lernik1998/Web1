@@ -19,18 +19,16 @@
           :style="{ transitionDelay: `${i * 100}ms` }"
         >
           <div class="kb-card__media">
-            <img
-              src="/images/psicologa-denia-hero.jpg"
-              alt="María B. Kanbouri, psicóloga en su consulta de Dénia"
-              class="kb-card__image"
-            />
+            <img :src="card.imageUrl" :alt="card.title" class="kb-card__image" />
           </div>
 
           <div class="kb-card__body">
             <h3 class="kb-card__title text-h3">{{ card.title }}</h3>
             <p class="kb-card__desc text-secondary">{{ card.description }}</p>
 
-            <a :href="card.href" class="kb-card__link text-cta">Me interesa</a>
+            <router-link :to="card.href" class="kb-card__link text-cta">
+              {{ card.buttonText }}
+            </router-link>
           </div>
         </article>
       </div>
@@ -39,32 +37,15 @@
 </template>
 
 <script setup lang="ts">
-const cards = [
-  {
-    title: 'Psicología infantil',
-    description:
-      'Acompañamos a los más pequeños a comprender y gestionar sus emociones a través del juego y la palabra.',
-    href: '/terapia-online/infantil',
-  },
-  {
-    title: 'Psicología para adolescentes',
-    description:
-      'Un espacio de escucha y confianza para explorar identidad, autoestima y relaciones en esta etapa de cambios.',
-    href: '/terapia-online/adolescentes',
-  },
-  {
-    title: 'Psicología para adultos',
-    description:
-      'Terapia para gestionar ansiedad, duelo, autoestima o momentos de transición vital, siempre a tu ritmo.',
-    href: '/terapia-online/adultos',
-  },
-  {
-    title: 'Psicología para padres y familia',
-    description:
-      'Herramientas y apoyo para fortalecer la comunicación y el bienestar de todo el núcleo familiar.',
-    href: '/terapia-online/padres-familia',
-  },
-]
+defineProps<{
+  cards: Array<{
+    title: string
+    description: string
+    imageUrl: string
+    buttonText: string
+    href: string
+  }>
+}>()
 </script>
 
 <style scoped>

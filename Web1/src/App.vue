@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import AppHeader from "./components/AppHeader.vue";
+import Header from "./components/Header.vue";
 import Footer from './components/Footer.vue';
 </script>
 
 <template>
-  <AppHeader />
+  <Header />
   <main>
     <router-view v-slot="{ Component }">
       <transition name="page-fade" mode="out-in">

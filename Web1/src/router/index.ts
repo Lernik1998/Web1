@@ -49,18 +49,8 @@ const router = createRouter({
     {
       path: '/terapia-online',
       name: 'terapia-online',
-      redirect: '/terapia-online/como-funciona',
+      redirect: '/terapia-online/infantil',
       children: [
-        {
-          path: 'como-funciona',
-          name: 'como-funciona',
-          component: () => import('../views/terapia-online/ComoFuncionaView.vue'),
-        },
-        {
-          path: 'servicios',
-          name: 'servicios',
-          component: () => import('../views/terapia-online/ServiciosView.vue'),
-        },
         {
           path: 'infantil',
           name: 'infantil',
@@ -123,11 +113,6 @@ const router = createRouter({
       path: '/pedir-cita',
       name: 'pedir-cita',
       component: () => import('../views/PedirCitaView.vue'),
-    },
-    {
-      path: '/contacto',
-      name: 'contacto',
-      component: () => import('../views/legal/ContactaConNosotrosView.vue'),
     },
     {
       path: '/politica-privacidad',

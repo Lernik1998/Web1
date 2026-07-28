@@ -2,45 +2,50 @@
   <section class="kb-hero">
     <div class="kb-hero__inner">
       <div class="kb-hero__content">
-        <p class="kb-hero__eyebrow text-secondary"></p>
+        <h1 class="kb-hero__title text-h1">{{ title }}</h1>
 
-        <h1 class="kb-hero__title text-h1">
-         
-        </h1>
-
-        <p class="kb-hero__lead text-body">
-         
+        <p
+          v-for="(paragraph, index) in descriptionParagraphs"
+          :key="index"
+          class="kb-hero__lead text-body"
+        >
+          {{ paragraph }}
         </p>
 
         <div class="kb-hero__actions">
-          <a href="/pedir-cita" class="kb-hero__cta text-cta">
-          <!-- Pedir cita -->
-          </a>
+          <router-link to="/pedir-cita" class="kb-hero__cta text-cta">
+            {{ buttonText }}
+          </router-link>
           <a href="#terapias" class="kb-hero__link text-cta">
-            <!-- Ver tipos de terapia -->
+            Ver tipos de terapia
             <ArrowIcon />
           </a>
         </div>
-
-        <p class="kb-hero__note text-secondary">
-    
-        </p>
       </div>
 
       <div class="kb-hero__media">
         <div class="kb-hero__blob" aria-hidden="true"></div>
-        <img
-          src=""
-          alt=""
-          class="kb-hero__image"
-        />
+        <img :src="imageUrl" :alt="title" class="kb-hero__image" />
       </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { defineComponent, h } from 'vue'
+import { computed, defineComponent, h } from 'vue'
+
+const props = defineProps<{
+  title: string
+  description: string
+  imageUrl: string
+  buttonText: string
+}>()
+
+// El ACF de WordPress manda la descripción como un único texto con párrafos
+// separados por una línea en blanco.
+const descriptionParagraphs = computed(() =>
+  props.description.split(/\r?\n\s*\r?\n/).filter(Boolean),
+)
 
 /** Flecha fina para el enlace secundario del hero. */
 const ArrowIcon = defineComponent({
@@ -93,19 +98,16 @@ const ArrowIcon = defineComponent({
 }
 
 /* ---------- Columna de texto ---------- */
-.kb-hero__eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: var(--color-rose-hover);
-  margin-bottom: 18px;
-}
-
 .kb-hero__title {
   margin-bottom: 22px;
 }
 
 .kb-hero__lead {
   max-width: 46ch;
+  margin-bottom: 20px;
+}
+
+.kb-hero__lead:last-of-type {
   margin-bottom: 32px;
 }
 
@@ -114,11 +116,6 @@ const ArrowIcon = defineComponent({
   align-items: center;
   gap: 28px;
   flex-wrap: wrap;
-  margin-bottom: 18px;
-}
-
-.kb-hero__note {
-  margin: 0;
 }
 
 .kb-hero__cta {

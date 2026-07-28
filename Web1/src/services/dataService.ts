@@ -1,5 +1,11 @@
 import apiClient from './api'
-import type { WordPressPage, WordPressPost, PageSlug, PAGE_SLUGS } from '../types/api'
+import type {
+  WordPressPage,
+  WordPressPost,
+  WordPressMedia,
+  WordPressHomePage,
+  PageSlug,
+} from '../types/api'
 
 // Fetch WordPress page by slug
 export const fetchPageBySlug = async (slug: PageSlug): Promise<WordPressPage[]> => {
@@ -22,21 +28,6 @@ export const fetchPageBySlugProcessed = async (slug: PageSlug): Promise<WordPres
   }
 }
 
-// Fetch page by slug and return first result (or null if not found)
-export const fetchPageBySlugSingle = async (slug: PageSlug): Promise<WordPressPage | null> => {
-  const pages = await fetchPageBySlug(slug)
-  return pages.length > 0 ? (pages[0] ?? null) : null
-}
-
-// Specific page fetch functions (using processed content endpoint)
-export const fetchInicioPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('inicio')
-}
-
-export const fetchContactoPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('contacto')
-}
-
 export const fetchAvisoLegalPage = async (): Promise<WordPressPage | null> => {
   return fetchPageBySlugProcessed('aviso-legal')
 }
@@ -49,10 +40,6 @@ export const fetchPoliticaCookiesPage = async (): Promise<WordPressPage | null> 
   return fetchPageBySlugProcessed('politica-de-cookies-ue')
 }
 
-export const fetchSobreNosotrasPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('sobre-nosotras')
-}
-
 export const fetchQuienesSomosPage = async (): Promise<WordPressPage | null> => {
   return fetchPageBySlugProcessed('quienes-somos')
 }
@@ -61,77 +48,33 @@ export const fetchNuestraFilosofiaPage = async (): Promise<WordPressPage | null>
   return fetchPageBySlugProcessed('nuestra-filosofia')
 }
 
-export const fetchTerapiaOnlinePage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('terapia-online')
-}
-
-export const fetchComoFuncionaPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('como-funciona')
-}
-
-export const fetchServiciosPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('servicios')
-}
-
 export const fetchPedirCitaPage = async (): Promise<WordPressPage | null> => {
   return fetchPageBySlugProcessed('pedircita')
 }
 
-// New page fetch functions for updated slugs
-export const fetchHomePage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('home')
+export const fetchHomePage = async (): Promise<WordPressHomePage | null> => {
+  return fetchPageBySlugProcessed('home') as Promise<WordPressHomePage | null>
+}
+
+// Imagen de la biblioteca de medios por ID (usado para resolver hero_image,
+// therapy_X_image, etc. de los campos ACF, que solo dan el ID numérico).
+export const fetchMediaById = async (id: number): Promise<WordPressMedia | null> => {
+  if (!id) return null
+  try {
+    const response = await apiClient.get<WordPressMedia>(`/wp-json/wp/v2/media/${id}`)
+    return response.data
+  } catch (error) {
+    console.error(`Error fetching media ${id}:`, error)
+    return null
+  }
 }
 
 export const fetchAboutMePage = async (): Promise<WordPressPage | null> => {
   return fetchPageBySlugProcessed('about-me')
 }
 
-export const fetchTeamPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('team')
-}
-
-export const fetchOnlineTherapyPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('onlinetherpy')
-}
-
-export const fetchInfantilPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('infantil')
-}
-
-export const fetchAdolescentesPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('adolescentes')
-}
-
-export const fetchAdultosPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('adultos')
-}
-
-export const fetchAnsiedadPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('ansiedad')
-}
-
-export const fetchDepresionPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('depresion')
-}
-
-export const fetchAutoestimaPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('autoestima')
-}
-
-export const fetchDueloPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('duelo')
-}
-
-export const fetchPadresPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('padres')
-}
-
 export const fetchForPsicologosPage = async (): Promise<WordPressPage | null> => {
   return fetchPageBySlugProcessed('forpsicologs')
-}
-
-export const fetchBlogPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('blog')
 }
 
 // Artículos del blog (WordPress posts, no páginas). `_embed` trae la imagen
@@ -146,16 +89,4 @@ export const fetchBlogPosts = async (page = 1, perPage = 9): Promise<WordPressPo
 export const fetchBlogPostBySlug = async (slug: string): Promise<WordPressPost | null> => {
   const response = await apiClient.get<WordPressPost[]>(`/wp-json/wp/v2/posts?slug=${slug}&_embed`)
   return response.data.length > 0 ? (response.data[0] ?? null) : null
-}
-
-// Generic GET request for other WordPress endpoints
-export const getData = async <T>(endpoint: string): Promise<T> => {
-  const response = await apiClient.get<T>(endpoint)
-  return response.data
-}
-
-// Generic POST request
-export const postData = async <T>(endpoint: string, data: unknown): Promise<T> => {
-  const response = await apiClient.post<T>(endpoint, data)
-  return response.data
 }
