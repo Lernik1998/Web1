@@ -14,6 +14,7 @@ import { parseVCShortcodes } from './vcShortcodeParser'
 const WP_BUTTON_TEXT_TO_ROUTE: Record<string, string> = {
   'pedir cita': '/pedir-cita',
   'ver tipos de terapia': '/terapia-online',
+  'reservar supervisión': '/pedir-cita?servicio=profesionales',
 }
 
 /**

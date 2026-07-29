@@ -112,7 +112,7 @@ export interface WordPressPost extends WordPressPage {
 export const PAGE_SLUGS = {
   HOME: 'home',
   ABOUT_ME: 'about-me',
-  FOR_PSICOLOGOS: 'forpsicologs',
+  FOR_PSICOLOGOS: 'for-psychologists',
   PEDIR_CITA: 'pedircita',
   AVISO_LEGAL: 'aviso-legal',
   POLITICA_PRIVACIDAD: 'politica-privacidad',

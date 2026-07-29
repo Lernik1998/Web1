@@ -1,100 +1,176 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { fetchForPsicologosPage } from '../services/dataService'
+import { processWordPressContent } from '../utils/contentProcessor'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
+import type { WordPressPage } from '../types/api'
 
 defineOptions({
   name: 'ParaPsicologosView',
 })
 
-const pageLoading = ref(true)
+const pageData = ref<WordPressPage | null>(null)
+const loading = ref(true)
+const error = ref<string | null>(null)
 
-const areas = [
-  { label: 'Ansiedad', href: '/terapia-online/adultos/ansiedad' },
-  { label: 'Depresión y estado de ánimo', href: '/terapia-online/adultos/depresion' },
-  { label: 'Autoestima y desarrollo personal', href: '/terapia-online/adultos/autoestima' },
-  { label: 'Duelo y pérdidas', href: '/terapia-online/adultos/duelo' },
-  { label: 'Psicología infantil', href: '/terapia-online/infantil' },
-  { label: 'Psicología para adolescentes', href: '/terapia-online/adolescentes' },
-  { label: 'Padres y familia', href: '/terapia-online/padres-familia' },
-]
+/**
+ * Ruta interna de cada área listada en "Áreas que trabajamos". El texto de
+ * cada área viene de WordPress, pero a qué página de Terapia Online enlaza
+ * es una decisión de navegación de esta SPA, así que se resuelve por texto.
+ */
+const AREA_ROUTES: Record<string, string> = {
+  ansiedad: '/terapia-online/adultos/ansiedad',
+  'depresión y estado de ánimo': '/terapia-online/adultos/depresion',
+  'autoestima y desarrollo personal': '/terapia-online/adultos/autoestima',
+  'duelo y pérdidas': '/terapia-online/adultos/duelo',
+  'psicología infantil': '/terapia-online/infantil',
+  'psicología para adolescentes': '/terapia-online/adolescentes',
+  'padres y familia': '/terapia-online/padres-familia',
+}
 
-const steps = [
-  {
-    title: 'Contacta',
-    description: 'Escríbenos desde el formulario de cita o escribe a',
-    email: 'gabinete@kanbouripsicologia.com',
-  },
-  {
-    title: 'Cuéntanos tu caso',
-    description:
-      'Antes de la sesión, comparte brevemente el caso o los casos que te gustaría revisar.',
-  },
-  {
-    title: 'Sesión online',
-    description:
-      'Nos conectamos por videollamada en el horario que hayamos acordado juntas.',
-  },
-]
+interface TextBlock {
+  title: string
+  description: string
+}
+
+interface Step {
+  title: string
+  description: string
+}
+
+const lead = ref('')
+const quote = ref('')
+const buttonText = ref('Reservar supervisión')
+const textBlocks = ref<TextBlock[]>([])
+const areas = ref<{ label: string; href: string }[]>([])
+const steps = ref<Step[]>([])
+const finalHeading = ref('')
+const finalText = ref('')
+
+function splitByBr(html: string): string[] {
+  return html
+    .split(/<br\s*\/?>/i)
+    .map((part) => part.trim())
+    .filter(Boolean)
+}
+
+function parseContent(html: string) {
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  const children = Array.from(doc.body.children)
+
+  const firstButtons = children.find((el) => el.classList.contains('wp-block-buttons'))
+  const leadParagraph = children.find(
+    (el) => el.tagName === 'P' && (!firstButtons || children.indexOf(el) < children.indexOf(firstButtons)),
+  )
+  lead.value = leadParagraph?.textContent?.trim() ?? ''
+
+  const firstButtonLink = doc.querySelector('.wp-block-button__link')
+  if (firstButtonLink?.textContent?.trim()) {
+    buttonText.value = firstButtonLink.textContent.trim()
+  }
+
+  quote.value = doc.querySelector('blockquote')?.textContent?.trim() ?? ''
+
+  const h3s = Array.from(doc.querySelectorAll('h3'))
+  const blocks: TextBlock[] = []
+  for (const h3 of h3s) {
+    const title = h3.textContent?.replace(/\s+/g, ' ').trim() ?? ''
+    const next = h3.nextElementSibling
+    if (!next) continue
+
+    if (next.tagName === 'UL') {
+      areas.value = Array.from(next.querySelectorAll('li')).map((li) => {
+        const label = li.textContent?.replace(/\s+/g, ' ').trim() ?? ''
+        return { label, href: AREA_ROUTES[label.toLowerCase()] ?? '/terapia-online' }
+      })
+    } else if (next.tagName === 'P') {
+      blocks.push({ title, description: next.textContent?.trim() ?? '' })
+    }
+  }
+  textBlocks.value = blocks
+
+  const h4 = doc.querySelector('h4')
+  if (h4) {
+    const paragraphs: HTMLElement[] = []
+    let node = h4.nextElementSibling
+    while (node && node.tagName === 'P') {
+      paragraphs.push(node as HTMLElement)
+      node = node.nextElementSibling
+    }
+
+    const finalParagraph = paragraphs.pop()
+    const lines = paragraphs.flatMap((p) => splitByBr(p.innerHTML))
+
+    const parsedSteps: Step[] = []
+    for (let i = 0; i < lines.length; i += 2) {
+      parsedSteps.push({
+        title: lines[i] ?? '',
+        description: processWordPressContent(lines[i + 1] ?? ''),
+      })
+    }
+    steps.value = parsedSteps
+
+    if (finalParagraph) {
+      const finalLines = splitByBr(finalParagraph.innerHTML)
+      finalHeading.value = finalLines[0] ?? ''
+      finalText.value = finalLines[1] ?? ''
+    }
+  }
+}
 
 onMounted(async () => {
   try {
-    await fetchForPsicologosPage()
+    pageData.value = await fetchForPsicologosPage()
+    if (pageData.value) parseContent(pageData.value.content.rendered)
   } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Error desconocido'
     console.error('Error fetching para psicólogos:', err)
   } finally {
-    pageLoading.value = false
+    loading.value = false
   }
 })
+
+const title = computed(() => pageData.value?.title.rendered ?? '')
 </script>
 
 <template>
   <section class="kb-supervision">
-    <LoadingSpinner v-if="pageLoading" message="Cargando..." />
+    <LoadingSpinner v-if="loading" message="Cargando..." />
 
-    <template v-else>
+    <div v-else-if="error" class="kb-supervision__error">
+      <p>Error: {{ error }}</p>
+      <p class="text-secondary">Verifica que la API esté accesible.</p>
+    </div>
+
+    <template v-else-if="pageData">
       <div class="kb-supervision__header">
-        <h1 class="kb-supervision__title text-h1">Supervisión clínica para profesionales</h1>
-        <p class="kb-supervision__lead text-body">
-          Un espacio de supervisión online para revisar casos, afinar
-          herramientas de intervención y cuidar también de quien acompaña a
-          otros en su proceso terapéutico.
-        </p>
+        <h1 class="kb-supervision__title text-h1">{{ title }}</h1>
+        <p class="kb-supervision__lead text-body">{{ lead }}</p>
         <router-link
           :to="{ path: '/pedir-cita', query: { servicio: 'profesionales' } }"
           class="kb-supervision__cta text-cta"
         >
-          Reservar supervisión
+          {{ buttonText }}
         </router-link>
       </div>
 
       <div class="kb-supervision__inner">
-        <blockquote class="kb-supervision__quote text-quote">
-          La supervisión enriquece la práctica profesional y, a la vez,
-          sostiene y protege a quien acompaña a otras personas.
+        <blockquote v-if="quote" class="kb-supervision__quote text-quote">
+          {{ quote }}
         </blockquote>
 
         <div class="kb-supervision__card">
-          <div class="kb-supervision__block" v-animate-on-scroll>
-            <h2 class="text-h2">Teoría y práctica, de la mano</h2>
-            <p class="text-body">
-              Cada sesión combina marco teórico y trabajo práctico: revisamos
-              el caso, ponemos en común herramientas de intervención y
-              dejamos también espacio para el autocuidado del profesional,
-              una parte del trabajo que a menudo queda en segundo plano.
-            </p>
+          <div
+            v-for="block in textBlocks"
+            :key="block.title"
+            class="kb-supervision__block"
+            v-animate-on-scroll
+          >
+            <h2 class="text-h2">{{ block.title }}</h2>
+            <p class="text-body">{{ block.description }}</p>
           </div>
 
-          <div class="kb-supervision__block" v-animate-on-scroll>
-            <h2 class="text-h2">Supervisión individual</h2>
-            <p class="text-body">
-              Sesión online de una hora, pensada para revisar uno o dos casos
-              en profundidad: técnicas, herramientas concretas y también
-              cómo te está afectando a ti el acompañamiento.
-            </p>
-          </div>
-
-          <div class="kb-supervision__block" v-animate-on-scroll>
+          <div v-if="areas.length" class="kb-supervision__block" v-animate-on-scroll>
             <h2 class="text-h2">Áreas que trabajamos</h2>
             <div class="kb-pill-group">
               <router-link
@@ -108,35 +184,34 @@ onMounted(async () => {
             </div>
           </div>
 
-          <div class="kb-supervision__block" v-animate-on-scroll>
+          <div v-if="steps.length" class="kb-supervision__block" v-animate-on-scroll>
             <h2 class="text-h2">Cómo funciona</h2>
             <ol class="kb-steps">
               <li v-for="(step, index) in steps" :key="step.title" class="kb-steps__item">
                 <span class="kb-steps__number">{{ index + 1 }}</span>
                 <p class="kb-steps__title">{{ step.title }}</p>
-                <p class="kb-steps__desc text-secondary">
-                  {{ step.description }}
-                  <a v-if="step.email" :href="`mailto:${step.email}`" class="kb-steps__email">{{
-                    step.email
-                  }}</a>
-                </p>
+                <p class="kb-steps__desc text-secondary" v-html="step.description"></p>
               </li>
             </ol>
           </div>
         </div>
 
-        <div class="kb-supervision__final">
-          <h2 class="text-h2">¿Empezamos?</h2>
-          <p class="text-body">Escríbenos y buscamos juntas el mejor momento.</p>
+        <div v-if="finalHeading" class="kb-supervision__final">
+          <h2 class="text-h2">{{ finalHeading }}</h2>
+          <p class="text-body">{{ finalText }}</p>
           <router-link
-          :to="{ path: '/pedir-cita', query: { servicio: 'profesionales' } }"
-          class="kb-supervision__cta text-cta"
-        >
-            Reservar supervisión
+            :to="{ path: '/pedir-cita', query: { servicio: 'profesionales' } }"
+            class="kb-supervision__cta text-cta"
+          >
+            {{ buttonText }}
           </router-link>
         </div>
       </div>
     </template>
+
+    <div v-else class="kb-supervision__error">
+      <p>No se encontró la página.</p>
+    </div>
   </section>
 </template>
 
@@ -301,14 +376,14 @@ onMounted(async () => {
   line-height: 1.55;
 }
 
-.kb-steps__email {
+.kb-steps__desc :deep(a) {
   color: var(--color-rose-hover);
   text-decoration: underline;
   text-underline-offset: 2px;
   transition: color var(--dur-base) var(--ease-base);
 }
 
-.kb-steps__email:hover {
+.kb-steps__desc :deep(a:hover) {
   color: var(--color-rose);
 }
 
@@ -324,5 +399,16 @@ onMounted(async () => {
 .kb-supervision__final p {
   color: var(--color-ink);
   margin-bottom: 22px;
+}
+
+.kb-supervision__error {
+  max-width: 640px;
+  margin: 0 auto;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-left: 3px solid #d32f2f;
+  border-radius: var(--radius-md);
+  padding: 24px 28px;
+  color: #b23c3c;
 }
 </style>

@@ -74,7 +74,7 @@ export const fetchAboutMePage = async (): Promise<WordPressPage | null> => {
 }
 
 export const fetchForPsicologosPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('forpsicologs')
+  return fetchPageBySlugProcessed('for-psychologists')
 }
 
 // Artículos del blog (WordPress posts, no páginas). `_embed` trae la imagen
