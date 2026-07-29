@@ -1,5 +1,5 @@
 <template>
-  <section class="kb-hero">
+  <section class="kb-hero" v-spotlight>
     <div class="kb-hero__inner">
       <div class="kb-hero__content kb-hero__reveal" style="animation-delay: 0ms">
         <h1 class="kb-hero__title text-h1">{{ title }}</h1>
@@ -13,7 +13,7 @@
         </p>
 
         <div class="kb-hero__actions">
-          <router-link to="/pedir-cita" class="kb-hero__cta text-cta">
+          <router-link to="/pedir-cita" class="kb-hero__cta kb-glare text-cta">
             {{ buttonText }}
           </router-link>
           <a href="#terapias" class="kb-hero__link text-cta">
@@ -75,7 +75,7 @@ const ArrowIcon = defineComponent({
   overflow: hidden;
 }
 
-.kb-hero::before {
+.kb-hero::after {
   content: '';
   position: absolute;
   inset: 0;

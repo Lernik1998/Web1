@@ -381,7 +381,12 @@ async function handleSubmit() {
 
         <p v-if="errorMsg" class="kb-appointment__error">{{ errorMsg }}</p>
 
-        <button type="submit" class="kb-appointment__submit text-cta" :disabled="submitting">
+        <button
+          type="submit"
+          class="kb-appointment__submit text-cta"
+          v-ripple
+          :disabled="submitting"
+        >
           {{ submitting ? 'Enviando...' : 'Enviar solicitud' }}
         </button>
       </form>

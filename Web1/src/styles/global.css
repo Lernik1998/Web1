@@ -360,6 +360,86 @@ button {
   border-top: 1px solid var(--color-line);
 }
 
+/* Spotlight hover (v-spotlight): resplandor que sigue al cursor sobre una
+   tarjeta. El elemento debe tener position:relative/overflow-hidden propios
+   (ya los tienen las tarjetas del sitio) para que el brillo quede recortado
+   a sus bordes redondeados. */
+.kb-spotlight {
+  position: relative;
+}
+
+.kb-spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(
+    circle 220px at var(--spot-x, 50%) var(--spot-y, 50%),
+    rgba(190, 146, 146, 0.16),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 320ms var(--ease-base);
+  pointer-events: none;
+}
+
+.kb-spotlight:hover::before {
+  opacity: 1;
+}
+
+.kb-spotlight > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Brillo diagonal al pasar el cursor (glare sweep), para los botones de
+   llamada a la acción más destacados. Requiere overflow:hidden, que ya
+   suelen tener estos botones por su border-radius en píldora. */
+.kb-glare {
+  position: relative;
+  overflow: hidden;
+}
+
+.kb-glare::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transform: skewX(-20deg);
+  transition: left 550ms var(--ease-base);
+  pointer-events: none;
+}
+
+.kb-glare:hover::after {
+  left: 125%;
+}
+
+/* Ripple (v-ripple): onda expansiva al hacer clic, estilo PrimeVue/Material.
+   El elemento necesita overflow:hidden para que la onda no se salga. */
+.kb-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.kb-ripple__circle {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--kb-ripple-color, rgba(255, 255, 255, 0.55));
+  transform: scale(0);
+  animation: kb-ripple-anim 550ms ease-out;
+  pointer-events: none;
+}
+
+@keyframes kb-ripple-anim {
+  to {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
 /* Respeta la preferencia de "reducir movimiento" del sistema operativo,
    aplicándolo a todas las animaciones/transiciones del sitio de una vez. */
 @media (prefers-reduced-motion: reduce) {

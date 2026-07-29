@@ -112,7 +112,7 @@
           </li>
         </ul>
 
-        <router-link to="/pedir-cita" class="kb-cta" @click="closeAll">
+        <router-link to="/pedir-cita" class="kb-cta kb-glare" @click="closeAll">
           Pedir cita
         </router-link>
       </nav>

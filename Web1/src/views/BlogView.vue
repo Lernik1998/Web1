@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { fetchBlogPosts } from '../services/dataService'
-import LoadingSpinner from '../components/LoadingSpinner.vue'
 import BlogCard from '../components/BlogCard.vue'
 import type { WordPressPost } from '../types/api'
 
@@ -36,7 +35,21 @@ onMounted(async () => {
     </div>
 
     <div class="kb-blog__inner">
-      <LoadingSpinner v-if="loading" message="Cargando artículos..." />
+      <div v-if="loading" class="kb-blog__list" aria-hidden="true">
+        <div v-for="n in 3" :key="n" class="kb-skeleton-card">
+          <div class="kb-skeleton kb-skeleton-card__media"></div>
+          <div class="kb-skeleton-card__body">
+            <div class="kb-skeleton" style="width: 90px; height: 12px"></div>
+            <div class="kb-skeleton" style="width: 70%; height: 22px; margin-top: 12px"></div>
+            <div class="kb-skeleton" style="width: 100%; height: 14px; margin-top: 16px"></div>
+            <div class="kb-skeleton" style="width: 85%; height: 14px; margin-top: 8px"></div>
+            <div
+              class="kb-skeleton"
+              style="width: 120px; height: 32px; margin-top: 18px; border-radius: 999px"
+            ></div>
+          </div>
+        </div>
+      </div>
 
       <div v-else-if="error" class="kb-blog__error">
         <p>Error: {{ error }}</p>
@@ -53,6 +66,7 @@ onMounted(async () => {
           :key="post.id"
           :post="post"
           v-animate-on-scroll
+          v-spotlight
           :style="{ transitionDelay: `${Math.min(i, 4) * 100}ms` }"
         />
       </div>
@@ -103,5 +117,55 @@ onMounted(async () => {
 .kb-blog__error {
   border-left: 3px solid #d32f2f;
   color: #b23c3c;
+}
+
+/* ---------- Skeleton (mientras cargan los artículos) ---------- */
+.kb-skeleton-card {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 28px;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.kb-skeleton-card__media {
+  aspect-ratio: 4 / 3;
+}
+
+.kb-skeleton-card__body {
+  padding: 24px 28px 24px 0;
+}
+
+.kb-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-line) 25%,
+    rgba(255, 255, 255, 0.7) 50%,
+    var(--color-line) 75%
+  );
+  background-size: 200% 100%;
+  animation: kb-skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes kb-skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .kb-skeleton-card {
+    grid-template-columns: 1fr;
+  }
+
+  .kb-skeleton-card__body {
+    padding: 20px;
+  }
 }
 </style>

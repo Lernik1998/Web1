@@ -22,6 +22,7 @@ defineOptions({
         :key="member.slug"
         class="kb-team-card"
         v-animate-on-scroll
+        v-spotlight
         :style="{ transitionDelay: `${i * 100}ms` }"
       >
         <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__media">
@@ -40,7 +41,7 @@ defineOptions({
         </router-link>
         <p class="kb-team-card__role text-secondary">Psicóloga</p>
 
-        <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__link text-cta">
+        <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__link text-cta" v-ripple>
           Más sobre {{ member.name.split(' ')[0] }}
         </router-link>
       </article>

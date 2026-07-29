@@ -75,7 +75,7 @@ onMounted(async () => {
         </blockquote>
 
         <div class="kb-supervision__card">
-          <div class="kb-supervision__block">
+          <div class="kb-supervision__block" v-animate-on-scroll>
             <h2 class="text-h2">Teoría y práctica, de la mano</h2>
             <p class="text-body">
               Cada sesión combina marco teórico y trabajo práctico: revisamos
@@ -85,7 +85,7 @@ onMounted(async () => {
             </p>
           </div>
 
-          <div class="kb-supervision__block">
+          <div class="kb-supervision__block" v-animate-on-scroll>
             <h2 class="text-h2">Supervisión individual</h2>
             <p class="text-body">
               Sesión online de una hora, pensada para revisar uno o dos casos
@@ -94,7 +94,7 @@ onMounted(async () => {
             </p>
           </div>
 
-          <div class="kb-supervision__block">
+          <div class="kb-supervision__block" v-animate-on-scroll>
             <h2 class="text-h2">Áreas que trabajamos</h2>
             <div class="kb-pill-group">
               <router-link
@@ -108,7 +108,7 @@ onMounted(async () => {
             </div>
           </div>
 
-          <div class="kb-supervision__block">
+          <div class="kb-supervision__block" v-animate-on-scroll>
             <h2 class="text-h2">Cómo funciona</h2>
             <ol class="kb-steps">
               <li v-for="(step, index) in steps" :key="step.title" class="kb-steps__item">
@@ -204,6 +204,17 @@ onMounted(async () => {
 
 .kb-supervision__block {
   text-align: center;
+}
+
+.kb-supervision__block.kb-animate-onscroll {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 550ms var(--ease-base), transform 550ms var(--ease-base);
+}
+
+.kb-supervision__block.kb-animate-onscroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .kb-supervision__block h2 {

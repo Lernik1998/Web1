@@ -16,6 +16,7 @@
           :key="card.title"
           class="kb-card"
           v-animate-on-scroll
+          v-spotlight
           :style="{ transitionDelay: `${i * 100}ms` }"
         >
           <div class="kb-card__media">
@@ -26,7 +27,7 @@
             <h3 class="kb-card__title text-h3">{{ card.title }}</h3>
             <p class="kb-card__desc text-secondary">{{ card.description }}</p>
 
-            <router-link :to="card.href" class="kb-card__link text-cta">
+            <router-link :to="card.href" class="kb-card__link text-cta" v-ripple>
               {{ card.buttonText }}
             </router-link>
           </div>
