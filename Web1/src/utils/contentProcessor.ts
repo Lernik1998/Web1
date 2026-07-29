@@ -154,3 +154,14 @@ export const extractTextFromHtml = (html: string, maxLength = 160): string => {
   // Truncate if needed
   return text.length > maxLength ? text.substring(0, maxLength).trim() + '...' : text
 }
+
+/**
+ * Extract the first <img> src from a block of HTML. Se usa como imagen de
+ * respaldo para artículos del blog que no tienen imagen destacada asignada
+ * en WordPress, pero sí traen una imagen incrustada en el propio contenido.
+ */
+export const extractFirstImageUrl = (html: string): string | null => {
+  if (!html) return null
+  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i)
+  return match?.[1] ? makeAbsoluteUrl(match[1]) : null
+}

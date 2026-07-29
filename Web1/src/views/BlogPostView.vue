@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { fetchBlogPostBySlug } from '../services/dataService'
-import { processWordPressContent } from '../utils/contentProcessor'
+import { processWordPressContent, extractFirstImageUrl } from '../utils/contentProcessor'
 import { useInternalLinks } from '../composables/useInternalLinks'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import type { WordPressPost } from '../types/api'
@@ -21,8 +21,24 @@ const contentEl = ref<HTMLElement | null>(null)
 
 useInternalLinks(contentEl)
 
+const featuredMediaUrl = computed(
+  () => post.value?._embedded?.['wp:featuredmedia']?.[0]?.source_url ?? null,
+)
+
+// Si el artículo no tiene imagen destacada en WordPress, usamos la primera
+// imagen que traiga el propio contenido en vez del marcador de posición
+// genérico (para no mostrar, por ejemplo, la foto de María en todos los
+// artículos que no tengan destacada).
+const contentFallbackImageUrl = computed(() =>
+  post.value ? extractFirstImageUrl(post.value.content.rendered) : null,
+)
+
+const usingContentFallback = computed(
+  () => !featuredMediaUrl.value && !!contentFallbackImageUrl.value,
+)
+
 const imageUrl = computed(
-  () => post.value?._embedded?.['wp:featuredmedia']?.[0]?.source_url || '/images/psicologa-denia-hero.jpg',
+  () => featuredMediaUrl.value || contentFallbackImageUrl.value || '/images/psicologa-denia-hero.jpg',
 )
 
 const imageAlt = computed(
@@ -40,7 +56,16 @@ const formattedDate = computed(() => {
 
 const processedContent = computed(() => {
   if (!post.value) return ''
-  return processWordPressContent(post.value.content.rendered)
+  let html = post.value.content.rendered
+
+  // Si esa primera imagen se está usando como cabecera, la quitamos del
+  // cuerpo para que no salga duplicada.
+  if (usingContentFallback.value) {
+    const withoutFigure = html.replace(/<figure[^>]*>[\s\S]*?<\/figure>/, '')
+    html = withoutFigure !== html ? withoutFigure : html.replace(/<img[^>]+>/, '')
+  }
+
+  return processWordPressContent(html)
 })
 
 async function loadPost(slug: string) {

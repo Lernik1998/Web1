@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { extractTextFromHtml } from '../utils/contentProcessor'
+import { extractTextFromHtml, extractFirstImageUrl } from '../utils/contentProcessor'
 import type { WordPressPost } from '../types/api'
 
 const props = defineProps<{
@@ -8,7 +8,10 @@ const props = defineProps<{
 }>()
 
 const imageUrl = computed(
-  () => props.post._embedded?.['wp:featuredmedia']?.[0]?.source_url || '/images/psicologa-denia-hero.jpg',
+  () =>
+    props.post._embedded?.['wp:featuredmedia']?.[0]?.source_url ||
+    extractFirstImageUrl(props.post.content.rendered) ||
+    '/images/psicologa-denia-hero.jpg',
 )
 
 const imageAlt = computed(
