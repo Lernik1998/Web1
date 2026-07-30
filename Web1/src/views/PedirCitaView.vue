@@ -48,7 +48,7 @@ const weekdays = [
 const timeSlots = [
   { value: 'manana', label: 'Mañana', hint: '9:00 – 12:00' },
   { value: 'mediodia', label: 'Mediodía', hint: '12:00 – 15:00' },
-  { value: 'tarde', label: 'Tarde', hint: '15:00 – 21:00' },
+  { value: 'tarde', label: 'Tarde', hint: '15:00 – 20:00' },
 ]
 
 const howFoundOptions = [

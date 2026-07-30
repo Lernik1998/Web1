@@ -28,10 +28,6 @@
             <router-link to="/sobre-mi" class="kb-nav__link" @click="closeAll">Sobre Mí</router-link>
           </li>
 
-          <li class="kb-nav__item">
-            <router-link to="/equipo" class="kb-nav__link" @click="closeAll">Equipo</router-link>
-          </li>
-
           <li
             class="kb-nav__item kb-nav__item--dropdown"
             @mouseenter="openMenu('terapia')"
@@ -43,7 +39,7 @@
               :aria-expanded="activeMenu === 'terapia'"
               @click="toggleMenu('terapia')"
             >
-              Terapia Online
+              Terapias
               <ChevronIcon :class="['kb-chevron', { 'is-open': activeMenu === 'terapia' }]" />
             </button>
 
@@ -103,6 +99,10 @@
           </li>
 
           <li class="kb-nav__item">
+            <router-link to="/equipo" class="kb-nav__link" @click="closeAll">Equipo</router-link>
+          </li>
+
+          <li class="kb-nav__item">
             <router-link to="/para-psicologos" class="kb-nav__link" @click="closeAll">Para psicólogos</router-link>
           </li>
 
@@ -149,19 +149,19 @@ const ChevronIcon = defineComponent({
 })
 
 const terapiaItems = [
-  { label: 'Psicología infantil', href: '/terapia-online/infantil' },
-  { label: 'Psicología para adolescentes', href: '/terapia-online/adolescentes' },
+  { label: 'Psicología infantil', href: '/terapias/infantil' },
+  { label: 'Psicología para adolescentes', href: '/terapias/adolescentes' },
   {
     label: 'Psicología para adultos',
-    href: '/terapia-online/adultos',
+    href: '/terapias/adultos',
     children: [
-      { label: 'Ansiedad', href: '/terapia-online/adultos/ansiedad' },
-      { label: 'Depresión y estado de ánimo', href: '/terapia-online/adultos/depresion' },
-      { label: 'Autoestima y desarrollo personal', href: '/terapia-online/adultos/autoestima' },
-      { label: 'Duelo y pérdidas', href: '/terapia-online/adultos/duelo' },
+      { label: 'Ansiedad', href: '/terapias/adultos/ansiedad' },
+      { label: 'Depresión y estado de ánimo', href: '/terapias/adultos/depresion' },
+      { label: 'Autoestima y desarrollo personal', href: '/terapias/adultos/autoestima' },
+      { label: 'Duelo y pérdidas', href: '/terapias/adultos/duelo' },
     ],
   },
-  { label: 'Psicología para padres y familia', href: '/terapia-online/padres-familia' },
+  { label: 'Psicología para padres y familia', href: '/terapias/padres-familia' },
 ]
 
 const isScrolled = ref(false)

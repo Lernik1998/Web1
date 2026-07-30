@@ -19,13 +19,13 @@ const error = ref<string | null>(null)
  * es una decisión de navegación de esta SPA, así que se resuelve por texto.
  */
 const AREA_ROUTES: Record<string, string> = {
-  ansiedad: '/terapia-online/adultos/ansiedad',
-  'depresión y estado de ánimo': '/terapia-online/adultos/depresion',
-  'autoestima y desarrollo personal': '/terapia-online/adultos/autoestima',
-  'duelo y pérdidas': '/terapia-online/adultos/duelo',
-  'psicología infantil': '/terapia-online/infantil',
-  'psicología para adolescentes': '/terapia-online/adolescentes',
-  'padres y familia': '/terapia-online/padres-familia',
+  ansiedad: '/terapias/adultos/ansiedad',
+  'depresión y estado de ánimo': '/terapias/adultos/depresion',
+  'autoestima y desarrollo personal': '/terapias/adultos/autoestima',
+  'duelo y pérdidas': '/terapias/adultos/duelo',
+  'psicología infantil': '/terapias/infantil',
+  'psicología para adolescentes': '/terapias/adolescentes',
+  'padres y familia': '/terapias/padres-familia',
 }
 
 interface TextBlock {
@@ -81,7 +81,7 @@ function parseContent(html: string) {
     if (next.tagName === 'UL') {
       areas.value = Array.from(next.querySelectorAll('li')).map((li) => {
         const label = li.textContent?.replace(/\s+/g, ' ').trim() ?? ''
-        return { label, href: AREA_ROUTES[label.toLowerCase()] ?? '/terapia-online' }
+        return { label, href: AREA_ROUTES[label.toLowerCase()] ?? '/terapias' }
       })
     } else if (next.tagName === 'P') {
       blocks.push({ title, description: next.textContent?.trim() ?? '' })

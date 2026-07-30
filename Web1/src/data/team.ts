@@ -70,7 +70,7 @@ export const team: TeamMember[] = [
     imageScale: 1.4,
     imagePosition: 'center 30%',
     bio: [
-      'Acompaño a niños a partir de 6 años y adolescentes que atraviesan dificultades emocionales, conductuales o familiares, ofreciendo un espacio cercano y seguro donde puedan sentirse comprendidos y acompañados.',
+      'Acompaño a niños a partir de 4 años y adolescentes que atraviesan dificultades emocionales, conductuales o familiares, ofreciendo un espacio cercano y seguro donde puedan sentirse comprendidos y acompañados.',
       'Trabajo desde una mirada integrativa y sistémica, ayudando tanto a los menores como a sus familias a entender mejor lo que están viviendo, sus emociones y las distintas etapas del desarrollo. En terapia acompaño dificultades relacionadas con la gestión emocional, ansiedad, autoestima, inseguridad, relaciones sociales o conflictos familiares, adaptando siempre el proceso a las necesidades de cada niño, adolescente y familia.',
       'Mi objetivo es que tanto los menores como sus padres puedan sentirse escuchados, comprendidos y acompañados durante todo el proceso terapéutico.',
     ],

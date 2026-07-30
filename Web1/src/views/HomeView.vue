@@ -11,10 +11,10 @@ defineOptions({
 })
 
 const therapyHrefs = [
-  '/terapia-online/infantil',
-  '/terapia-online/adolescentes',
-  '/terapia-online/adultos',
-  '/terapia-online/padres-familia',
+  '/terapias/infantil',
+  '/terapias/adolescentes',
+  '/terapias/adultos',
+  '/terapias/padres-familia',
 ]
 
 const pageData = ref<WordPressHomePage | null>(null)

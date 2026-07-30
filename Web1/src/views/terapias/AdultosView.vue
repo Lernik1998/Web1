@@ -6,10 +6,10 @@ defineOptions({
 })
 
 const areas = [
-  { label: 'Ansiedad', href: '/terapia-online/adultos/ansiedad' },
-  { label: 'Depresión y estado de ánimo', href: '/terapia-online/adultos/depresion' },
-  { label: 'Autoestima y desarrollo personal', href: '/terapia-online/adultos/autoestima' },
-  { label: 'Duelo y pérdidas', href: '/terapia-online/adultos/duelo' },
+  { label: 'Ansiedad', href: '/terapias/adultos/ansiedad' },
+  { label: 'Depresión y estado de ánimo', href: '/terapias/adultos/depresion' },
+  { label: 'Autoestima y desarrollo personal', href: '/terapias/adultos/autoestima' },
+  { label: 'Duelo y pérdidas', href: '/terapias/adultos/duelo' },
 ]
 
 const beneficios = [
