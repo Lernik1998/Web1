@@ -2,8 +2,7 @@
   <header class="kb-header" :class="{ 'kb-header--scrolled': isScrolled }">
     <div class="kb-header__bar">
       <router-link to="/" class="kb-brand" @click="closeAll">
-        <span class="kb-brand__name">Kanbouri</span>
-        <span class="kb-brand__tag">Psicología</span>
+        <img src="/images/logo_kanbouri_2023.png" alt="Kanbouri Psicología" class="kb-brand__logo" />
       </router-link>
 
       <button
@@ -120,8 +119,12 @@
   </header>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, defineComponent, h } from 'vue'
+
+defineOptions({
+  name: 'TheHeader',
+})
 
 /**
  * Icono de flecha (trazo fino) dibujado a mano para no depender de
@@ -163,18 +166,18 @@ const terapiaItems = [
 
 const isScrolled = ref(false)
 const mobileOpen = ref(false)
-const activeMenu = ref(null)
-const activeSubmenu = ref(null)
+const activeMenu = ref<string | null>(null)
+const activeSubmenu = ref<string | null>(null)
 
-let closeTimer = null
-let subCloseTimer = null
+let closeTimer: ReturnType<typeof setTimeout> | undefined
+let subCloseTimer: ReturnType<typeof setTimeout> | undefined
 
-function openMenu(name) {
+function openMenu(name: string) {
   clearTimeout(closeTimer)
   activeMenu.value = name
 }
 
-function scheduleClose(name) {
+function scheduleClose(name: string) {
   clearTimeout(closeTimer)
   closeTimer = setTimeout(() => {
     if (activeMenu.value === name) {
@@ -188,12 +191,12 @@ function cancelClose() {
   clearTimeout(closeTimer)
 }
 
-function toggleMenu(name) {
+function toggleMenu(name: string) {
   activeMenu.value = activeMenu.value === name ? null : name
   if (activeMenu.value !== name) activeSubmenu.value = null
 }
 
-function openSubmenu(label) {
+function openSubmenu(label: string) {
   clearTimeout(subCloseTimer)
   activeSubmenu.value = label
 }
@@ -209,7 +212,7 @@ function cancelSubClose() {
   clearTimeout(subCloseTimer)
 }
 
-function toggleSubmenu(label) {
+function toggleSubmenu(label: string) {
   activeSubmenu.value = activeSubmenu.value === label ? null : label
 }
 
@@ -229,7 +232,7 @@ function handleScroll() {
   }
 }
 
-function handleKeydown(event) {
+function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') closeAll()
 }
 
@@ -274,28 +277,16 @@ onBeforeUnmount(() => {
 /* Marca */
 .kb-brand {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  align-items: center;
   text-decoration: none;
   color: var(--color-ink);
   white-space: nowrap;
 }
 
-.kb-brand__name {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--color-heading);
-}
-
-.kb-brand__tag {
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--color-rose-hover);
+.kb-brand__logo {
+  display: block;
+  height: 72px;
+  width: auto;
 }
 
 /* Navegación */

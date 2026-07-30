@@ -117,8 +117,6 @@ export const PAGE_SLUGS = {
   AVISO_LEGAL: 'aviso-legal',
   POLITICA_PRIVACIDAD: 'politica-privacidad',
   POLITICA_COOKIES: 'politica-de-cookies-ue',
-  QUIENES_SOMOS: 'quienes-somos',
-  NUESTRA_FILOSOFIA: 'nuestra-filosofia',
 } as const
 
 export type PageSlug = (typeof PAGE_SLUGS)[keyof typeof PAGE_SLUGS]

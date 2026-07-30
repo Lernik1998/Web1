@@ -9,14 +9,19 @@ defineOptions({
     <div class="footer-content">
       <div class="brand-section">
         <div class="footer-brand">
-          <span class="footer-brand__name">Kanbouri</span>
-          <span class="footer-brand__tag">Psicología</span>
+          <img src="/images/logo_kanbouri_2023.png" alt="Kanbouri Psicología" class="footer-brand__logo" />
         </div>
 
         <p class="footer-person text-secondary">María B. Kanbouri</p>
 
         <div class="social-icons">
-          <a href="#" aria-label="Facebook" class="social-link">
+          <a
+            href="https://www.facebook.com/Psicologakanbouri"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Facebook"
+            class="social-link"
+          >
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -29,7 +34,13 @@ defineOptions({
               <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />
             </svg>
           </a>
-          <a href="#" aria-label="Instagram" class="social-link">
+          <a
+            href="https://www.instagram.com/kanbouri_psicologia/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Instagram"
+            class="social-link"
+          >
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -112,8 +123,14 @@ defineOptions({
         </div>
       </div>
 
-      <div class="footer-map" aria-hidden="true">
-        <p class="footer-map__placeholder text-secondary">Mapa próximamente</p>
+      <div class="footer-map">
+        <iframe
+          class="footer-map__frame"
+          title="Ubicación de Kanbouri Psicología en Google Maps"
+          src="https://www.google.com/maps?q=C%2F%20Sant%20Josep%2031%2C%20D%C3%A9nia%20(Alicante)&output=embed"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+        ></iframe>
       </div>
     </div>
 
@@ -151,25 +168,13 @@ defineOptions({
 .footer-brand {
   display: flex;
   justify-content: center;
-  align-items: baseline;
-  gap: 8px;
   margin-bottom: 10px;
 }
 
-.footer-brand__name {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 20px;
-  color: var(--color-heading);
-  letter-spacing: -0.01em;
-}
-
-.footer-brand__tag {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--color-rose-hover);
+.footer-brand__logo {
+  display: block;
+  height: 88px;
+  width: auto;
 }
 
 .footer-person {
@@ -288,17 +293,19 @@ defineOptions({
 }
 
 .footer-map {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   min-height: 140px;
   background: var(--color-paper);
-  border: 1px dashed var(--color-line);
+  border: 1px solid var(--color-line);
   border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
-.footer-map__placeholder {
-  font-size: 13px;
+.footer-map__frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 140px;
+  border: 0;
 }
 
 /* ---------- Línea inferior ---------- */

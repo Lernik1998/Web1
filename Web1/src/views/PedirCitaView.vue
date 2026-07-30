@@ -63,19 +63,71 @@ const initialServicio = services.some((service) => service.value === route.query
   ? (route.query.servicio as string)
   : ''
 
-const form = reactive({
-  nombre: '',
-  apellidos: '',
-  email: '',
-  telefono: '',
-  servicio: initialServicio,
-  profesional: 'sin-preferencia',
-  dias: [] as string[],
-  horarios: [] as string[],
-  comoNosConociste: '',
-  mensaje: '',
-  privacidad: false,
+/**
+ * Recordamos lo que el cliente ya ha escrito mientras dura la pestaña: es
+ * habitual que entre a Pedir Cita, se vaya a mirar otra sección y vuelva, y
+ * no queremos que tenga que rellenar todo de nuevo.
+ */
+const STORAGE_KEY = 'kb-pedir-cita-form'
+
+type PedirCitaForm = {
+  nombre: string
+  apellidos: string
+  email: string
+  telefono: string
+  servicio: string
+  profesional: string
+  dias: string[]
+  horarios: string[]
+  comoNosConociste: string
+  mensaje: string
+  privacidad: boolean
+}
+
+function loadSavedForm(): Partial<PedirCitaForm> | null {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY)
+    return raw ? (JSON.parse(raw) as Partial<PedirCitaForm>) : null
+  } catch {
+    return null
+  }
+}
+
+const savedForm = loadSavedForm()
+
+const form = reactive<PedirCitaForm>({
+  nombre: savedForm?.nombre ?? '',
+  apellidos: savedForm?.apellidos ?? '',
+  email: savedForm?.email ?? '',
+  telefono: savedForm?.telefono ?? '',
+  servicio: savedForm?.servicio || initialServicio,
+  profesional: savedForm?.profesional ?? 'sin-preferencia',
+  dias: savedForm?.dias ?? [],
+  horarios: savedForm?.horarios ?? [],
+  comoNosConociste: savedForm?.comoNosConociste ?? '',
+  mensaje: savedForm?.mensaje ?? '',
+  privacidad: savedForm?.privacidad ?? false,
 })
+
+watch(
+  form,
+  (value) => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(value))
+    } catch {
+      // Almacenamiento no disponible (modo privado, cuota llena, etc.): no es crítico.
+    }
+  },
+  { deep: true },
+)
+
+function clearSavedForm() {
+  try {
+    sessionStorage.removeItem(STORAGE_KEY)
+  } catch {
+    // Ignorar si sessionStorage no está disponible.
+  }
+}
 
 const submitting = ref(false)
 const submitted = ref(false)
@@ -130,6 +182,7 @@ async function handleSubmit() {
     // TODO: conectar con el endpoint real de envío (WordPress) cuando esté disponible.
     await new Promise((resolve) => setTimeout(resolve, 500))
     submitted.value = true
+    clearSavedForm()
   } catch {
     errorMsg.value = 'No se ha podido enviar la solicitud. Inténtalo de nuevo en unos minutos.'
   } finally {

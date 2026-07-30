@@ -13,19 +13,12 @@ export const fetchPageBySlug = async (slug: PageSlug): Promise<WordPressPage[]> 
   return response.data
 }
 
-// Fetch WordPress page by slug with processed content (shortcodes rendered)
+// El endpoint personalizado `/wp-json/processed-content/v1/page/{slug}` no
+// existe en el WordPress real (siempre devuelve 404), así que se consulta
+// directamente la API estándar de páginas.
 export const fetchPageBySlugProcessed = async (slug: PageSlug): Promise<WordPressPage | null> => {
-  try {
-    const response = await apiClient.get<WordPressPage>(
-      `/wp-json/processed-content/v1/page/${slug}`,
-    )
-    return response.data
-  } catch (error) {
-    console.error('Error fetching processed content, falling back to standard API:', error)
-    // Fallback to standard API if processed endpoint is not available
-    const pages = await fetchPageBySlug(slug)
-    return pages.length > 0 ? (pages[0] ?? null) : null
-  }
+  const pages = await fetchPageBySlug(slug)
+  return pages.length > 0 ? (pages[0] ?? null) : null
 }
 
 export const fetchAvisoLegalPage = async (): Promise<WordPressPage | null> => {
@@ -38,14 +31,6 @@ export const fetchPoliticaPrivacidadPage = async (): Promise<WordPressPage | nul
 
 export const fetchPoliticaCookiesPage = async (): Promise<WordPressPage | null> => {
   return fetchPageBySlugProcessed('politica-de-cookies-ue')
-}
-
-export const fetchQuienesSomosPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('quienes-somos')
-}
-
-export const fetchNuestraFilosofiaPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('nuestra-filosofia')
 }
 
 export const fetchPedirCitaPage = async (): Promise<WordPressPage | null> => {

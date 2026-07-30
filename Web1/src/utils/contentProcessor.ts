@@ -111,7 +111,6 @@ const makeAbsoluteUrl = (url: string): string => {
   const cleanUrl = url.trim()
 
   // Handle URLs with query parameters (like ?id=380)
-  const hasQueryParams = cleanUrl.includes('?')
   const urlParts = cleanUrl.split('?')
   const baseUrl = urlParts[0] || ''
   const queryParams = urlParts.length > 1 ? `?${urlParts.slice(1).join('?')}` : ''

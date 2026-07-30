@@ -18,7 +18,9 @@
           </router-link>
           <a href="#terapias" class="kb-hero__link text-cta">
             Ver tipos de terapia
-            <ArrowIcon />
+            <span class="kb-hero__link-icon" aria-hidden="true">
+              <ArrowIcon />
+            </span>
           </a>
         </div>
       </div>
@@ -34,6 +36,10 @@
 <script setup lang="ts">
 import { computed, defineComponent, h } from 'vue'
 
+defineOptions({
+  name: 'HeroSection',
+})
+
 const props = defineProps<{
   title: string
   description: string
@@ -47,17 +53,17 @@ const descriptionParagraphs = computed(() =>
   props.description.split(/\r?\n\s*\r?\n/).filter(Boolean),
 )
 
-/** Flecha fina para el enlace secundario del hero. */
+/** Flecha para el badge circular del enlace secundario del hero. */
 const ArrowIcon = defineComponent({
   render() {
     return h(
       'svg',
-      { viewBox: '0 0 16 10', width: 16, height: 10, fill: 'none', 'aria-hidden': 'true' },
+      { viewBox: '0 0 14 14', width: 14, height: 14, fill: 'none', 'aria-hidden': 'true' },
       [
         h('path', {
-          d: 'M1 5H15M15 5L10.5 1M15 5L10.5 9',
+          d: 'M3 7H11M11 7L7.5 3.5M11 7L7.5 10.5',
           stroke: 'currentColor',
-          'stroke-width': 1.4,
+          'stroke-width': 1.8,
           'stroke-linecap': 'round',
           'stroke-linejoin': 'round',
         }),
@@ -160,31 +166,40 @@ const ArrowIcon = defineComponent({
 .kb-hero__link {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   color: var(--color-heading);
   text-decoration: none;
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid transparent;
   padding-bottom: 2px;
-  transition: border-color var(--dur-base) var(--ease-base), gap var(--dur-base) var(--ease-base),
-    color var(--dur-base) var(--ease-base);
+  transition: color var(--dur-base) var(--ease-base);
 }
 
-.kb-hero__link svg {
-  transition: transform var(--dur-base) var(--ease-base);
+.kb-hero__link-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-rose-soft-wash);
+  color: var(--color-rose-hover);
+  transition: background-color var(--dur-base) var(--ease-base),
+    color var(--dur-base) var(--ease-base), transform var(--dur-base) var(--ease-base);
 }
 
 .kb-hero__link:hover {
   color: var(--color-rose-hover);
-  border-color: var(--color-rose-hover);
-  gap: 10px;
 }
 
-.kb-hero__link:hover svg {
+.kb-hero__link:hover .kb-hero__link-icon {
+  background: var(--color-rose);
+  color: var(--color-on-rose);
   transform: translateX(3px);
 }
 
-.kb-hero__link:active {
-  color: var(--color-heading);
+.kb-hero__link:active .kb-hero__link-icon {
+  transform: translateX(1px) scale(0.95);
 }
 
 /* ---------- Columna de imagen ---------- */

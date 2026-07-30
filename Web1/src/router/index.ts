@@ -14,23 +14,6 @@ const router = createRouter({
       component: () => import('../views/HomeView.vue'),
     },
     {
-      path: '/sobre-nosotras',
-      name: 'sobre-nosotras',
-      redirect: '/sobre-nosotras/quienes-somos',
-      children: [
-        {
-          path: 'quienes-somos',
-          name: 'quienes-somos',
-          component: () => import('../views/sobre-nosotras/QuienesSomosView.vue'),
-        },
-        {
-          path: 'nuestra-filosofia',
-          name: 'nuestra-filosofia',
-          component: () => import('../views/sobre-nosotras/NuestraFilosofiaView.vue'),
-        },
-      ],
-    },
-    {
       path: '/sobre-mi',
       name: 'sobre-mi',
       component: () => import('../views/About/AboutView.vue'),
@@ -128,6 +111,11 @@ const router = createRouter({
       path: '/politica-cookies',
       name: 'politica-cookies',
       component: () => import('../views/legal/PoliticaCookiesView.vue'),
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('../views/NotFoundView.vue'),
     },
   ],
 })

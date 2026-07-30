@@ -84,8 +84,6 @@ export const parseVCShortcodes = (content: string): string => {
   processedContent = processedContent.replace(/\[vc_single_image([^\]]*)\]/gi, (match, attrs) => {
     const parsedAttrs = parseShortcodeAttrs(attrs)
     const image = parsedAttrs.image || ''
-    const imgSize = parsedAttrs.img_size || 'full'
-    const alignment = parsedAttrs.alignment || 'center'
 
     if (image) {
       // Try to get image URL from ID (this would need API call, for now use placeholder)
