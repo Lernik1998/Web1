@@ -4,6 +4,8 @@ import { fetchHomePage, fetchMediaById } from '../services/dataService'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import Hero from '../components/Hero.vue'
 import TherapyCards from '../components/TherapyCards.vue'
+import GoogleReviews from '../components/GoogleReviews.vue'
+import Collaborations from '../components/Collaborations.vue'
 import type { WordPressHomePage } from '../types/api'
 
 defineOptions({
@@ -105,6 +107,8 @@ onMounted(async () => {
     <template v-else-if="heroProps">
       <Hero v-bind="heroProps" />
       <TherapyCards :cards="therapyCards" />
+      <Collaborations />
+      <GoogleReviews />
     </template>
 
     <div v-else class="state-box no-data">

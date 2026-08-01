@@ -98,6 +98,13 @@ export const processWordPressContent = (html: string): string => {
     },
   )
 
+  // Envolver tablas en un contenedor con scroll horizontal: en móvil una
+  // tabla ancha desbordaría la página en vez de solo desplazarse.
+  processedHtml = processedHtml.replace(
+    /<table([^>]*)>([\s\S]*?)<\/table>/gi,
+    (match) => `<div class="kb-table-wrap">${match}</div>`,
+  )
+
   return processedHtml
 }
 

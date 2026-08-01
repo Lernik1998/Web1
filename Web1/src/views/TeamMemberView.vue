@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { team } from '../data/team'
+import { ref, onMounted, computed } from 'vue'
+import { fetchTeamPage } from '../services/dataService'
+import { parseTeamContent } from '../utils/teamParser'
+import { getTeamPhoto } from '../data/teamPhotos'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
 
 defineOptions({
   name: 'TeamMemberView',
@@ -10,7 +13,35 @@ const props = defineProps<{
   slug: string
 }>()
 
-const member = computed(() => team.find((m) => m.slug === props.slug) ?? null)
+const loading = ref(true)
+const error = ref<string | null>(null)
+const members = ref<ReturnType<typeof parseTeamContent>>([])
+
+const member = computed(() => members.value.find((m) => m.slug === props.slug) ?? null)
+const photo = computed(() => (member.value ? getTeamPhoto(member.value.slug) : null))
+const initials = computed(() =>
+  member.value
+    ? member.value.name
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0])
+        .join('')
+        .toUpperCase()
+    : '',
+)
+
+onMounted(async () => {
+  try {
+    const page = await fetchTeamPage()
+    members.value = page ? parseTeamContent(page.content.rendered) : []
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Error desconocido'
+    console.error('Error fetching team page:', err)
+  } finally {
+    loading.value = false
+  }
+})
 </script>
 
 <template>
@@ -18,24 +49,32 @@ const member = computed(() => team.find((m) => m.slug === props.slug) ?? null)
     <div class="kb-profile__inner">
       <router-link to="/equipo" class="kb-profile__back text-secondary">← Volver al equipo</router-link>
 
-      <template v-if="member">
+      <LoadingSpinner v-if="loading" message="Cargando..." />
+
+      <div v-else-if="error" class="kb-profile__error">
+        <p>Error: {{ error }}</p>
+        <p class="text-secondary">Verifica que la API esté accesible.</p>
+      </div>
+
+      <template v-else-if="member">
         <div class="kb-profile__header kb-profile__animate" style="animation-delay: 0ms">
           <div class="kb-profile__media">
             <img
-              :src="member.image"
+              v-if="photo"
+              :src="photo.image"
               :alt="member.name"
               class="kb-profile__image"
               :style="{
-                '--img-scale': member.imageScale ?? 1,
-                objectPosition: member.imagePosition,
+                '--img-scale': photo.imageScale ?? 1,
+                objectPosition: photo.imagePosition,
               }"
             />
+            <div v-else class="kb-profile__placeholder" aria-hidden="true">{{ initials }}</div>
           </div>
 
           <div class="kb-profile__intro">
             <h1 class="kb-profile__name text-h1">{{ member.name }}</h1>
-            <p class="kb-profile__role text-secondary">{{ member.role }}</p>
-            <p class="kb-profile__collegiate text-secondary">{{ member.collegiate }}</p>
+            <p v-if="member.role" class="kb-profile__role text-secondary">{{ member.role }}</p>
 
             <router-link to="/pedir-cita" class="kb-profile__cta text-cta">
               Pedir cita
@@ -44,20 +83,20 @@ const member = computed(() => team.find((m) => m.slug === props.slug) ?? null)
         </div>
 
         <div class="kb-profile__card kb-profile__animate" style="animation-delay: 160ms">
-          <div class="kb-profile__block">
+          <div v-if="member.bio.length" class="kb-profile__block">
             <p v-for="(paragraph, index) in member.bio" :key="index" class="text-body">
               {{ paragraph }}
             </p>
           </div>
 
-          <div class="kb-profile__block">
+          <div v-if="member.formacionAcademica.length" class="kb-profile__block">
             <h2 class="text-h2">Formación académica</h2>
             <ul class="kb-profile__list">
               <li v-for="(item, index) in member.formacionAcademica" :key="index">{{ item }}</li>
             </ul>
           </div>
 
-          <div class="kb-profile__block">
+          <div v-if="member.formacionExtra.length" class="kb-profile__block">
             <h2 class="text-h2">Formación extracurricular</h2>
             <ul class="kb-profile__list">
               <li v-for="(item, index) in member.formacionExtra" :key="index">{{ item }}</li>
@@ -139,15 +178,24 @@ const member = computed(() => team.find((m) => m.slug === props.slug) ?? null)
   transform: scale(var(--img-scale, 1));
 }
 
+.kb-profile__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  background: var(--color-rose-soft-wash);
+  color: var(--color-rose-hover);
+  font-family: var(--font-display);
+  font-size: 56px;
+  font-weight: 600;
+}
+
 .kb-profile__name {
   margin-bottom: 8px;
 }
 
 .kb-profile__role {
-  margin-bottom: 2px;
-}
-
-.kb-profile__collegiate {
   margin-bottom: 20px;
 }
 
@@ -181,13 +229,18 @@ const member = computed(() => team.find((m) => m.slug === props.slug) ?? null)
   gap: clamp(28px, 4vw, 40px);
 }
 
+.kb-profile__block {
+  text-align: center;
+}
+
 .kb-profile__block h2 {
   margin-bottom: 12px;
 }
 
 .kb-profile__block p {
+  max-width: 56ch;
+  margin: 0 auto 14px;
   line-height: 1.65;
-  margin-bottom: 14px;
 }
 
 .kb-profile__block p:last-child {
@@ -195,12 +248,32 @@ const member = computed(() => team.find((m) => m.slug === props.slug) ?? null)
 }
 
 .kb-profile__list {
-  list-style: disc;
-  padding-left: 1.3em;
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 46ch;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
   line-height: 1.55;
+}
+
+.kb-profile__list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+}
+
+.kb-profile__list li::before {
+  content: '';
+  flex-shrink: 0;
+  margin-top: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-rose);
 }
 
 .kb-profile__final {

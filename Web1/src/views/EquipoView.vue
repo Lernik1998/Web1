@@ -1,8 +1,42 @@
 <script setup lang="ts">
-import { team } from '../data/team'
+import { ref, onMounted, computed } from 'vue'
+import { fetchTeamPage } from '../services/dataService'
+import { parseTeamContent } from '../utils/teamParser'
+import { getTeamPhoto } from '../data/teamPhotos'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
 
 defineOptions({
   name: 'EquipoView',
+})
+
+const loading = ref(true)
+const error = ref<string | null>(null)
+const members = ref<ReturnType<typeof parseTeamContent>>([])
+
+const cards = computed(() =>
+  members.value.map((member) => ({
+    ...member,
+    photo: getTeamPhoto(member.slug),
+    initials: member.name
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase(),
+  })),
+)
+
+onMounted(async () => {
+  try {
+    const page = await fetchTeamPage()
+    members.value = page ? parseTeamContent(page.content.rendered) : []
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Error desconocido'
+    console.error('Error fetching team page:', err)
+  } finally {
+    loading.value = false
+  }
 })
 </script>
 
@@ -16,9 +50,16 @@ defineOptions({
       </p>
     </div>
 
-    <div class="kb-team__grid">
+    <LoadingSpinner v-if="loading" message="Cargando equipo..." />
+
+    <div v-else-if="error" class="kb-team__error">
+      <p>Error: {{ error }}</p>
+      <p class="text-secondary">Verifica que la API esté accesible.</p>
+    </div>
+
+    <div v-else class="kb-team__grid">
       <article
-        v-for="(member, i) in team"
+        v-for="(member, i) in cards"
         :key="member.slug"
         class="kb-team-card"
         v-animate-on-scroll
@@ -27,14 +68,18 @@ defineOptions({
       >
         <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__media">
           <img
-            :src="member.image"
+            v-if="member.photo"
+            :src="member.photo.image"
             :alt="member.name"
             class="kb-team-card__image"
             :style="{
-              '--img-scale': member.imageScale ?? 1,
-              objectPosition: member.imagePosition,
+              '--img-scale': member.photo.imageScale ?? 1,
+              objectPosition: member.photo.imagePosition,
             }"
           />
+          <div v-else class="kb-team-card__placeholder" aria-hidden="true">
+            {{ member.initials }}
+          </div>
         </router-link>
         <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__name-link">
           <h3 class="kb-team-card__name text-h3">{{ member.name }}</h3>
@@ -69,12 +114,24 @@ defineOptions({
   color: var(--color-ink);
 }
 
+.kb-team__error {
+  max-width: 640px;
+  margin: 0 auto;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-left: 3px solid #d32f2f;
+  border-radius: var(--radius-md);
+  padding: 24px 28px;
+  color: #b23c3c;
+  text-align: center;
+}
+
 .kb-team__grid {
-  max-width: var(--content-max-width);
+  max-width: 1500px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 32px;
 }
 
 .kb-team-card {
@@ -134,6 +191,19 @@ defineOptions({
   transform: scale(calc(var(--img-scale, 1) * 1.05));
 }
 
+.kb-team-card__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: var(--color-rose-soft-wash);
+  color: var(--color-rose-hover);
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 600;
+}
+
 .kb-team-card__name-link {
   text-decoration: none;
 }
@@ -177,7 +247,7 @@ defineOptions({
 }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 860px) {
+@media (max-width: 1080px) {
   .kb-team__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

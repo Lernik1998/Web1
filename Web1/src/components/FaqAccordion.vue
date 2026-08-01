@@ -88,19 +88,21 @@ function toggle(index: number) {
 }
 
 .kb-faq__answer-wrapper {
-  max-height: 0;
+  display: grid;
+  grid-template-rows: 0fr;
   opacity: 0;
-  overflow: hidden;
   background: var(--color-paper);
-  transition: max-height 320ms var(--ease-base), opacity 240ms var(--ease-base);
+  transition: grid-template-rows 320ms var(--ease-base), opacity 240ms var(--ease-base);
 }
 
 .kb-faq__answer-wrapper.is-open {
-  max-height: 240px;
+  grid-template-rows: 1fr;
   opacity: 1;
 }
 
 .kb-faq__answer {
+  min-height: 0;
+  overflow: hidden;
   padding: 0 18px 16px;
   color: var(--color-ink);
   line-height: 1.6;

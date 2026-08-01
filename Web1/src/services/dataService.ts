@@ -4,6 +4,7 @@ import type {
   WordPressPost,
   WordPressMedia,
   WordPressHomePage,
+  GoogleReview,
   PageSlug,
 } from '../types/api'
 
@@ -62,6 +63,10 @@ export const fetchForPsicologosPage = async (): Promise<WordPressPage | null> =>
   return fetchPageBySlugProcessed('for-psychologists')
 }
 
+export const fetchTeamPage = async (): Promise<WordPressPage | null> => {
+  return fetchPageBySlugProcessed('team')
+}
+
 // Artículos del blog (WordPress posts, no páginas). `_embed` trae la imagen
 // destacada y las categorías ya resueltas para no hacer peticiones extra.
 export const fetchBlogPosts = async (page = 1, perPage = 9): Promise<WordPressPost[]> => {
@@ -74,4 +79,10 @@ export const fetchBlogPosts = async (page = 1, perPage = 9): Promise<WordPressPo
 export const fetchBlogPostBySlug = async (slug: string): Promise<WordPressPost | null> => {
   const response = await apiClient.get<WordPressPost[]>(`/wp-json/wp/v2/posts?slug=${slug}&_embed`)
   return response.data.length > 0 ? (response.data[0] ?? null) : null
+}
+
+// Reseñas de Google (endpoint propio del WordPress, no la API estándar).
+export const fetchGoogleReviews = async (): Promise<GoogleReview[]> => {
+  const response = await apiClient.get<GoogleReview[]>('/wp-json/kanbouri/v1/reviews')
+  return response.data
 }

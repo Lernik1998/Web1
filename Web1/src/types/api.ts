@@ -108,11 +108,24 @@ export interface WordPressPost extends WordPressPage {
   }
 }
 
+// Reseñas de Google, expuestas por un endpoint propio del WordPress
+// (wp-json/kanbouri/v1/reviews), no por la API estándar de WP.
+export interface GoogleReview {
+  id: string
+  user: string
+  user_photo: string
+  rating: string
+  text: string
+  reply: string
+  date: string
+}
+
 // Page slug constants
 export const PAGE_SLUGS = {
   HOME: 'home',
   ABOUT_ME: 'about-me',
   FOR_PSICOLOGOS: 'for-psychologists',
+  TEAM: 'team',
   PEDIR_CITA: 'pedircita',
   AVISO_LEGAL: 'aviso-legal',
   POLITICA_PRIVACIDAD: 'politica-privacidad',

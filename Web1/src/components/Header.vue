@@ -43,59 +43,59 @@
               <ChevronIcon :class="['kb-chevron', { 'is-open': activeMenu === 'terapia' }]" />
             </button>
 
-            <transition name="kb-fade">
-              <div
-                v-if="activeMenu === 'terapia'"
-                class="kb-dropdown"
-                @mouseenter="cancelClose"
-                @mouseleave="scheduleClose('terapia')"
-              >
-                <ul class="kb-dropdown__list">
-                  <li
-                    v-for="item in terapiaItems"
-                    :key="item.label"
-                    class="kb-dropdown__item"
-                    :class="{ 'has-submenu': item.children }"
-                    @mouseenter="item.children && openSubmenu(item.label)"
-                    @mouseleave="item.children && scheduleCloseSubmenu()"
+            <div
+              class="kb-dropdown"
+              :class="{ 'is-open': activeMenu === 'terapia' }"
+              :inert="activeMenu !== 'terapia'"
+              @mouseenter="cancelClose"
+              @mouseleave="scheduleClose('terapia')"
+            >
+              <ul class="kb-dropdown__list">
+                <li
+                  v-for="item in terapiaItems"
+                  :key="item.label"
+                  class="kb-dropdown__item"
+                  :class="{ 'has-submenu': item.children }"
+                  @mouseenter="item.children && openSubmenu(item.label)"
+                  @mouseleave="item.children && scheduleCloseSubmenu()"
+                >
+                  <router-link
+                    v-if="!item.children"
+                    :to="item.href"
+                    class="kb-dropdown__link"
+                    @click="closeAll"
                   >
-                    <router-link
-                      v-if="!item.children"
-                      :to="item.href"
-                      class="kb-dropdown__link"
-                      @click="closeAll"
+                    {{ item.label }}
+                  </router-link>
+
+                  <template v-else>
+                    <button
+                      type="button"
+                      class="kb-dropdown__link kb-dropdown__link--trigger"
+                      :aria-expanded="activeSubmenu === item.label"
+                      @click="toggleSubmenu(item.label)"
                     >
                       {{ item.label }}
-                    </router-link>
+                      <ChevronIcon :class="['kb-chevron', 'kb-chevron--nested', { 'is-open': activeSubmenu === item.label }]" />
+                    </button>
 
-                    <template v-else>
-                      <button
-                        type="button"
-                        class="kb-dropdown__link kb-dropdown__link--trigger"
-                        :aria-expanded="activeSubmenu === item.label"
-                        @click="toggleSubmenu(item.label)"
-                      >
-                        {{ item.label }}
-                        <ChevronIcon :class="['kb-chevron', 'kb-chevron--nested', { 'is-open': activeSubmenu === item.label }]" />
-                      </button>
-
-                      <transition name="kb-fade">
-                        <ul
-                          v-if="activeSubmenu === item.label"
-                          class="kb-submenu"
-                          @mouseenter="cancelSubClose"
-                          @mouseleave="scheduleCloseSubmenu"
-                        >
-                          <li v-for="sub in item.children" :key="sub.label" class="kb-submenu__item">
-                            <router-link :to="sub.href" class="kb-submenu__link" @click="closeAll">{{ sub.label }}</router-link>
-                          </li>
-                        </ul>
-                      </transition>
-                    </template>
-                  </li>
-                </ul>
-              </div>
-            </transition>
+                    <div
+                      class="kb-submenu-wrap"
+                      :class="{ 'is-open': activeSubmenu === item.label }"
+                      :inert="activeSubmenu !== item.label"
+                      @mouseenter="cancelSubClose"
+                      @mouseleave="scheduleCloseSubmenu"
+                    >
+                      <ul class="kb-submenu">
+                        <li v-for="sub in item.children" :key="sub.label" class="kb-submenu__item">
+                          <router-link :to="sub.href" class="kb-submenu__link" @click="closeAll">{{ sub.label }}</router-link>
+                        </li>
+                      </ul>
+                    </div>
+                  </template>
+                </li>
+              </ul>
+            </div>
           </li>
 
           <li class="kb-nav__item">
@@ -169,10 +169,26 @@ const mobileOpen = ref(false)
 const activeMenu = ref<string | null>(null)
 const activeSubmenu = ref<string | null>(null)
 
+// En el menú móvil (acordeón, mismo punto de corte que el CSS) el
+// desplegable solo debe abrirse/cerrarse con el toque en el botón. Si
+// además reacciona al "hover" (mouseenter/mouseleave de la fila), un
+// tap dispara antes el mouseenter que lo abre, y el propio click del
+// toggle lo cierra a continuación: el menú parecía no abrirse a la
+// primera. Comprobamos el ancho real (no si el dispositivo "tiene
+// hover", porque un ratón sobre una ventana estrecha también lo tiene)
+// para desactivar el hover exactamente cuando el CSS pasa al acordeón.
+const MOBILE_BREAKPOINT = 960
+const isDesktopNav = ref(true)
+
+function updateIsDesktopNav() {
+  isDesktopNav.value = window.innerWidth > MOBILE_BREAKPOINT
+}
+
 let closeTimer: ReturnType<typeof setTimeout> | undefined
 let subCloseTimer: ReturnType<typeof setTimeout> | undefined
 
 function openMenu(name: string) {
+  if (!isDesktopNav.value) return
   clearTimeout(closeTimer)
   activeMenu.value = name
 }
@@ -197,6 +213,7 @@ function toggleMenu(name: string) {
 }
 
 function openSubmenu(label: string) {
+  if (!isDesktopNav.value) return
   clearTimeout(subCloseTimer)
   activeSubmenu.value = label
 }
@@ -237,14 +254,17 @@ function handleKeydown(event: KeyboardEvent) {
 }
 
 onMounted(() => {
+  updateIsDesktopNav()
   window.addEventListener('scroll', handleScroll, { passive: true })
   window.addEventListener('keydown', handleKeydown)
+  window.addEventListener('resize', updateIsDesktopNav)
   handleScroll()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', handleScroll)
   window.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('resize', updateIsDesktopNav)
 })
 </script>
 
@@ -393,7 +413,6 @@ onBeforeUnmount(() => {
   position: absolute;
   top: calc(100% + 14px);
   left: 50%;
-  transform: translateX(-50%);
   min-width: 300px;
   background: var(--color-paper);
   border: 1px solid var(--color-line);
@@ -401,6 +420,21 @@ onBeforeUnmount(() => {
   box-shadow: var(--shadow-popover);
   padding: 10px;
   z-index: 10;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(-6px);
+  transition: opacity 220ms var(--ease-base), transform 220ms var(--ease-base),
+    visibility 0s linear 220ms;
+}
+
+.kb-dropdown.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+  transition: opacity 220ms var(--ease-base), transform 220ms var(--ease-base),
+    visibility 0s linear;
 }
 
 .kb-dropdown__list {
@@ -445,10 +479,28 @@ onBeforeUnmount(() => {
 }
 
 /* Submenú (nivel 2) — "Psicología para adultos" */
-.kb-submenu {
+.kb-submenu-wrap {
   position: absolute;
   top: -10px;
   left: calc(100% + 10px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity 220ms var(--ease-base), transform 220ms var(--ease-base),
+    visibility 0s linear 220ms;
+}
+
+.kb-submenu-wrap.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition: opacity 220ms var(--ease-base), transform 220ms var(--ease-base),
+    visibility 0s linear;
+}
+
+.kb-submenu {
   min-width: 260px;
   list-style: none;
   margin: 0;
@@ -472,18 +524,6 @@ onBeforeUnmount(() => {
 
 .kb-submenu__link:hover {
   background: var(--color-rose-soft-wash);
-}
-
-/* Transición de apertura */
-.kb-fade-enter-active,
-.kb-fade-leave-active {
-  transition: opacity 220ms var(--ease-base), transform 220ms var(--ease-base);
-}
-
-.kb-fade-enter-from,
-.kb-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-6px);
 }
 
 /* Botón hamburguesa (móvil) */
@@ -588,20 +628,48 @@ onBeforeUnmount(() => {
     font-size: 15px;
   }
 
+  /* En móvil el desplegable no es un popover flotante, sino un acordeón
+     que empuja el resto del menú: se anima con grid-template-rows para
+     que la apertura/cierre se note bien (en vez del simple fundido usado
+     en el popover de escritorio). */
   .kb-dropdown,
-  .kb-submenu {
+  .kb-submenu-wrap {
     position: static;
     transform: none;
     width: 100%;
     min-width: 0;
+    padding: 0;
     box-shadow: none;
     border: none;
     border-radius: 0;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 320ms var(--ease-base);
+  }
+
+  .kb-dropdown.is-open,
+  .kb-submenu-wrap.is-open {
+    grid-template-rows: 1fr;
+  }
+
+  .kb-dropdown__list,
+  .kb-submenu {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .kb-dropdown__list {
     padding: 0 0 8px 12px;
   }
 
   .kb-submenu {
-    padding-left: 20px;
+    min-width: 0;
+    padding: 0 0 8px 20px;
+    background: none;
+    border-radius: 0;
   }
 
   .kb-cta {
