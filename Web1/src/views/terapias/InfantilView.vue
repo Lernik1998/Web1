@@ -1,24 +1,32 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { fetchChildPsychologyPage } from '../../services/dataService'
+import { parseTherapyContent } from '../../utils/therapyParser'
+import type { ParsedTherapyContent } from '../../utils/therapyParser'
 import FaqAccordion from '../../components/FaqAccordion.vue'
+import LoadingSpinner from '../../components/LoadingSpinner.vue'
 
 defineOptions({
   name: 'InfantilView',
 })
 
-const cuandoAyuda = [
-  'Rabietas o dificultad para gestionar la frustración',
-  'Cambios de conducta en casa o en el colegio',
-  'Miedos, ansiedad o problemas de sueño',
-  'Cambios importantes: hermanos, mudanzas, separación',
-  'Duelo infantil',
-]
+const loading = ref(true)
+const content = ref<ParsedTherapyContent | null>(null)
+const title = ref('Psicología infantil')
 
-const beneficios = [
-  'Aprende a identificar y expresar lo que siente',
-  'Gana herramientas para gestionar la frustración',
-  'Mejora la relación con la familia y el entorno',
-  'Recupera la confianza y la seguridad en sí mismo/a',
-]
+onMounted(async () => {
+  try {
+    const page = await fetchChildPsychologyPage()
+    if (page) {
+      title.value = page.title.rendered
+      content.value = parseTherapyContent(page.content.rendered)
+    }
+  } catch (err) {
+    console.error('Error fetching child psychology page:', err)
+  } finally {
+    loading.value = false
+  }
+})
 
 const faqs = [
   {
@@ -41,56 +49,45 @@ const faqs = [
 
 <template>
   <section class="kb-therapy">
-    <div class="kb-therapy__header">
-      <h1 class="kb-therapy__title text-h1">Psicología infantil</h1>
-      <p class="kb-therapy__lead text-body">
-        Un espacio pensado para que los más pequeños de la casa aprendan a
-        entender y expresar lo que sienten, a través del juego, el dibujo y
-        la palabra.
-      </p>
-    </div>
+    <LoadingSpinner v-if="loading" message="Cargando..." />
 
-    <div class="kb-therapy__card">
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">¿Cuándo puede ayudar la terapia?</h2>
-        <ul class="kb-therapy__list">
-          <li v-for="item in cuandoAyuda" :key="item">{{ item }}</li>
-        </ul>
+    <template v-else>
+      <div class="kb-therapy__header">
+        <h1 class="kb-therapy__title text-h1">{{ title }}</h1>
+        <p v-if="content?.intro" class="kb-therapy__lead text-body">{{ content.intro }}</p>
       </div>
 
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">Cómo trabajamos</h2>
-        <p class="text-body">
-          Trabajamos a través del juego y el lenguaje propio de cada edad,
-          creando un espacio seguro donde el niño o la niña pueda expresarse
-          con libertad. Cuando es necesario, implicamos también a la familia
-          para acompañar el proceso desde casa.
-        </p>
-      </div>
+      <div class="kb-therapy__card">
+        <div
+          v-for="block in content?.blocks"
+          :key="block.title"
+          class="kb-therapy__block"
+          v-animate-on-scroll
+        >
+          <h2 class="text-h2">{{ block.title }}</h2>
+          <ul v-if="block.type === 'list'" class="kb-therapy__list">
+            <li v-for="item in block.items" :key="item">{{ item }}</li>
+          </ul>
+          <p v-else class="text-body">{{ block.text }}</p>
+        </div>
 
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">Qué te llevas del proceso</h2>
-        <ul class="kb-therapy__list">
-          <li v-for="item in beneficios" :key="item">{{ item }}</li>
-        </ul>
-      </div>
-
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">Preguntas frecuentes</h2>
-        <div class="kb-therapy__faq">
-          <FaqAccordion :items="faqs" />
+        <div class="kb-therapy__block" v-animate-on-scroll>
+          <h2 class="text-h2">Preguntas frecuentes</h2>
+          <div class="kb-therapy__faq">
+            <FaqAccordion :items="faqs" />
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="kb-therapy__final">
-      <router-link
-        :to="{ path: '/pedir-cita', query: { servicio: 'infantil' } }"
-        class="kb-therapy__cta text-cta"
-      >
-        Pedir cita
-      </router-link>
-    </div>
+      <div class="kb-therapy__final">
+        <router-link
+          :to="{ path: '/pedir-cita', query: { servicio: 'infantil' } }"
+          class="kb-therapy__cta text-cta"
+        >
+          Pedir cita
+        </router-link>
+      </div>
+    </template>
   </section>
 </template>
 

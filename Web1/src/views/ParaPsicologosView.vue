@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { fetchForPsicologosPage } from '../services/dataService'
 import { processWordPressContent } from '../utils/contentProcessor'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
+import NewsletterSignup from '../components/NewsletterSignup.vue'
 import type { WordPressPage } from '../types/api'
 
 defineOptions({
@@ -193,6 +194,10 @@ const title = computed(() => pageData.value?.title.rendered ?? '')
                 <p class="kb-steps__desc text-secondary" v-html="step.description"></p>
               </li>
             </ol>
+          </div>
+
+          <div class="kb-supervision__block" v-animate-on-scroll>
+            <NewsletterSignup />
           </div>
         </div>
 

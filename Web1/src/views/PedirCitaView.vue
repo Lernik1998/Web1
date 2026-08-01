@@ -2,6 +2,7 @@
 import { reactive, ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchPedirCitaPage } from '../services/dataService'
+import type { WordPressPage } from '../types/api'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 
 const route = useRoute()
@@ -11,10 +12,11 @@ defineOptions({
 })
 
 const pageLoading = ref(true)
+const pageData = ref<WordPressPage | null>(null)
 
 onMounted(async () => {
   try {
-    await fetchPedirCitaPage()
+    pageData.value = await fetchPedirCitaPage()
   } catch (err) {
     console.error('Error fetching pedir cita:', err)
   } finally {
@@ -88,6 +90,7 @@ type PedirCitaForm = {
   comoNosConociste: string
   mensaje: string
   privacidad: boolean
+  contacto: boolean
 }
 
 function loadSavedForm(): Partial<PedirCitaForm> | null {
@@ -114,6 +117,7 @@ const form = reactive<PedirCitaForm>({
   comoNosConociste: savedForm?.comoNosConociste ?? '',
   mensaje: savedForm?.mensaje ?? '',
   privacidad: savedForm?.privacidad ?? false,
+  contacto: savedForm?.contacto ?? false,
 })
 
 watch(
@@ -174,6 +178,7 @@ const modalidadInvalid = computed(() => attempted.value && !form.modalidad)
 const diasInvalid = computed(() => attempted.value && !form.dia)
 const horariosInvalid = computed(() => attempted.value && !form.horario)
 const privacidadInvalid = computed(() => attempted.value && !form.privacidad)
+const contactoInvalid = computed(() => attempted.value && !form.contacto)
 
 const hasErrors = computed(
   () =>
@@ -185,7 +190,8 @@ const hasErrors = computed(
     modalidadInvalid.value ||
     diasInvalid.value ||
     horariosInvalid.value ||
-    privacidadInvalid.value,
+    privacidadInvalid.value ||
+    contactoInvalid.value,
 )
 
 async function handleSubmit() {
@@ -217,8 +223,15 @@ async function handleSubmit() {
 
     <template v-else>
     <div class="kb-appointment__header">
-      <h1 class="kb-appointment__title text-h1">Reserva tu primera sesión</h1>
-      <p class="kb-appointment__lead text-body">
+      <h1 class="kb-appointment__title text-h1">
+        {{ pageData?.title.rendered || 'Reserva tu primera sesión' }}
+      </h1>
+      <div
+        v-if="pageData?.content.rendered"
+        class="kb-appointment__lead text-body"
+        v-html="pageData.content.rendered"
+      ></div>
+      <p v-else class="kb-appointment__lead text-body">
         Cuéntanos un poco sobre ti y tu disponibilidad. Te contactaremos para
         confirmar el día y la hora que mejor os encajen.
       </p>
@@ -245,6 +258,7 @@ async function handleSubmit() {
                 v-model="form.nombre"
                 type="text"
                 name="nombre"
+                placeholder="Ana"
                 required
                 :class="{ 'is-invalid': nombreInvalid }"
               />
@@ -257,6 +271,7 @@ async function handleSubmit() {
                 v-model="form.apellidos"
                 type="text"
                 name="apellidos"
+                placeholder="García López"
                 required
                 :class="{ 'is-invalid': apellidosInvalid }"
               />
@@ -271,6 +286,7 @@ async function handleSubmit() {
                 v-model="form.email"
                 type="email"
                 name="email"
+                placeholder="ana@ejemplo.com"
                 required
                 :class="{ 'is-invalid': emailInvalid }"
               />
@@ -283,6 +299,7 @@ async function handleSubmit() {
                 v-model="form.telefono"
                 type="tel"
                 name="telefono"
+                placeholder="600 000 000"
                 required
                 :class="{ 'is-invalid': telefonoInvalid }"
               />
@@ -449,6 +466,7 @@ async function handleSubmit() {
               v-model="form.mensaje"
               name="mensaje"
               rows="4"
+              placeholder="Cuéntanos qué te preocupa o qué te ha llevado a buscar ayuda psicológica."
               :maxlength="MENSAJE_MAX_LENGTH"
             ></textarea>
             <span class="kb-field-count text-secondary">
@@ -468,11 +486,28 @@ async function handleSubmit() {
           />
           <span class="text-secondary">
             He leído y acepto la
-            <router-link to="/politica-privacidad">política de privacidad</router-link>.
+            <router-link to="/politica-privacidad">Política de Privacidad</router-link>.
           </span>
         </label>
         <span v-if="privacidadInvalid" class="kb-field-error">
           Debes aceptar la política de privacidad para continuar.
+        </span>
+
+        <label class="kb-checkbox">
+          <input
+            v-model="form.contacto"
+            type="checkbox"
+            name="contacto"
+            required
+            :class="{ 'is-invalid': contactoInvalid }"
+          />
+          <span class="text-secondary">
+            Acepto que el centro pueda contactar conmigo por teléfono o correo
+            electrónico para gestionar mi solicitud de cita.
+          </span>
+        </label>
+        <span v-if="contactoInvalid" class="kb-field-error">
+          Debes aceptar el contacto para gestionar tu solicitud.
         </span>
 
         <p v-if="errorMsg" class="kb-appointment__error">{{ errorMsg }}</p>

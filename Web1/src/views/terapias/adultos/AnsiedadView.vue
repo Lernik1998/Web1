@@ -1,24 +1,32 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { fetchAdultAnxietyPage } from '../../../services/dataService'
+import { parseTherapyContent } from '../../../utils/therapyParser'
+import type { ParsedTherapyContent } from '../../../utils/therapyParser'
 import FaqAccordion from '../../../components/FaqAccordion.vue'
+import LoadingSpinner from '../../../components/LoadingSpinner.vue'
 
 defineOptions({
   name: 'AnsiedadView',
 })
 
-const cuandoAyuda = [
-  'Preocupación constante o pensamientos que no paran',
-  'Síntomas físicos: tensión, insomnio, taquicardia',
-  'Crisis de ansiedad o ataques de pánico',
-  'Evitación de situaciones o lugares por miedo',
-  'Sensación de estar siempre alerta o «al límite»',
-]
+const loading = ref(true)
+const content = ref<ParsedTherapyContent | null>(null)
+const title = ref('Ansiedad')
 
-const beneficios = [
-  'Comprender qué mantiene tu ansiedad',
-  'Herramientas de regulación para el día a día',
-  'Reducir la evitación y recuperar tu rutina',
-  'Sentir más control sobre lo que te pasa',
-]
+onMounted(async () => {
+  try {
+    const page = await fetchAdultAnxietyPage()
+    if (page) {
+      title.value = page.title.rendered
+      content.value = parseTherapyContent(page.content.rendered)
+    }
+  } catch (err) {
+    console.error('Error fetching adult anxiety page:', err)
+  } finally {
+    loading.value = false
+  }
+})
 
 const faqs = [
   {
@@ -41,55 +49,45 @@ const faqs = [
 
 <template>
   <section class="kb-therapy">
-    <div class="kb-therapy__header">
-      <h1 class="kb-therapy__title text-h1">Ansiedad</h1>
-      <p class="kb-therapy__lead text-body">
-        Si la ansiedad te acompaña más de lo que te gustaría, en terapia
-        podemos aprender a comprenderla y a que deje de controlar tu día a
-        día.
-      </p>
-    </div>
+    <LoadingSpinner v-if="loading" message="Cargando..." />
 
-    <div class="kb-therapy__card">
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">¿Cuándo puede ayudar la terapia?</h2>
-        <ul class="kb-therapy__list">
-          <li v-for="item in cuandoAyuda" :key="item">{{ item }}</li>
-        </ul>
+    <template v-else>
+      <div class="kb-therapy__header">
+        <h1 class="kb-therapy__title text-h1">{{ title }}</h1>
+        <p v-if="content?.intro" class="kb-therapy__lead text-body">{{ content.intro }}</p>
       </div>
 
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">Cómo trabajamos</h2>
-        <p class="text-body">
-          Trabajamos para entender qué mantiene la ansiedad y aprender
-          herramientas de regulación emocional que puedas llevarte a tu día a
-          día, siempre a tu ritmo y sin prisas.
-        </p>
-      </div>
+      <div class="kb-therapy__card">
+        <div
+          v-for="block in content?.blocks"
+          :key="block.title"
+          class="kb-therapy__block"
+          v-animate-on-scroll
+        >
+          <h2 class="text-h2">{{ block.title }}</h2>
+          <ul v-if="block.type === 'list'" class="kb-therapy__list">
+            <li v-for="item in block.items" :key="item">{{ item }}</li>
+          </ul>
+          <p v-else class="text-body">{{ block.text }}</p>
+        </div>
 
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">Qué te llevas del proceso</h2>
-        <ul class="kb-therapy__list">
-          <li v-for="item in beneficios" :key="item">{{ item }}</li>
-        </ul>
-      </div>
-
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">Preguntas frecuentes</h2>
-        <div class="kb-therapy__faq">
-          <FaqAccordion :items="faqs" />
+        <div class="kb-therapy__block" v-animate-on-scroll>
+          <h2 class="text-h2">Preguntas frecuentes</h2>
+          <div class="kb-therapy__faq">
+            <FaqAccordion :items="faqs" />
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="kb-therapy__final">
-      <router-link
-        :to="{ path: '/pedir-cita', query: { servicio: 'adultos' } }"
-        class="kb-therapy__cta text-cta"
-      >
-        Pedir cita
-      </router-link>
-    </div>
+      <div class="kb-therapy__final">
+        <router-link
+          :to="{ path: '/pedir-cita', query: { servicio: 'adultos' } }"
+          class="kb-therapy__cta text-cta"
+        >
+          Pedir cita
+        </router-link>
+      </div>
+    </template>
   </section>
 </template>
 

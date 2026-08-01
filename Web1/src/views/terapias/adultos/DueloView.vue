@@ -1,24 +1,32 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { fetchAdultGriefPage } from '../../../services/dataService'
+import { parseTherapyContent } from '../../../utils/therapyParser'
+import type { ParsedTherapyContent } from '../../../utils/therapyParser'
 import FaqAccordion from '../../../components/FaqAccordion.vue'
+import LoadingSpinner from '../../../components/LoadingSpinner.vue'
 
 defineOptions({
   name: 'DueloView',
 })
 
-const cuandoAyuda = [
-  'Pérdida de un ser querido',
-  'Duelos no reconocidos: rupturas, mudanzas, pérdida de salud',
-  'Sensación de bloqueo o de no poder «pasar página»',
-  'Culpa, rabia o tristeza que no encuentran espacio',
-  'Necesidad de acompañamiento en el proceso, a tu ritmo',
-]
+const loading = ref(true)
+const content = ref<ParsedTherapyContent | null>(null)
+const title = ref('Duelo y pérdidas')
 
-const beneficios = [
-  'Un espacio para procesar la pérdida a tu ritmo',
-  'Herramientas para integrar lo vivido',
-  'Acompañamiento sin prisas ni plazos',
-  'Recuperar poco a poco tu día a día',
-]
+onMounted(async () => {
+  try {
+    const page = await fetchAdultGriefPage()
+    if (page) {
+      title.value = page.title.rendered
+      content.value = parseTherapyContent(page.content.rendered)
+    }
+  } catch (err) {
+    console.error('Error fetching adult grief page:', err)
+  } finally {
+    loading.value = false
+  }
+})
 
 const faqs = [
   {
@@ -40,54 +48,45 @@ const faqs = [
 
 <template>
   <section class="kb-therapy">
-    <div class="kb-therapy__header">
-      <h1 class="kb-therapy__title text-h1">Duelo y pérdidas</h1>
-      <p class="kb-therapy__lead text-body">
-        Un espacio para acompañarte en el proceso de duelo, sea cual sea la
-        pérdida, respetando siempre tu propio ritmo.
-      </p>
-    </div>
+    <LoadingSpinner v-if="loading" message="Cargando..." />
 
-    <div class="kb-therapy__card">
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">¿Cuándo puede ayudar la terapia?</h2>
-        <ul class="kb-therapy__list">
-          <li v-for="item in cuandoAyuda" :key="item">{{ item }}</li>
-        </ul>
+    <template v-else>
+      <div class="kb-therapy__header">
+        <h1 class="kb-therapy__title text-h1">{{ title }}</h1>
+        <p v-if="content?.intro" class="kb-therapy__lead text-body">{{ content.intro }}</p>
       </div>
 
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">Cómo trabajamos</h2>
-        <p class="text-body">
-          Acompañamos el proceso de duelo desde el respeto y la escucha,
-          ofreciendo un espacio donde poder sostener lo que sientes sin
-          prisas, con herramientas que te ayuden a integrarlo poco a poco.
-        </p>
-      </div>
+      <div class="kb-therapy__card">
+        <div
+          v-for="block in content?.blocks"
+          :key="block.title"
+          class="kb-therapy__block"
+          v-animate-on-scroll
+        >
+          <h2 class="text-h2">{{ block.title }}</h2>
+          <ul v-if="block.type === 'list'" class="kb-therapy__list">
+            <li v-for="item in block.items" :key="item">{{ item }}</li>
+          </ul>
+          <p v-else class="text-body">{{ block.text }}</p>
+        </div>
 
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">Qué te llevas del proceso</h2>
-        <ul class="kb-therapy__list">
-          <li v-for="item in beneficios" :key="item">{{ item }}</li>
-        </ul>
-      </div>
-
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">Preguntas frecuentes</h2>
-        <div class="kb-therapy__faq">
-          <FaqAccordion :items="faqs" />
+        <div class="kb-therapy__block" v-animate-on-scroll>
+          <h2 class="text-h2">Preguntas frecuentes</h2>
+          <div class="kb-therapy__faq">
+            <FaqAccordion :items="faqs" />
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="kb-therapy__final">
-      <router-link
-        :to="{ path: '/pedir-cita', query: { servicio: 'adultos' } }"
-        class="kb-therapy__cta text-cta"
-      >
-        Pedir cita
-      </router-link>
-    </div>
+      <div class="kb-therapy__final">
+        <router-link
+          :to="{ path: '/pedir-cita', query: { servicio: 'adultos' } }"
+          class="kb-therapy__cta text-cta"
+        >
+          Pedir cita
+        </router-link>
+      </div>
+    </template>
   </section>
 </template>
 

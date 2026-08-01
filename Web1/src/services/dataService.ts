@@ -35,7 +35,7 @@ export const fetchPoliticaCookiesPage = async (): Promise<WordPressPage | null> 
 }
 
 export const fetchPedirCitaPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('pedircita')
+  return fetchPageBySlugProcessed('form-appointment')
 }
 
 export const fetchHomePage = async (): Promise<WordPressHomePage | null> => {
@@ -65,6 +65,34 @@ export const fetchForPsicologosPage = async (): Promise<WordPressPage | null> =>
 
 export const fetchTeamPage = async (): Promise<WordPressPage | null> => {
   return fetchPageBySlugProcessed('team')
+}
+
+export const fetchChildPsychologyPage = async (): Promise<WordPressPage | null> => {
+  return fetchPageBySlugProcessed('child-psychology')
+}
+
+export const fetchAdolescentPsychologyPage = async (): Promise<WordPressPage | null> => {
+  return fetchPageBySlugProcessed('psychology-for-adolescents')
+}
+
+export const fetchAdultAnxietyPage = async (): Promise<WordPressPage | null> => {
+  return fetchPageBySlugProcessed('adult-anxiety')
+}
+
+export const fetchAdultDepressionPage = async (): Promise<WordPressPage | null> => {
+  return fetchPageBySlugProcessed('adult-depression')
+}
+
+export const fetchAdultSelfEsteemPage = async (): Promise<WordPressPage | null> => {
+  return fetchPageBySlugProcessed('adult-self-esteem')
+}
+
+export const fetchAdultGriefPage = async (): Promise<WordPressPage | null> => {
+  return fetchPageBySlugProcessed('adult-grief')
+}
+
+export const fetchPsychologyParentsPage = async (): Promise<WordPressPage | null> => {
+  return fetchPageBySlugProcessed('psychology-parents')
 }
 
 // Artículos del blog (WordPress posts, no páginas). `_embed` trae la imagen

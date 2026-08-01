@@ -1,24 +1,32 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { fetchAdultSelfEsteemPage } from '../../../services/dataService'
+import { parseTherapyContent } from '../../../utils/therapyParser'
+import type { ParsedTherapyContent } from '../../../utils/therapyParser'
 import FaqAccordion from '../../../components/FaqAccordion.vue'
+import LoadingSpinner from '../../../components/LoadingSpinner.vue'
 
 defineOptions({
   name: 'AutoestimaView',
 })
 
-const cuandoAyuda = [
-  'Autocrítica constante o sensación de «no ser suficiente»',
-  'Dificultad para poner límites o decir que no',
-  'Comparación continua con los demás',
-  'Inseguridad en las relaciones o en el trabajo',
-  'Necesidad de aprobación externa constante',
-]
+const loading = ref(true)
+const content = ref<ParsedTherapyContent | null>(null)
+const title = ref('Autoestima y desarrollo personal')
 
-const beneficios = [
-  'Una relación más amable contigo mismo/a',
-  'Herramientas para poner límites',
-  'Menos dependencia de la validación externa',
-  'Más seguridad en tus decisiones',
-]
+onMounted(async () => {
+  try {
+    const page = await fetchAdultSelfEsteemPage()
+    if (page) {
+      title.value = page.title.rendered
+      content.value = parseTherapyContent(page.content.rendered)
+    }
+  } catch (err) {
+    console.error('Error fetching adult self-esteem page:', err)
+  } finally {
+    loading.value = false
+  }
+})
 
 const faqs = [
   {
@@ -40,54 +48,45 @@ const faqs = [
 
 <template>
   <section class="kb-therapy">
-    <div class="kb-therapy__header">
-      <h1 class="kb-therapy__title text-h1">Autoestima y desarrollo personal</h1>
-      <p class="kb-therapy__lead text-body">
-        Un espacio para trabajar la relación contigo mismo/a: cómo te hablas,
-        cómo te tratas y cómo te posicionas frente a los demás.
-      </p>
-    </div>
+    <LoadingSpinner v-if="loading" message="Cargando..." />
 
-    <div class="kb-therapy__card">
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">¿Cuándo puede ayudar la terapia?</h2>
-        <ul class="kb-therapy__list">
-          <li v-for="item in cuandoAyuda" :key="item">{{ item }}</li>
-        </ul>
+    <template v-else>
+      <div class="kb-therapy__header">
+        <h1 class="kb-therapy__title text-h1">{{ title }}</h1>
+        <p v-if="content?.intro" class="kb-therapy__lead text-body">{{ content.intro }}</p>
       </div>
 
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">Cómo trabajamos</h2>
-        <p class="text-body">
-          Trabajamos para identificar y transformar esa voz interna crítica,
-          reconociendo tu valor y construyendo, paso a paso, una relación más
-          amable contigo mismo/a.
-        </p>
-      </div>
+      <div class="kb-therapy__card">
+        <div
+          v-for="block in content?.blocks"
+          :key="block.title"
+          class="kb-therapy__block"
+          v-animate-on-scroll
+        >
+          <h2 class="text-h2">{{ block.title }}</h2>
+          <ul v-if="block.type === 'list'" class="kb-therapy__list">
+            <li v-for="item in block.items" :key="item">{{ item }}</li>
+          </ul>
+          <p v-else class="text-body">{{ block.text }}</p>
+        </div>
 
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">Qué te llevas del proceso</h2>
-        <ul class="kb-therapy__list">
-          <li v-for="item in beneficios" :key="item">{{ item }}</li>
-        </ul>
-      </div>
-
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">Preguntas frecuentes</h2>
-        <div class="kb-therapy__faq">
-          <FaqAccordion :items="faqs" />
+        <div class="kb-therapy__block" v-animate-on-scroll>
+          <h2 class="text-h2">Preguntas frecuentes</h2>
+          <div class="kb-therapy__faq">
+            <FaqAccordion :items="faqs" />
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="kb-therapy__final">
-      <router-link
-        :to="{ path: '/pedir-cita', query: { servicio: 'adultos' } }"
-        class="kb-therapy__cta text-cta"
-      >
-        Pedir cita
-      </router-link>
-    </div>
+      <div class="kb-therapy__final">
+        <router-link
+          :to="{ path: '/pedir-cita', query: { servicio: 'adultos' } }"
+          class="kb-therapy__cta text-cta"
+        >
+          Pedir cita
+        </router-link>
+      </div>
+    </template>
   </section>
 </template>
 

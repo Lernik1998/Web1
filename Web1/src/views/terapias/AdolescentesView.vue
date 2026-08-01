@@ -1,25 +1,32 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { fetchAdolescentPsychologyPage } from '../../services/dataService'
+import { parseTherapyContent } from '../../utils/therapyParser'
+import type { ParsedTherapyContent } from '../../utils/therapyParser'
 import FaqAccordion from '../../components/FaqAccordion.vue'
+import LoadingSpinner from '../../components/LoadingSpinner.vue'
 
 defineOptions({
   name: 'AdolescentesView',
 })
 
-const cuandoAyuda = [
-  'Cambios de humor o irritabilidad frecuente',
-  'Ansiedad, baja autoestima o inseguridad',
-  'Conflictos familiares o con el grupo de amigos',
-  'Dificultades académicas o de motivación',
-  'Uso de redes sociales y pantallas',
-  'Búsqueda de identidad y autoconocimiento',
-]
+const loading = ref(true)
+const content = ref<ParsedTherapyContent | null>(null)
+const title = ref('Psicología para adolescentes')
 
-const beneficios = [
-  'Un espacio propio, confidencial y sin juicio',
-  'Herramientas para gestionar emociones intensas',
-  'Mejora en la comunicación familiar',
-  'Más seguridad para tomar sus propias decisiones',
-]
+onMounted(async () => {
+  try {
+    const page = await fetchAdolescentPsychologyPage()
+    if (page) {
+      title.value = page.title.rendered
+      content.value = parseTherapyContent(page.content.rendered)
+    }
+  } catch (err) {
+    console.error('Error fetching adolescent psychology page:', err)
+  } finally {
+    loading.value = false
+  }
+})
 
 const faqs = [
   {
@@ -41,55 +48,45 @@ const faqs = [
 
 <template>
   <section class="kb-therapy">
-    <div class="kb-therapy__header">
-      <h1 class="kb-therapy__title text-h1">Psicología para adolescentes</h1>
-      <p class="kb-therapy__lead text-body">
-        Un espacio de escucha y confianza para adolescentes que están
-        construyendo su identidad, sus relaciones y su forma de estar en el
-        mundo.
-      </p>
-    </div>
+    <LoadingSpinner v-if="loading" message="Cargando..." />
 
-    <div class="kb-therapy__card">
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">¿Cuándo puede ayudar la terapia?</h2>
-        <ul class="kb-therapy__list">
-          <li v-for="item in cuandoAyuda" :key="item">{{ item }}</li>
-        </ul>
+    <template v-else>
+      <div class="kb-therapy__header">
+        <h1 class="kb-therapy__title text-h1">{{ title }}</h1>
+        <p v-if="content?.intro" class="kb-therapy__lead text-body">{{ content.intro }}</p>
       </div>
 
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">Cómo trabajamos</h2>
-        <p class="text-body">
-          Ofrecemos un espacio confidencial y sin juicio, adaptado al ritmo
-          de cada adolescente, donde puedan hablar con libertad de lo que les
-          preocupa y encontrar herramientas propias para gestionarlo.
-        </p>
-      </div>
+      <div class="kb-therapy__card">
+        <div
+          v-for="block in content?.blocks"
+          :key="block.title"
+          class="kb-therapy__block"
+          v-animate-on-scroll
+        >
+          <h2 class="text-h2">{{ block.title }}</h2>
+          <ul v-if="block.type === 'list'" class="kb-therapy__list">
+            <li v-for="item in block.items" :key="item">{{ item }}</li>
+          </ul>
+          <p v-else class="text-body">{{ block.text }}</p>
+        </div>
 
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">Qué te llevas del proceso</h2>
-        <ul class="kb-therapy__list">
-          <li v-for="item in beneficios" :key="item">{{ item }}</li>
-        </ul>
-      </div>
-
-      <div class="kb-therapy__block" v-animate-on-scroll>
-        <h2 class="text-h2">Preguntas frecuentes</h2>
-        <div class="kb-therapy__faq">
-          <FaqAccordion :items="faqs" />
+        <div class="kb-therapy__block" v-animate-on-scroll>
+          <h2 class="text-h2">Preguntas frecuentes</h2>
+          <div class="kb-therapy__faq">
+            <FaqAccordion :items="faqs" />
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="kb-therapy__final">
-      <router-link
-        :to="{ path: '/pedir-cita', query: { servicio: 'adolescentes' } }"
-        class="kb-therapy__cta text-cta"
-      >
-        Pedir cita
-      </router-link>
-    </div>
+      <div class="kb-therapy__final">
+        <router-link
+          :to="{ path: '/pedir-cita', query: { servicio: 'adolescentes' } }"
+          class="kb-therapy__cta text-cta"
+        >
+          Pedir cita
+        </router-link>
+      </div>
+    </template>
   </section>
 </template>
 
