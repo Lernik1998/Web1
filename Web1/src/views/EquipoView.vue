@@ -84,7 +84,6 @@ onMounted(async () => {
         <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__name-link">
           <h3 class="kb-team-card__name text-h3">{{ member.name }}</h3>
         </router-link>
-        <p class="kb-team-card__role text-secondary">Psicóloga</p>
 
         <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__link text-cta" v-ripple>
           Más sobre {{ member.name.split(' ')[0] }}
@@ -211,19 +210,17 @@ onMounted(async () => {
 .kb-team-card__name {
   margin: 14px 0 2px;
   transition: color var(--dur-base) var(--ease-base);
+  margin-top:20px
 }
 
 .kb-team-card__name-link:hover .kb-team-card__name {
   color: var(--color-rose-hover);
 }
 
-.kb-team-card__role {
-  margin-bottom: 14px;
-}
-
 .kb-team-card__link {
   display: inline-flex;
   align-items: center;
+  margin-top:10px;
   margin-bottom: 18px;
   padding: 11px 24px;
   border-radius: var(--radius-pill);
