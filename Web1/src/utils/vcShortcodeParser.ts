@@ -14,7 +14,9 @@ export const parseVCShortcodes = (content: string): string => {
   let processedContent = content
 
   // Parse vc_row
-  processedContent = processedContent.replace(/\[vc_row([^\]]*)\]/gi, (match, attrs) => {
+  // (negative lookahead: "[vc_row_inner ...]" must be left for the vc_row_inner
+  // rule below, otherwise this broader regex greedily swallows it first.)
+  processedContent = processedContent.replace(/\[vc_row(?!_inner)([^\]]*)\]/gi, (match, attrs) => {
     const parsedAttrs = parseShortcodeAttrs(attrs)
     const style = buildStyleFromAttrs(parsedAttrs)
     return `<div class="vc-row" style="${style}">`
@@ -23,7 +25,9 @@ export const parseVCShortcodes = (content: string): string => {
   processedContent = processedContent.replace(/\[\/vc_row\]/gi, '</div>')
 
   // Parse vc_column
-  processedContent = processedContent.replace(/\[vc_column([^\]]*)\]/gi, (match, attrs) => {
+  // (negative lookahead: leave "[vc_column_inner ...]" and "[vc_column_text ...]"
+  // for their own more specific rules below/above, same reasoning as vc_row.)
+  processedContent = processedContent.replace(/\[vc_column(?!_inner|_text)([^\]]*)\]/gi, (match, attrs) => {
     const parsedAttrs = parseShortcodeAttrs(attrs)
     const style = buildStyleFromAttrs(parsedAttrs)
     return `<div class="vc-column" style="${style}">`
@@ -59,8 +63,8 @@ export const parseVCShortcodes = (content: string): string => {
 
       // Extract background image from CSS and add as img tag for visibility
       let enhancedContent = content
-      if (attrs.css && attrs.css.includes('background-image')) {
-        const bgMatch = attrs.css.match(/background-image:\s*url\(['"]?([^'")]+)['"]?\)/i)
+      if (parsedAttrs.css && parsedAttrs.css.includes('background-image')) {
+        const bgMatch = parsedAttrs.css.match(/background-image:\s*url\(['"]?([^'")]+)['"]?\)/i)
         if (bgMatch && bgMatch[1]) {
           const imageUrl = makeAbsoluteUrl(bgMatch[1])
           enhancedContent =

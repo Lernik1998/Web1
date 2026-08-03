@@ -8,7 +8,7 @@ import { spotlight } from './directives/spotlight'
 import { ripple } from './directives/ripple'
 
 import './styles/tokens.css'
-import './utils/typography.css'
+import './styles/typography.css'
 import './styles/global.css'
 
 const app = createApp(App)
