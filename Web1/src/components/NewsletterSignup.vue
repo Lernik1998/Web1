@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref, computed } from 'vue'
+import { subscribeToNewsletter } from '../services/dataService'
 
 withDefaults(
   defineProps<{
@@ -45,8 +46,7 @@ async function handleSubmit() {
 
   submitting.value = true
   try {
-    // TODO: conectar con el endpoint real de newsletter (WordPress) cuando esté disponible.
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    await subscribeToNewsletter(form.nombre, form.email)
     submitted.value = true
   } catch {
     errorMsg.value = 'No se ha podido enviar la solicitud. Inténtalo de nuevo en unos minutos.'

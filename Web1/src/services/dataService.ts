@@ -114,3 +114,8 @@ export const fetchGoogleReviews = async (): Promise<GoogleReview[]> => {
   const response = await apiClient.get<GoogleReview[]>('/wp-json/kanbouri/v1/reviews')
   return response.data
 }
+
+// Alta en la newsletter de "Para Psicólogos" (endpoint propio del WordPress).
+export const subscribeToNewsletter = async (name: string, email: string): Promise<void> => {
+  await apiClient.post('/wp-json/kanbouri/v1/appointment', {name, email })
+}
