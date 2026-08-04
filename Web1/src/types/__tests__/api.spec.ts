@@ -7,7 +7,6 @@ describe('PAGE_SLUGS', () => {
       HOME: 'home',
       ABOUT_ME: 'about-me',
       FOR_PSICOLOGOS: 'for-psychologists',
-      TEAM: 'team',
       CHILD_PSYCHOLOGY: 'child-psychology',
       ADOLESCENT_PSYCHOLOGY: 'psychology-for-adolescents',
       ADULT_ANXIETY: 'adult-anxiety',

@@ -205,6 +205,7 @@ onMounted(async () => {
 .kb-about__list li {
   break-inside: avoid;
   margin-bottom: 10px;
+  overflow-wrap: anywhere;
 }
 
 .kb-about__list li::marker {

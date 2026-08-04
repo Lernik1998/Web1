@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { fetchTeamPage } from '../services/dataService'
-import { parseTeamContent } from '../utils/teamParser'
-import { getTeamPhoto } from '../data/teamPhotos'
+import { fetchProfesionales, fetchMediaById } from '../services/dataService'
+import type { ProfesionalPost } from '../types/api'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 
 defineOptions({
@@ -11,29 +10,60 @@ defineOptions({
 
 const loading = ref(true)
 const error = ref<string | null>(null)
-const members = ref<ReturnType<typeof parseTeamContent>>([])
+const professionals = ref<ProfesionalPost[]>([])
+// `hero_image` es un ID de la biblioteca de medios, no la imagen destacada
+// del post (que estas fichas no usan), así que hay que resolverlo aparte.
+const photoUrls = ref<Record<number, string>>({})
+
+// María B. Kanbouri (directora del centro) va siempre primera; el resto, por
+// orden alfabético. WordPress por defecto las devuelve por fecha de creación,
+// que no es un orden que tenga sentido de cara al usuario.
+const FIRST_SLUG = 'maria-b-kanbouri'
+
+const sortedProfessionals = computed(() =>
+  [...professionals.value].sort((a, b) => {
+    if (a.slug === FIRST_SLUG) return -1
+    if (b.slug === FIRST_SLUG) return 1
+    return a.title.rendered.localeCompare(b.title.rendered, 'es')
+  }),
+)
 
 const cards = computed(() =>
-  members.value.map((member) => ({
-    ...member,
-    photo: getTeamPhoto(member.slug),
-    initials: member.name
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0])
-      .join('')
-      .toUpperCase(),
-  })),
+  sortedProfessionals.value.map((post) => {
+    const name = post.title.rendered
+    const apiPhoto = photoUrls.value[post.acf.hero_image] ?? null
+    return {
+      slug: post.slug,
+      name,
+      photo: apiPhoto ? { image: apiPhoto } : null,
+      initials: name
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0])
+        .join('')
+        .toUpperCase(),
+    }
+  }),
 )
 
 onMounted(async () => {
   try {
-    const page = await fetchTeamPage()
-    members.value = page ? parseTeamContent(page.content.rendered) : []
+    professionals.value = await fetchProfesionales()
+
+    const mediaIds = [...new Set(professionals.value.map((post) => post.acf.hero_image))].filter(
+      Boolean,
+    )
+    const mediaResults = await Promise.all(mediaIds.map((id) => fetchMediaById(id)))
+    const urlMap: Record<number, string> = {}
+    mediaResults.forEach((media, index) => {
+      const id = mediaIds[index]
+      if (id && media?.source_url) urlMap[id] = media.source_url
+    })
+    photoUrls.value = urlMap
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Error desconocido'
-    console.error('Error fetching team page:', err)
+    console.error('Error fetching profesionales:', err)
   } finally {
     loading.value = false
   }
@@ -72,10 +102,6 @@ onMounted(async () => {
             :src="member.photo.image"
             :alt="member.name"
             class="kb-team-card__image"
-            :style="{
-              '--img-scale': member.photo.imageScale ?? 1,
-              objectPosition: member.photo.imagePosition,
-            }"
           />
           <div v-else class="kb-team-card__placeholder" aria-hidden="true">
             {{ member.initials }}

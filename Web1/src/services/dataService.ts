@@ -4,9 +4,28 @@ import type {
   WordPressPost,
   WordPressMedia,
   WordPressHomePage,
+  ProfesionalPost,
   GoogleReview,
   PageSlug,
 } from '../types/api'
+
+// Listado y ficha individual de las profesionales (custom post type
+// "profesional", un post por persona, no una página de WordPress). El
+// contenido real (rol, biografía, formación) vive en los campos ACF, no en
+// `content.rendered` (que WordPress deja vacío para este tipo de post).
+export const fetchProfesionales = async (): Promise<ProfesionalPost[]> => {
+  const response = await apiClient.get<ProfesionalPost[]>(
+    '/wp-json/wp/v2/profesional?_embed&per_page=100',
+  )
+  return response.data
+}
+
+export const fetchProfesionalBySlug = async (slug: string): Promise<ProfesionalPost | null> => {
+  const response = await apiClient.get<ProfesionalPost[]>(
+    `/wp-json/wp/v2/profesional?slug=${slug}&_embed`,
+  )
+  return response.data.length > 0 ? (response.data[0] ?? null) : null
+}
 
 // Fetch WordPress page by slug
 export const fetchPageBySlug = async (slug: PageSlug): Promise<WordPressPage[]> => {
@@ -61,10 +80,6 @@ export const fetchAboutMePage = async (): Promise<WordPressPage | null> => {
 
 export const fetchForPsicologosPage = async (): Promise<WordPressPage | null> => {
   return fetchPageBySlugProcessed('for-psychologists')
-}
-
-export const fetchTeamPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('team')
 }
 
 export const fetchChildPsychologyPage = async (): Promise<WordPressPage | null> => {

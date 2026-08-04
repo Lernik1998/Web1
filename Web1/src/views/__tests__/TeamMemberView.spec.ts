@@ -2,22 +2,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import TeamMemberView from '../TeamMemberView.vue'
 import router from '../../router'
-import type { WordPressPage } from '../../types/api'
+import type { ProfesionalPost, WordPressMedia } from '../../types/api'
 
-const { fetchTeamPageMock } = vi.hoisted(() => ({
-  fetchTeamPageMock: vi.fn<() => Promise<WordPressPage | null>>(),
+const { fetchProfesionalBySlugMock, fetchMediaByIdMock } = vi.hoisted(() => ({
+  fetchProfesionalBySlugMock: vi.fn<() => Promise<ProfesionalPost | null>>(),
+  fetchMediaByIdMock: vi.fn<() => Promise<WordPressMedia | null>>(),
 }))
 
 vi.mock('../../services/dataService', () => ({
-  fetchTeamPage: fetchTeamPageMock,
+  fetchProfesionalBySlug: fetchProfesionalBySlugMock,
+  fetchMediaById: fetchMediaByIdMock,
 }))
 
-const TEAM_HTML =
-  '<p><strong>Ana García</strong></p><p><strong>Psicóloga Infantil</strong></p>' +
-  '<p>Bio paragraph one.</p><p>Formación académica</p><ul><li>Grado en Psicología</li></ul>' +
-  '<p>Formación extracurricular</p><ul><li>Curso de terapia infantil</li></ul>'
-
-function makePage(html: string): WordPressPage {
+function makePost(overrides: Partial<ProfesionalPost> = {}): ProfesionalPost {
   return {
     id: 1,
     date: '',
@@ -25,12 +22,12 @@ function makePage(html: string): WordPressPage {
     guid: { rendered: '' },
     modified: '',
     modified_gmt: '',
-    slug: 'team',
+    slug: 'ana-garcia',
     status: 'publish',
-    type: 'page',
+    type: 'profesional',
     link: '',
-    title: { rendered: 'Team' },
-    content: { rendered: html },
+    title: { rendered: 'Ana García' },
+    content: { rendered: '' },
     excerpt: { rendered: '' },
     author: 1,
     featured_media: 0,
@@ -39,6 +36,16 @@ function makePage(html: string): WordPressPage {
     sticky: false,
     template: '',
     format: '',
+    acf: {
+      position: 'Psicóloga Infantil',
+      hero_image: 0,
+      short_description: 'Bio paragraph one.',
+      work_description: '',
+      license_number: 'CV12345',
+      academic_training: 'Grado en Psicología',
+      extra_training: 'Curso de terapia infantil',
+    },
+    ...overrides,
   }
 }
 
@@ -53,11 +60,12 @@ const globalStubs = {
 
 describe('TeamMemberView', () => {
   beforeEach(() => {
-    fetchTeamPageMock.mockReset()
+    fetchProfesionalBySlugMock.mockReset()
+    fetchMediaByIdMock.mockReset()
   })
 
-  it('shows a loading state before the page resolves', async () => {
-    fetchTeamPageMock.mockReturnValue(new Promise(() => {}))
+  it('shows a loading state before the post resolves', async () => {
+    fetchProfesionalBySlugMock.mockReturnValue(new Promise(() => {}))
     await router.push('/equipo/ana-garcia')
     await router.isReady()
 
@@ -68,23 +76,40 @@ describe('TeamMemberView', () => {
     expect(wrapper.text()).toContain('Cargando')
   })
 
-  it('renders the matching member profile for the route slug', async () => {
-    fetchTeamPageMock.mockResolvedValue(makePage(TEAM_HTML))
+  it('renders the profile fetched by slug, parsed from the ACF fields', async () => {
+    fetchProfesionalBySlugMock.mockResolvedValue(makePost())
     await router.push('/equipo/ana-garcia')
     await router.isReady()
 
     const wrapper = mount(TeamMemberView, { props: { slug: 'ana-garcia' }, global: globalStubs })
     await flushPromises()
 
+    expect(fetchProfesionalBySlugMock).toHaveBeenCalledWith('ana-garcia')
     expect(wrapper.text()).toContain('Ana García')
     expect(wrapper.text()).toContain('Psicóloga Infantil')
+    expect(wrapper.text()).toContain('Nº de colegiada: CV12345')
     expect(wrapper.text()).toContain('Bio paragraph one.')
     expect(wrapper.text()).toContain('Grado en Psicología')
     expect(wrapper.text()).toContain('Curso de terapia infantil')
   })
 
-  it('shows a not-found message when the slug does not match any member', async () => {
-    fetchTeamPageMock.mockResolvedValue(makePage(TEAM_HTML))
+  it('resolves the photo from hero_image via fetchMediaById when present', async () => {
+    fetchProfesionalBySlugMock.mockResolvedValue(makePost({ acf: { ...makePost().acf, hero_image: 42 } }))
+    fetchMediaByIdMock.mockResolvedValue({ id: 42, source_url: 'https://example.com/photo.jpg' })
+    await router.push('/equipo/ana-garcia')
+    await router.isReady()
+
+    const wrapper = mount(TeamMemberView, { props: { slug: 'ana-garcia' }, global: globalStubs })
+    await flushPromises()
+
+    expect(fetchMediaByIdMock).toHaveBeenCalledWith(42)
+    expect(wrapper.find('.kb-profile__image').attributes('src')).toBe(
+      'https://example.com/photo.jpg',
+    )
+  })
+
+  it('shows a not-found message when the API has no post for that slug', async () => {
+    fetchProfesionalBySlugMock.mockResolvedValue(null)
     await router.push('/equipo/no-existe')
     await router.isReady()
 
@@ -95,7 +120,7 @@ describe('TeamMemberView', () => {
   })
 
   it('shows an error message when the fetch fails', async () => {
-    fetchTeamPageMock.mockRejectedValue(new Error('network down'))
+    fetchProfesionalBySlugMock.mockRejectedValue(new Error('network down'))
     await router.push('/equipo/ana-garcia')
     await router.isReady()
 

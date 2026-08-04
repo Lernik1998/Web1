@@ -19,7 +19,8 @@ import {
   fetchMediaById,
   fetchAboutMePage,
   fetchForPsicologosPage,
-  fetchTeamPage,
+  fetchProfesionales,
+  fetchProfesionalBySlug,
   fetchChildPsychologyPage,
   fetchAdolescentPsychologyPage,
   fetchAdultAnxietyPage,
@@ -75,7 +76,6 @@ describe('dataService', () => {
     ['fetchHomePage', fetchHomePage as never, 'home'],
     ['fetchAboutMePage', fetchAboutMePage as never, 'about-me'],
     ['fetchForPsicologosPage', fetchForPsicologosPage as never, 'for-psychologists'],
-    ['fetchTeamPage', fetchTeamPage as never, 'team'],
     ['fetchChildPsychologyPage', fetchChildPsychologyPage as never, 'child-psychology'],
     [
       'fetchAdolescentPsychologyPage',
@@ -155,6 +155,32 @@ describe('dataService', () => {
     it('returns null when no post matches the slug', async () => {
       mockedGet.mockResolvedValueOnce({ data: [] })
       const result = await fetchBlogPostBySlug('no-existe')
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('fetchProfesionales', () => {
+    it('requests all professionals with embedded featured media', async () => {
+      const posts = [{ id: 1, slug: 'ana-garcia' }]
+      mockedGet.mockResolvedValueOnce({ data: posts })
+      const result = await fetchProfesionales()
+      expect(mockedGet).toHaveBeenCalledWith('/wp-json/wp/v2/profesional?_embed&per_page=100')
+      expect(result).toEqual(posts)
+    })
+  })
+
+  describe('fetchProfesionalBySlug', () => {
+    it('requests the professional by slug and returns the first match', async () => {
+      const post = { id: 1, slug: 'ana-garcia' }
+      mockedGet.mockResolvedValueOnce({ data: [post] })
+      const result = await fetchProfesionalBySlug('ana-garcia')
+      expect(mockedGet).toHaveBeenCalledWith('/wp-json/wp/v2/profesional?slug=ana-garcia&_embed')
+      expect(result).toEqual(post)
+    })
+
+    it('returns null when no professional matches the slug', async () => {
+      mockedGet.mockResolvedValueOnce({ data: [] })
+      const result = await fetchProfesionalBySlug('no-existe')
       expect(result).toBeNull()
     })
   })

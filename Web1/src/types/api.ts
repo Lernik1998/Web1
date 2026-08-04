@@ -96,6 +96,17 @@ export interface WordPressHomePage extends WordPressPage {
   acf: HomePageAcf
 }
 
+// Campos ACF del custom post type "profesional" (una ficha por profesional).
+export interface ProfesionalAcf {
+  position: string
+  hero_image: number
+  short_description: string
+  work_description: string
+  license_number: string
+  academic_training: string
+  extra_training: string
+}
+
 // WordPress REST API Post type (artículos del blog).
 // Se pide con `_embed` para traer la imagen destacada y las categorías ya resueltas.
 export interface WordPressPost extends WordPressPage {
@@ -106,6 +117,10 @@ export interface WordPressPost extends WordPressPage {
     }>
     'wp:term'?: Array<Array<{ id: number; name: string; slug: string; taxonomy: string }>>
   }
+}
+
+export interface ProfesionalPost extends WordPressPost {
+  acf: ProfesionalAcf
 }
 
 // Reseñas de Google, expuestas por un endpoint propio del WordPress
@@ -125,7 +140,6 @@ export const PAGE_SLUGS = {
   HOME: 'home',
   ABOUT_ME: 'about-me',
   FOR_PSICOLOGOS: 'for-psychologists',
-  TEAM: 'team',
   CHILD_PSYCHOLOGY: 'child-psychology',
   ADOLESCENT_PSYCHOLOGY: 'psychology-for-adolescents',
   ADULT_ANXIETY: 'adult-anxiety',
