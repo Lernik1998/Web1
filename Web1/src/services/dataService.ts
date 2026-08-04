@@ -5,6 +5,7 @@ import type {
   WordPressMedia,
   WordPressHomePage,
   ProfesionalPost,
+  TherapiePost,
   GoogleReview,
   PageSlug,
 } from '../types/api'
@@ -23,6 +24,16 @@ export const fetchProfesionales = async (): Promise<ProfesionalPost[]> => {
 export const fetchProfesionalBySlug = async (slug: string): Promise<ProfesionalPost | null> => {
   const response = await apiClient.get<ProfesionalPost[]>(
     `/wp-json/wp/v2/profesional?slug=${slug}&_embed`,
+  )
+  return response.data.length > 0 ? (response.data[0] ?? null) : null
+}
+
+// Ficha de una terapia (custom post type "therapie"). Igual que "profesional",
+// el contenido real (intro, listas, textos) vive en los campos ACF, no en
+// `content.rendered`.
+export const fetchTherapieBySlug = async (slug: string): Promise<TherapiePost | null> => {
+  const response = await apiClient.get<TherapiePost[]>(
+    `/wp-json/wp/v2/therapie?slug=${slug}&_embed`,
   )
   return response.data.length > 0 ? (response.data[0] ?? null) : null
 }
@@ -80,34 +91,6 @@ export const fetchAboutMePage = async (): Promise<WordPressPage | null> => {
 
 export const fetchForPsicologosPage = async (): Promise<WordPressPage | null> => {
   return fetchPageBySlugProcessed('for-psychologists')
-}
-
-export const fetchChildPsychologyPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('child-psychology')
-}
-
-export const fetchAdolescentPsychologyPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('psychology-for-adolescents')
-}
-
-export const fetchAdultAnxietyPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('adult-anxiety')
-}
-
-export const fetchAdultDepressionPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('adult-depression')
-}
-
-export const fetchAdultSelfEsteemPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('adult-self-esteem')
-}
-
-export const fetchAdultGriefPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('adult-grief')
-}
-
-export const fetchPsychologyParentsPage = async (): Promise<WordPressPage | null> => {
-  return fetchPageBySlugProcessed('psychology-parents')
 }
 
 // Artículos del blog (WordPress posts, no páginas). `_embed` trae la imagen

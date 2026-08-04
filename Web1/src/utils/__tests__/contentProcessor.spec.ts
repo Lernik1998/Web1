@@ -59,7 +59,9 @@ describe('processWordPressContent', () => {
   it('wraps <table> elements in a scrollable container', () => {
     const html = `<table><tr><td>1</td></tr></table>`
     const out = processWordPressContent(html)
-    expect(out).toBe(`<div class="kb-table-wrap">${html}</div>`)
+    // El saneado (DOMPurify) reserializa el HTML y añade el <tbody> implícito
+    // que el propio navegador insertaría de todas formas al parsear la tabla.
+    expect(out).toBe('<div class="kb-table-wrap"><table><tbody><tr><td>1</td></tr></tbody></table></div>')
   })
 
   it('returns an empty string for empty input', () => {
@@ -82,6 +84,15 @@ describe('extractTextFromHtml', () => {
     const html = `<p>${longText}</p>`
     const result = extractTextFromHtml(html, 20)
     expect(result).toBe('a'.repeat(20) + '...')
+  })
+
+  it('parses malicious markup inertly (DOMParser, not a live innerHTML node)', () => {
+    // Un <img onerror> asignado a innerHTML de un nodo real dispararía el
+    // handler al intentar cargar la imagen, incluso desconectado del
+    // documento. Aquí solo debe extraerse el texto, sin ejecutar nada.
+    const html = '<img src="x" onerror="window.__pwned = true"><p>Resumen real</p>'
+    expect(extractTextFromHtml(html)).toBe('Resumen real')
+    expect((window as unknown as { __pwned?: boolean }).__pwned).toBeUndefined()
   })
 })
 

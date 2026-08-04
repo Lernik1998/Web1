@@ -2,6 +2,8 @@
 import { reactive, ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchPedirCitaPage } from '../services/dataService'
+import { processWordPressContent } from '../utils/contentProcessor'
+import { useInternalLinks } from '../composables/useInternalLinks'
 import type { WordPressPage } from '../types/api'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 
@@ -13,6 +15,14 @@ defineOptions({
 
 const pageLoading = ref(true)
 const pageData = ref<WordPressPage | null>(null)
+const leadEl = ref<HTMLElement | null>(null)
+
+useInternalLinks(leadEl)
+
+const processedLead = computed(() => {
+  if (!pageData.value?.content.rendered) return ''
+  return processWordPressContent(pageData.value.content.rendered)
+})
 
 onMounted(async () => {
   try {
@@ -228,8 +238,9 @@ async function handleSubmit() {
       </h1>
       <div
         v-if="pageData?.content.rendered"
+        ref="leadEl"
         class="kb-appointment__lead text-body"
-        v-html="pageData.content.rendered"
+        v-html="processedLead"
       ></div>
       <p v-else class="kb-appointment__lead text-body">
         Cuéntanos un poco sobre ti y tu disponibilidad. Te contactaremos para

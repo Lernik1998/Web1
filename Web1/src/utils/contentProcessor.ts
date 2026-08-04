@@ -4,6 +4,7 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://kanbouripsicologia.com'
 import { parseVCShortcodes } from './vcShortcodeParser'
+import { sanitizeHtml } from './sanitizeHtml'
 
 /**
  * Los bloques de botón de WordPress ("wp-block-button") llegan sin href,
@@ -105,7 +106,10 @@ export const processWordPressContent = (html: string): string => {
     (match) => `<div class="kb-table-wrap">${match}</div>`,
   )
 
-  return processedHtml
+  // Última barrera antes de que esto se inyecte con v-html: el HTML viene de
+  // WordPress, no de este código, así que se sanea igual que cualquier otro
+  // contenido de origen externo.
+  return sanitizeHtml(processedHtml)
 }
 
 /**
@@ -147,16 +151,18 @@ const makeAbsoluteUrl = (url: string): string => {
 
 /**
  * Extract plain text from HTML (for summaries, meta descriptions, etc.)
+ *
+ * Se parsea con DOMParser (documento inerte, sin renderizar) en vez de
+ * asignar el HTML a `innerHTML` de un nodo real: un `<img onerror="...">`
+ * dentro del HTML de WordPress dispararía ese `onerror` en cuanto el
+ * navegador intente cargar la imagen, aunque el div esté desconectado del
+ * documento. DOMParser no dispara carga de recursos ni ejecuta nada.
  */
 export const extractTextFromHtml = (html: string, maxLength = 160): string => {
   if (!html) return ''
 
-  // Create a temporary div to parse HTML
-  const tempDiv = document.createElement('div')
-  tempDiv.innerHTML = html
-
-  // Get text content
-  const text = tempDiv.textContent || tempDiv.innerText || ''
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  const text = doc.body.textContent || ''
 
   // Truncate if needed
   return text.length > maxLength ? text.substring(0, maxLength).trim() + '...' : text

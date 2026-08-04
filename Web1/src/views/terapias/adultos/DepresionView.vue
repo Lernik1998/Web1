@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { fetchAdultDepressionPage } from '../../../services/dataService'
-import { parseTherapyContent } from '../../../utils/therapyParser'
-import type { ParsedTherapyContent } from '../../../utils/therapyParser'
+import { fetchTherapieBySlug } from '../../../services/dataService'
+import { parseTherapieAcf } from '../../../utils/therapyAcf'
+import type { ParsedTherapyContent } from '../../../utils/therapyAcf'
 import FaqAccordion from '../../../components/FaqAccordion.vue'
 import LoadingSpinner from '../../../components/LoadingSpinner.vue'
 
@@ -16,13 +16,13 @@ const title = ref('Depresión y estado de ánimo')
 
 onMounted(async () => {
   try {
-    const page = await fetchAdultDepressionPage()
-    if (page) {
-      title.value = page.title.rendered
-      content.value = parseTherapyContent(page.content.rendered)
+    const therapy = await fetchTherapieBySlug('depresion-y-estado-de-animo')
+    if (therapy) {
+      title.value = therapy.title.rendered
+      content.value = parseTherapieAcf(therapy.acf)
     }
   } catch (err) {
-    console.error('Error fetching adult depression page:', err)
+    console.error('Error fetching adult depression therapy:', err)
   } finally {
     loading.value = false
   }

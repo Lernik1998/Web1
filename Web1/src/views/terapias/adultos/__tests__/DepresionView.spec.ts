@@ -2,16 +2,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import router from '../../../../router'
 import DepresionView from '../DepresionView.vue'
-import { fetchAdultDepressionPage } from '../../../../services/dataService'
-import type { WordPressPage } from '../../../../types/api'
+import { fetchTherapieBySlug } from '../../../../services/dataService'
+import type { TherapiePost } from '../../../../types/api'
 
 vi.mock('../../../../services/dataService', () => ({
-  fetchAdultDepressionPage: vi.fn<() => Promise<WordPressPage | null>>(),
+  fetchTherapieBySlug: vi.fn<() => Promise<TherapiePost | null>>(),
 }))
 
 const directives = { 'animate-on-scroll': {}, spotlight: {}, ripple: {} }
 
-function makePage(overrides: Partial<WordPressPage> = {}): WordPressPage {
+function makeTherapy(overrides: Partial<TherapiePost> = {}): TherapiePost {
   return {
     id: 6,
     date: '2024-01-01',
@@ -19,15 +19,12 @@ function makePage(overrides: Partial<WordPressPage> = {}): WordPressPage {
     guid: { rendered: 'guid' },
     modified: '2024-01-01',
     modified_gmt: '2024-01-01',
-    slug: 'adult-depression',
+    slug: 'depresion-y-estado-de-animo',
     status: 'publish',
-    type: 'page',
-    link: 'https://example.com/adult-depression',
+    type: 'therapie',
+    link: 'https://example.com/depresion-y-estado-de-animo',
     title: { rendered: 'Depresión y estado de ánimo (WP)' },
-    content: {
-      rendered:
-        '<p>Intro paragraph text about this therapy.</p><h2>Síntomas</h2><ul><li>Symptom one</li><li>Symptom two</li></ul><h2>Tratamiento</h2><p>Treatment description text.</p>',
-    },
+    content: { rendered: '' },
     excerpt: { rendered: '' },
     author: 1,
     featured_media: 0,
@@ -36,6 +33,18 @@ function makePage(overrides: Partial<WordPressPage> = {}): WordPressPage {
     sticky: false,
     template: '',
     format: 'standard',
+    acf: {
+      therapy_name: 'Depresión y estado de ánimo (WP)',
+      specialty: 'adult',
+      therapy_description: 'Intro paragraph text about this therapy.',
+      therapy_image: 0,
+      when_title: 'Síntomas',
+      when_items: 'Symptom one\r\nSymptom two',
+      how_title: 'Tratamiento',
+      how_description: 'Treatment description text.',
+      benefits_title: 'Qué te llevas del proceso',
+      benefits_items: 'Benefit one\r\nBenefit two',
+    },
     ...overrides,
   }
 }
@@ -48,8 +57,8 @@ describe('DepresionView', () => {
   })
 
   it('shows a loading indicator before the fetch resolves', () => {
-    let resolvePromise: (value: WordPressPage | null) => void = () => {}
-    vi.mocked(fetchAdultDepressionPage).mockReturnValue(
+    let resolvePromise: (value: TherapiePost | null) => void = () => {}
+    vi.mocked(fetchTherapieBySlug).mockReturnValue(
       new Promise((resolve) => {
         resolvePromise = resolve
       }),
@@ -64,7 +73,7 @@ describe('DepresionView', () => {
   })
 
   it('renders intro, block titles, list items and text content after fetch resolves', async () => {
-    vi.mocked(fetchAdultDepressionPage).mockResolvedValue(makePage())
+    vi.mocked(fetchTherapieBySlug).mockResolvedValue(makeTherapy())
 
     const wrapper = mount(DepresionView, {
       global: { plugins: [router], directives },
@@ -72,6 +81,7 @@ describe('DepresionView', () => {
 
     await flushPromises()
 
+    expect(fetchTherapieBySlug).toHaveBeenCalledWith('depresion-y-estado-de-animo')
     expect(wrapper.text()).toContain('Depresión y estado de ánimo (WP)')
     expect(wrapper.text()).toContain('Intro paragraph text about this therapy.')
     expect(wrapper.text()).toContain('Síntomas')
@@ -84,8 +94,8 @@ describe('DepresionView', () => {
     expect(itemTexts).toContain('Symptom two')
   })
 
-  it('falls back to the default title and does not crash when the page is null', async () => {
-    vi.mocked(fetchAdultDepressionPage).mockResolvedValue(null)
+  it('falls back to the default title and does not crash when the therapy is null', async () => {
+    vi.mocked(fetchTherapieBySlug).mockResolvedValue(null)
 
     const wrapper = mount(DepresionView, {
       global: { plugins: [router], directives },

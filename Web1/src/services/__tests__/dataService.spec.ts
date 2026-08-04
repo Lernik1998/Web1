@@ -21,13 +21,7 @@ import {
   fetchForPsicologosPage,
   fetchProfesionales,
   fetchProfesionalBySlug,
-  fetchChildPsychologyPage,
-  fetchAdolescentPsychologyPage,
-  fetchAdultAnxietyPage,
-  fetchAdultDepressionPage,
-  fetchAdultSelfEsteemPage,
-  fetchAdultGriefPage,
-  fetchPsychologyParentsPage,
+  fetchTherapieBySlug,
   fetchBlogPosts,
   fetchBlogPostBySlug,
   fetchGoogleReviews,
@@ -76,17 +70,6 @@ describe('dataService', () => {
     ['fetchHomePage', fetchHomePage as never, 'home'],
     ['fetchAboutMePage', fetchAboutMePage as never, 'about-me'],
     ['fetchForPsicologosPage', fetchForPsicologosPage as never, 'for-psychologists'],
-    ['fetchChildPsychologyPage', fetchChildPsychologyPage as never, 'child-psychology'],
-    [
-      'fetchAdolescentPsychologyPage',
-      fetchAdolescentPsychologyPage as never,
-      'psychology-for-adolescents',
-    ],
-    ['fetchAdultAnxietyPage', fetchAdultAnxietyPage as never, 'adult-anxiety'],
-    ['fetchAdultDepressionPage', fetchAdultDepressionPage as never, 'adult-depression'],
-    ['fetchAdultSelfEsteemPage', fetchAdultSelfEsteemPage as never, 'adult-self-esteem'],
-    ['fetchAdultGriefPage', fetchAdultGriefPage as never, 'adult-grief'],
-    ['fetchPsychologyParentsPage', fetchPsychologyParentsPage as never, 'psychology-parents'],
   ]
 
   it.each(slugFetchers)('%s requests the correct slug and unwraps the first page', async (_name, fn, slug) => {
@@ -181,6 +164,22 @@ describe('dataService', () => {
     it('returns null when no professional matches the slug', async () => {
       mockedGet.mockResolvedValueOnce({ data: [] })
       const result = await fetchProfesionalBySlug('no-existe')
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('fetchTherapieBySlug', () => {
+    it('requests the therapy by slug and returns the first match', async () => {
+      const post = { id: 1, slug: 'ansiedad' }
+      mockedGet.mockResolvedValueOnce({ data: [post] })
+      const result = await fetchTherapieBySlug('ansiedad')
+      expect(mockedGet).toHaveBeenCalledWith('/wp-json/wp/v2/therapie?slug=ansiedad&_embed')
+      expect(result).toEqual(post)
+    })
+
+    it('returns null when no therapy matches the slug', async () => {
+      mockedGet.mockResolvedValueOnce({ data: [] })
+      const result = await fetchTherapieBySlug('no-existe')
       expect(result).toBeNull()
     })
   })

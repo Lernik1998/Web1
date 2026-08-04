@@ -123,6 +123,24 @@ export interface ProfesionalPost extends WordPressPost {
   acf: ProfesionalAcf
 }
 
+// Campos ACF del custom post type "therapie" (una ficha por terapia/especialidad).
+export interface TherapieAcf {
+  therapy_name: string
+  specialty: string
+  therapy_description: string
+  therapy_image: number
+  when_title: string
+  when_items: string
+  how_title: string
+  how_description: string
+  benefits_title: string
+  benefits_items: string
+}
+
+export interface TherapiePost extends WordPressPost {
+  acf: TherapieAcf
+}
+
 // Reseñas de Google, expuestas por un endpoint propio del WordPress
 // (wp-json/kanbouri/v1/reviews), no por la API estándar de WP.
 export interface GoogleReview {
@@ -140,13 +158,6 @@ export const PAGE_SLUGS = {
   HOME: 'home',
   ABOUT_ME: 'about-me',
   FOR_PSICOLOGOS: 'for-psychologists',
-  CHILD_PSYCHOLOGY: 'child-psychology',
-  ADOLESCENT_PSYCHOLOGY: 'psychology-for-adolescents',
-  ADULT_ANXIETY: 'adult-anxiety',
-  ADULT_DEPRESSION: 'adult-depression',
-  ADULT_SELF_ESTEEM: 'adult-self-esteem',
-  ADULT_GRIEF: 'adult-grief',
-  PSYCHOLOGY_PARENTS: 'psychology-parents',
   PEDIR_CITA: 'form-appointment',
   AVISO_LEGAL: 'aviso-legal',
   POLITICA_PRIVACIDAD: 'politica-privacidad',

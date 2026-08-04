@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import Header from "./components/Header.vue";
 import Footer from './components/Footer.vue';
+import CookieConsent from './components/CookieConsent.vue';
+import WhatsAppButton from './components/WhatsAppButton.vue';
 </script>
 
 <template>
@@ -13,6 +15,8 @@ import Footer from './components/Footer.vue';
     </router-view>
   </main>
   <Footer />
+  <WhatsAppButton />
+  <CookieConsent />
 </template>
 
 <style scoped>

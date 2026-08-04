@@ -37,3 +37,9 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+# Env files (pueden llegar a contener secretos locales; .env con la URL
+# pública de la API ya está trackeado a propósito, así que no se ignora, pero
+# cualquier variante local/override si debe quedar fuera del repo)
+.env.local
+.env.*.local
