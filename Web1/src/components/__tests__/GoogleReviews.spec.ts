@@ -86,7 +86,10 @@ describe('GoogleReviews', () => {
     await flushPromises()
 
     const toggleButtons = wrapper.findAll('.kb-review__toggle')
-    expect(toggleButtons).toHaveLength(1)
+    expect(toggleButtons).toHaveLength(3)
+    expect(toggleButtons[0]!.classes()).not.toContain('kb-review__toggle--hidden')
+    expect(toggleButtons[1]!.classes()).toContain('kb-review__toggle--hidden')
+    expect(toggleButtons[2]!.classes()).toContain('kb-review__toggle--hidden')
     expect(toggleButtons[0]!.text()).toBe('Leer más')
 
     const firstReviewText = wrapper.findAll('.kb-review__text')[0]!

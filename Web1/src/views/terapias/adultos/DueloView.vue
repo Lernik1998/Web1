@@ -159,10 +159,11 @@ const faqs = [
   list-style: none;
   margin: 0 auto;
   padding: 0;
+  width: fit-content;
   max-width: 46ch;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 10px;
 }
 

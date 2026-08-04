@@ -80,12 +80,15 @@ function needsToggle(text: string): boolean {
 /**
  * Recorte en JS (en vez de "-webkit-line-clamp") para no depender de la
  * elipsis automática del navegador y no mostrar puntos suspensivos: se
- * corta en el último espacio antes del límite, respetando los saltos de
- * párrafo propios de la reseña hasta ese punto.
+ * corta en el último espacio antes del límite. Al recortar se colapsan los
+ * saltos de párrafo en espacios simples para que todas las tarjetas
+ * truncadas ocupen la misma altura (y así "Leer más" quede a la misma
+ * altura); al expandir se recupera el texto original con sus párrafos.
  */
 function displayText(review: GoogleReview): string {
   if (expanded.value.has(review.id) || !needsToggle(review.text)) return review.text
-  const cut = review.text.slice(0, TRUNCATE_THRESHOLD)
+  const collapsed = review.text.replace(/\s+/g, ' ').trim()
+  const cut = collapsed.slice(0, TRUNCATE_THRESHOLD)
   const lastSpace = cut.lastIndexOf(' ')
   return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trimEnd()
 }
@@ -102,11 +105,10 @@ function onPhotoError(id: string) {
   brokenPhotos.value.add(id)
 }
 
+// Solo una reseña puede estar expandida a la vez: al abrir una se cierra
+// cualquier otra que estuviera abierta.
 function toggleExpanded(id: string) {
-  if (expanded.value.has(id)) expanded.value.delete(id)
-  else expanded.value.add(id)
-  // Forzar reactividad: Set no dispara el render por sí solo con .add/.delete.
-  expanded.value = new Set(expanded.value)
+  expanded.value = expanded.value.has(id) ? new Set() : new Set([id])
 }
 
 onMounted(async () => {
@@ -162,38 +164,40 @@ onMounted(async () => {
           :style="{ transitionDelay: `${index * 90}ms` }"
         >
           <div class="kb-review__header">
-            <span class="kb-review__google-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="14" height="14">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.85A11 11 0 0012 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 13.9a6.6 6.6 0 010-4.2V6.85H2.18a11 11 0 000 9.9l3.66-2.85z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1a11 11 0 00-9.82 5.85l3.66 2.85c.87-2.6 3.3-4.32 6.16-4.32z"
-                />
-              </svg>
-            </span>
+            <span class="kb-review__avatar-wrap">
+              <img
+                v-if="!brokenPhotos.has(review.id)"
+                :src="review.user_photo"
+                :alt="review.user"
+                class="kb-review__avatar-img"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                @error="onPhotoError(review.id)"
+              />
+              <span v-else class="kb-review__avatar-fallback" aria-hidden="true">
+                {{ initials(review.user) }}
+              </span>
 
-            <img
-              v-if="!brokenPhotos.has(review.id)"
-              :src="review.user_photo"
-              :alt="review.user"
-              class="kb-review__avatar-img"
-              loading="lazy"
-              referrerpolicy="no-referrer"
-              @error="onPhotoError(review.id)"
-            />
-            <span v-else class="kb-review__avatar-fallback" aria-hidden="true">
-              {{ initials(review.user) }}
+              <span class="kb-review__google-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="14" height="14">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.85A11 11 0 0012 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 13.9a6.6 6.6 0 010-4.2V6.85H2.18a11 11 0 000 9.9l3.66-2.85z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1a11 11 0 00-9.82 5.85l3.66 2.85c.87-2.6 3.3-4.32 6.16-4.32z"
+                  />
+                </svg>
+              </span>
             </span>
 
             <span class="kb-review__meta">
@@ -225,11 +229,18 @@ onMounted(async () => {
             </span>
           </div>
 
-          <p class="kb-review__text">{{ displayText(review) }}</p>
+          <p
+            class="kb-review__text"
+            :class="{ 'kb-review__text--expanded': expanded.has(review.id) }"
+          >
+            {{ displayText(review) }}
+          </p>
           <button
-            v-if="needsToggle(review.text)"
             type="button"
             class="kb-review__toggle"
+            :class="{ 'kb-review__toggle--hidden': !needsToggle(review.text) }"
+            :aria-hidden="!needsToggle(review.text)"
+            :tabindex="needsToggle(review.text) ? 0 : -1"
             @click="toggleExpanded(review.id)"
           >
             {{ expanded.has(review.id) ? 'Ocultar' : 'Leer más' }}
@@ -336,6 +347,7 @@ onMounted(async () => {
 .kb-reviews__grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
   gap: 24px;
 }
 
@@ -372,6 +384,8 @@ onMounted(async () => {
 .kb-review {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
   padding: 22px 24px 20px;
   transition: transform var(--dur-base) var(--ease-base),
     box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
@@ -401,17 +415,21 @@ onMounted(async () => {
 
 /* ---------- Cabecera: icono de Google + avatar + nombre/fecha ---------- */
 .kb-review__header {
-  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 12px;
+}
+
+.kb-review__avatar-wrap {
+  position: relative;
 }
 
 .kb-review__google-icon {
   position: absolute;
-  top: 28px;
-  left: 28px;
+  bottom: 0;
+  right: -2px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -449,13 +467,16 @@ onMounted(async () => {
 .kb-review__meta {
   display: flex;
   flex-direction: column;
+  align-items: center;
   min-width: 0;
+  max-width: 100%;
 }
 
 .kb-review__name {
   font-size: 14.5px;
   font-weight: 600;
   color: var(--color-heading);
+  max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -470,6 +491,7 @@ onMounted(async () => {
 .kb-review__stars {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 3px;
   color: #f0a93a;
   margin-bottom: 14px;
@@ -487,10 +509,18 @@ onMounted(async () => {
   line-height: 1.6;
   font-size: 14.5px;
   white-space: pre-line;
+  text-align: center;
+  height: 8em;
+  overflow: hidden;
+}
+
+.kb-review__text--expanded {
+  height: auto;
+  overflow: visible;
 }
 
 .kb-review__toggle {
-  align-self: flex-start;
+  align-self: center;
   margin-top: 8px;
   padding: 0;
   border: none;
@@ -505,6 +535,11 @@ onMounted(async () => {
 .kb-review__toggle:hover {
   color: var(--color-rose);
   text-decoration: underline;
+}
+
+.kb-review__toggle--hidden {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* ---------- Transición al cambiar de página ---------- */
