@@ -124,10 +124,16 @@ defineOptions({
       </div>
 
       <div class="footer-map">
+        <!--
+          Street View (fachada real del centro) en vez del mapa de
+          carreteras: misma URL de Google Maps embed, en modo "svembed"
+          (capa "c" = Street View) apuntando a las coordenadas y encuadre
+          (cbp = heading,pitch) de la puerta del centro.
+        -->
         <iframe
           class="footer-map__frame"
-          title="Ubicación de Kanbouri Psicología en Google Maps"
-          src="https://www.google.com/maps?q=C%2F%20Sant%20Josep%2031%2C%20D%C3%A9nia%20(Alicante)&output=embed"
+          title="Fachada de Kanbouri Psicología (Google Street View)"
+          src="https://www.google.com/maps?layer=c&cbll=38.8386523,0.1060985&cbp=12,95,,0,0&output=svembed"
           loading="lazy"
           referrerpolicy="no-referrer-when-downgrade"
         ></iframe>
@@ -293,7 +299,7 @@ defineOptions({
 }
 
 .footer-map {
-  min-height: 140px;
+  min-height: 160px;
   background: var(--color-paper);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-lg);
@@ -304,7 +310,7 @@ defineOptions({
   display: block;
   width: 100%;
   height: 100%;
-  min-height: 140px;
+  min-height: 160px;
   border: 0;
 }
 

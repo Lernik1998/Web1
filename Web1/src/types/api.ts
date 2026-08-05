@@ -141,6 +141,33 @@ export interface TherapiePost extends WordPressPost {
   acf: TherapieAcf
 }
 
+// Campos ACF del custom post type "setting" usado para el banner de cookies
+// (un único post con slug "cookie-kanbouri"). No incluye una categoría de
+// "preferencias": solo hay "funcional" (siempre activa, no configurable),
+// "estadísticas" y "marketing".
+export interface CookieSettingAcf {
+  cookie_title: string
+  cookie_description: string
+  functional_title: string
+  functional_status: boolean
+  functional_description: string
+  statistics_title: string
+  statistics_description: string
+  marketing_title: string
+  marketing_description: string
+  accept_button_label: string
+  deny_button_label: string
+  save_button_label: string
+  cookies_policy_url: string
+  privacy_policy_url: string
+  legal_notice_url: string
+  cookie_banner_enabled: boolean
+}
+
+export interface CookieSettingPost extends WordPressPost {
+  acf: CookieSettingAcf
+}
+
 // Reseñas de Google, expuestas por un endpoint propio del WordPress
 // (wp-json/kanbouri/v1/reviews), no por la API estándar de WP.
 export interface GoogleReview {

@@ -6,6 +6,7 @@ import type {
   WordPressHomePage,
   ProfesionalPost,
   TherapiePost,
+  CookieSettingPost,
   GoogleReview,
   PageSlug,
 } from '../types/api'
@@ -34,6 +35,15 @@ export const fetchProfesionalBySlug = async (slug: string): Promise<ProfesionalP
 export const fetchTherapieBySlug = async (slug: string): Promise<TherapiePost | null> => {
   const response = await apiClient.get<TherapiePost[]>(
     `/wp-json/wp/v2/therapie?slug=${slug}&_embed`,
+  )
+  return response.data.length > 0 ? (response.data[0] ?? null) : null
+}
+
+// Textos y ajustes del banner de cookies (custom post type "setting", un
+// único post con slug "cookie-kanbouri"), editable desde WordPress.
+export const fetchCookieSetting = async (): Promise<CookieSettingPost | null> => {
+  const response = await apiClient.get<CookieSettingPost[]>(
+    '/wp-json/wp/v2/setting?slug=cookie-kanbouri',
   )
   return response.data.length > 0 ? (response.data[0] ?? null) : null
 }

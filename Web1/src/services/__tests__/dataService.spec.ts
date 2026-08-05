@@ -22,6 +22,7 @@ import {
   fetchProfesionales,
   fetchProfesionalBySlug,
   fetchTherapieBySlug,
+  fetchCookieSetting,
   fetchBlogPosts,
   fetchBlogPostBySlug,
   fetchGoogleReviews,
@@ -180,6 +181,22 @@ describe('dataService', () => {
     it('returns null when no therapy matches the slug', async () => {
       mockedGet.mockResolvedValueOnce({ data: [] })
       const result = await fetchTherapieBySlug('no-existe')
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('fetchCookieSetting', () => {
+    it('requests the cookie-kanbouri setting and returns the first match', async () => {
+      const post = { id: 955, slug: 'cookie-kanbouri' }
+      mockedGet.mockResolvedValueOnce({ data: [post] })
+      const result = await fetchCookieSetting()
+      expect(mockedGet).toHaveBeenCalledWith('/wp-json/wp/v2/setting?slug=cookie-kanbouri')
+      expect(result).toEqual(post)
+    })
+
+    it('returns null when there is no setting configured', async () => {
+      mockedGet.mockResolvedValueOnce({ data: [] })
+      const result = await fetchCookieSetting()
       expect(result).toBeNull()
     })
   })

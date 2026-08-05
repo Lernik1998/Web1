@@ -1,27 +1,34 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { fetchCookieSetting } from '../services/dataService'
+import { useCookieConsent } from '../composables/useCookieConsent'
+import type { ConsentCategory } from '../composables/useCookieConsent'
 
 defineOptions({
   name: 'CookieConsent',
 })
 
-const STORAGE_KEY = 'kb-cookie-consent'
-
-type CategoryKey = 'preferences' | 'statistics' | 'marketing'
-
-interface StoredConsent {
-  preferences: boolean
-  statistics: boolean
-  marketing: boolean
+interface CategoryContent {
+  key: ConsentCategory
+  label: string
+  description: string
 }
 
-const categories: Array<{ key: CategoryKey; label: string; description: string }> = [
-  {
-    key: 'preferences',
-    label: 'Preferencias',
-    description:
-      'Permiten recordar tus opciones (como el idioma o la región) para ofrecerte una experiencia más personalizada.',
-  },
+const { consent, hasDecided, acceptAll: acceptAllConsent, rejectAll: rejectAllConsent, savePreferences: savePreferencesConsent } =
+  useCookieConsent()
+
+// Textos por defecto (se muestran de inmediato y se sustituyen, si llegan,
+// por los que gestiona la clínica desde WordPress vía fetchCookieSetting).
+const title = ref('Usamos cookies')
+const description = ref(
+  'Utilizamos cookies propias y de terceros para que la web funcione correctamente, entender cómo se usa y, si nos das tu permiso, ofrecerte contenido más relevante.',
+)
+const acceptLabel = ref('Aceptar todas')
+const denyLabel = ref('Rechazar')
+const saveLabel = ref('Guardar preferencias')
+const bannerEnabled = ref(true)
+
+const categories = ref<CategoryContent[]>([
   {
     key: 'statistics',
     label: 'Estadísticas',
@@ -33,28 +40,21 @@ const categories: Array<{ key: CategoryKey; label: string; description: string }
     label: 'Marketing',
     description: 'Se usan para mostrarte contenido y publicidad más relevante según tus intereses.',
   },
-]
+])
 
 const visible = ref(false)
 const showDetails = ref(false)
-const hasDecided = ref(false)
 
-const preferences = reactive<StoredConsent>({
-  preferences: false,
+// Borrador editable de los toggles del panel "Personalizar": no se guarda en
+// la cookie hasta pulsar "Guardar preferencias".
+const draft = reactive<Record<ConsentCategory, boolean>>({
   statistics: false,
   marketing: false,
 })
 
-function persist() {
-  hasDecided.value = true
-  try {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ ...preferences, decidedAt: new Date().toISOString() }),
-    )
-  } catch (err) {
-    console.error('Error saving cookie preferences:', err)
-  }
+function syncDraftFromConsent() {
+  draft.statistics = consent.value?.statistics === true
+  draft.marketing = consent.value?.marketing === true
 }
 
 function close() {
@@ -63,46 +63,70 @@ function close() {
 }
 
 function acceptAll() {
-  preferences.preferences = true
-  preferences.statistics = true
-  preferences.marketing = true
-  persist()
+  acceptAllConsent()
   close()
 }
 
 function rejectAll() {
-  preferences.preferences = false
-  preferences.statistics = false
-  preferences.marketing = false
-  persist()
+  rejectAllConsent()
   close()
 }
 
 function savePreferences() {
-  persist()
+  savePreferencesConsent({ statistics: draft.statistics, marketing: draft.marketing })
   close()
 }
 
 function openPreferences() {
+  syncDraftFromConsent()
   showDetails.value = true
   visible.value = true
 }
 
-onMounted(() => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (!stored) {
-      visible.value = true
-      return
-    }
-    const parsed = JSON.parse(stored) as Partial<StoredConsent>
-    preferences.preferences = Boolean(parsed.preferences)
-    preferences.statistics = Boolean(parsed.statistics)
-    preferences.marketing = Boolean(parsed.marketing)
-    hasDecided.value = true
-  } catch (err) {
-    console.error('Error reading cookie preferences:', err)
+function trimmed(value: string | undefined): string {
+  return (value ?? '').replace(/\s+/g, ' ').trim()
+}
+
+onMounted(async () => {
+  if (!hasDecided.value) {
     visible.value = true
+    syncDraftFromConsent()
+  }
+
+  try {
+    const setting = await fetchCookieSetting()
+    const acf = setting?.acf
+    if (!acf) return
+
+    bannerEnabled.value = acf.cookie_banner_enabled !== false
+    if (acf.cookie_title) title.value = trimmed(acf.cookie_title)
+    if (acf.cookie_description) description.value = trimmed(acf.cookie_description)
+    if (acf.accept_button_label) acceptLabel.value = trimmed(acf.accept_button_label)
+    if (acf.deny_button_label) denyLabel.value = trimmed(acf.deny_button_label)
+    if (acf.save_button_label) saveLabel.value = trimmed(acf.save_button_label)
+
+    categories.value = [
+      {
+        key: 'statistics',
+        label: acf.statistics_title ? trimmed(acf.statistics_title) : categories.value[0]!.label,
+        description: acf.statistics_description
+          ? trimmed(acf.statistics_description)
+          : categories.value[0]!.description,
+      },
+      {
+        key: 'marketing',
+        label: acf.marketing_title ? trimmed(acf.marketing_title) : categories.value[1]!.label,
+        description: acf.marketing_description
+          ? trimmed(acf.marketing_description)
+          : categories.value[1]!.description,
+      },
+    ]
+
+    if (!bannerEnabled.value) {
+      visible.value = false
+    }
+  } catch (err) {
+    console.error('Error fetching cookie banner settings:', err)
   }
 })
 </script>
@@ -111,7 +135,7 @@ onMounted(() => {
   <div>
     <transition name="kb-cookie-fade">
       <div
-        v-if="visible"
+        v-if="visible && bannerEnabled"
         class="kb-cookie"
         role="region"
         aria-label="Consentimiento de cookies"
@@ -129,24 +153,10 @@ onMounted(() => {
           </svg>
         </button>
 
-        <h2 class="kb-cookie__title text-h3 text-h3--strong">Usamos cookies</h2>
-        <p id="kb-cookie-desc" class="kb-cookie__text text-body">
-          Utilizamos cookies propias y de terceros para que la web funcione correctamente, entender
-          cómo se usa y, si nos das tu permiso, ofrecerte contenido más relevante.
-        </p>
+        <h2 class="kb-cookie__title text-h3 text-h3--strong">{{ title }}</h2>
+        <p id="kb-cookie-desc" class="kb-cookie__text text-body">{{ description }}</p>
 
         <div v-if="showDetails" class="kb-cookie__categories">
-          <div class="kb-cookie__category">
-            <div class="kb-cookie__category-row">
-              <span class="kb-cookie__category-title">Necesarias</span>
-              <span class="kb-cookie__locked text-secondary">Siempre activas</span>
-            </div>
-            <p class="kb-cookie__category-desc text-secondary">
-              Imprescindibles para la navegación y la seguridad del sitio, y para recordar tus
-              propias preferencias de cookies. No se pueden desactivar.
-            </p>
-          </div>
-
           <div v-for="category in categories" :key="category.key" class="kb-cookie__category">
             <div class="kb-cookie__category-row">
               <span class="kb-cookie__category-title">{{ category.label }}</span>
@@ -154,10 +164,10 @@ onMounted(() => {
                 type="button"
                 class="kb-cookie__toggle"
                 role="switch"
-                :aria-checked="preferences[category.key]"
+                :aria-checked="draft[category.key]"
                 :aria-label="category.label"
-                :class="{ 'is-on': preferences[category.key] }"
-                @click="preferences[category.key] = !preferences[category.key]"
+                :class="{ 'is-on': draft[category.key] }"
+                @click="draft[category.key] = !draft[category.key]"
               >
                 <span class="kb-cookie__toggle-knob" aria-hidden="true"></span>
               </button>
@@ -169,40 +179,48 @@ onMounted(() => {
         <div class="kb-cookie__actions">
           <template v-if="!showDetails">
             <button type="button" class="kb-cookie__btn kb-cookie__btn--ghost" @click="rejectAll">
-              Rechazar
+              {{ denyLabel }}
             </button>
             <button
               type="button"
               class="kb-cookie__btn kb-cookie__btn--ghost"
               @click="showDetails = true"
             >
-              Personalizar
+              Ver preferencias
             </button>
             <button type="button" class="kb-cookie__btn kb-cookie__btn--primary" @click="acceptAll">
-              Aceptar todas
+              {{ acceptLabel }}
             </button>
           </template>
           <template v-else>
             <button type="button" class="kb-cookie__btn kb-cookie__btn--ghost" @click="acceptAll">
-              Aceptar todas
+              {{ acceptLabel }}
             </button>
             <button
               type="button"
               class="kb-cookie__btn kb-cookie__btn--primary"
               @click="savePreferences"
             >
-              Guardar preferencias
+              {{ saveLabel }}
             </button>
           </template>
         </div>
 
-        <router-link to="/politica-cookies" class="kb-cookie__link text-secondary" @click="close">
-          Más información en nuestra política de cookies
-        </router-link>
+        <div class="kb-cookie__legal-links">
+          <router-link to="/politica-cookies" class="kb-cookie__link text-secondary" @click="close">
+            Política de cookies
+          </router-link>
+          <router-link to="/politica-privacidad" class="kb-cookie__link text-secondary" @click="close">
+            Política de privacidad
+          </router-link>
+          <router-link to="/aviso-legal" class="kb-cookie__link text-secondary" @click="close">
+            Aviso Legal
+          </router-link>
+        </div>
       </div>
     </transition>
 
-    <div v-if="!visible && hasDecided" class="kb-cookie-reopen-slot">
+    <div v-if="!visible && hasDecided && bannerEnabled" class="kb-cookie-reopen-slot">
       <button
         type="button"
         class="kb-cookie-reopen"
@@ -298,10 +316,6 @@ onMounted(() => {
   color: var(--color-heading);
 }
 
-.kb-cookie__locked {
-  flex-shrink: 0;
-}
-
 .kb-cookie__category-desc {
   margin: 0;
 }
@@ -359,15 +373,21 @@ onMounted(() => {
     transform var(--dur-base) var(--ease-base);
 }
 
+/*
+ * Botón secundario "de texto": sin fondo ni borde propio, en un tono apagado
+ * (como "Denegar" / "Ver preferencias" en el banner real de la clínica) para
+ * que solo el botón primario ("Aceptar cookies") destaque visualmente.
+ */
 .kb-cookie__btn--ghost {
   background: transparent;
-  border-color: var(--color-line);
-  color: var(--color-ink);
+  border-color: transparent;
+  color: var(--color-secondary);
+  padding-left: 8px;
+  padding-right: 8px;
 }
 
 .kb-cookie__btn--ghost:hover {
-  background: var(--color-rose-soft-wash);
-  border-color: var(--color-rose-soft);
+  color: var(--color-rose-hover);
 }
 
 .kb-cookie__btn--primary {
@@ -382,15 +402,30 @@ onMounted(() => {
   box-shadow: var(--shadow-cta-hover);
 }
 
+.kb-cookie__legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px 14px;
+}
+
 .kb-cookie__link {
-  display: block;
-  text-align: center;
+  position: relative;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
 .kb-cookie__link:hover {
   color: var(--color-rose-hover);
+}
+
+.kb-cookie__legal-links .kb-cookie__link:not(:last-child)::after {
+  content: '·';
+  position: absolute;
+  right: -10px;
+  text-decoration: none;
+  color: var(--color-line);
 }
 
 .kb-cookie-fade-enter-active,
