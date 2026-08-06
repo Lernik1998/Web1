@@ -7,6 +7,7 @@ import type {
   ProfesionalPost,
   TherapiePost,
   CookieSettingPost,
+  MapsSettingPost,
   GoogleReview,
   PageSlug,
 } from '../types/api'
@@ -45,6 +46,13 @@ export const fetchCookieSetting = async (): Promise<CookieSettingPost | null> =>
   const response = await apiClient.get<CookieSettingPost[]>(
     '/wp-json/wp/v2/setting?slug=cookie-kanbouri',
   )
+  return response.data.length > 0 ? (response.data[0] ?? null) : null
+}
+
+// Activar/desactivar el mapa del footer y el enlace de Google Maps que debe
+// mostrar (custom post type "setting", único post con slug "maps").
+export const fetchMapsSetting = async (): Promise<MapsSettingPost | null> => {
+  const response = await apiClient.get<MapsSettingPost[]>('/wp-json/wp/v2/setting?slug=maps')
   return response.data.length > 0 ? (response.data[0] ?? null) : null
 }
 

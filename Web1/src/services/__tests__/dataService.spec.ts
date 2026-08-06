@@ -23,6 +23,7 @@ import {
   fetchProfesionalBySlug,
   fetchTherapieBySlug,
   fetchCookieSetting,
+  fetchMapsSetting,
   fetchBlogPosts,
   fetchBlogPostBySlug,
   fetchGoogleReviews,
@@ -197,6 +198,22 @@ describe('dataService', () => {
     it('returns null when there is no setting configured', async () => {
       mockedGet.mockResolvedValueOnce({ data: [] })
       const result = await fetchCookieSetting()
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('fetchMapsSetting', () => {
+    it('requests the maps setting and returns the first match', async () => {
+      const post = { id: 959, slug: 'maps' }
+      mockedGet.mockResolvedValueOnce({ data: [post] })
+      const result = await fetchMapsSetting()
+      expect(mockedGet).toHaveBeenCalledWith('/wp-json/wp/v2/setting?slug=maps')
+      expect(result).toEqual(post)
+    })
+
+    it('returns null when there is no setting configured', async () => {
+      mockedGet.mockResolvedValueOnce({ data: [] })
+      const result = await fetchMapsSetting()
       expect(result).toBeNull()
     })
   })

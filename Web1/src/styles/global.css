@@ -254,6 +254,11 @@ button {
    contenido largo (legal, blog...) usa esta clase para leerse bien. */
 .kb-prose {
   color: var(--color-ink);
+  overflow-wrap: break-word;
+}
+
+.kb-prose a {
+  word-break: break-word;
 }
 
 .kb-prose > *:first-child {

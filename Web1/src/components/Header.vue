@@ -650,9 +650,17 @@ onBeforeUnmount(() => {
     transition: grid-template-rows 320ms var(--ease-base);
   }
 
+  /* Las reglas de escritorio ".kb-dropdown.is-open" / ".kb-submenu-wrap.is-open"
+     tienen más especificidad (dos clases) que el reset de arriba (una clase) y
+     seguían aplicando su "transform: translateX(-50%) translateY(0)" aunque
+     esta media query ya hubiera puesto "transform: none": el desplegable
+     abierto en móvil quedaba desplazado ~140px hacia la izquierda, saliéndose
+     de la pantalla. Se iguala la especificidad aquí (y esta regla va después
+     en el CSS) para que gane el reset también en el estado abierto. */
   .kb-dropdown.is-open,
   .kb-submenu-wrap.is-open {
     grid-template-rows: 1fr;
+    transform: none;
   }
 
   .kb-dropdown__list,

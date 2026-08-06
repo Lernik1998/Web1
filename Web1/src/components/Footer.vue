@@ -1,6 +1,39 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { fetchMapsSetting } from '../services/dataService'
+import { parseStreetViewUrl, buildStreetViewEmbedSrc } from '../utils/googleMapsUrl'
+
 defineOptions({
   name: 'TheFooter',
+})
+
+// Encuadre de respaldo (fachada de C/ Sant Josep, de frente) por si el
+// "embed_url" que gestiona WordPress es un enlace corto de Google
+// (maps.app.goo.gl): esos no se pueden resolver desde el navegador, ya que
+// son una redirección 301 a otro origen y CORS impide leerla con JS.
+const FALLBACK_STREET_VIEW_SRC =
+  'https://www.google.com/maps?layer=c&cbll=38.8386523,0.1060985&cbp=12,95,,0,0&output=svembed'
+
+const mapEnabled = ref(true)
+const mapSrc = ref(FALLBACK_STREET_VIEW_SRC)
+
+onMounted(async () => {
+  try {
+    const setting = await fetchMapsSetting()
+    const acf = setting?.acf
+    if (!acf) return
+
+    mapEnabled.value = acf.enabled !== false
+
+    const parsed = parseStreetViewUrl(acf.embed_url ?? '')
+    if (parsed) {
+      mapSrc.value = buildStreetViewEmbedSrc(parsed)
+    }
+    // Si no se pudo parsear (p. ej. es un enlace corto maps.app.goo.gl), se
+    // mantiene el encuadre de respaldo ya cargado en mapSrc.
+  } catch (err) {
+    console.error('Error fetching maps setting:', err)
+  }
 })
 </script>
 
@@ -123,17 +156,18 @@ defineOptions({
         </div>
       </div>
 
-      <div class="footer-map">
+      <div v-if="mapEnabled" class="footer-map">
         <!--
           Street View (fachada real del centro) en vez del mapa de
-          carreteras: misma URL de Google Maps embed, en modo "svembed"
-          (capa "c" = Street View) apuntando a las coordenadas y encuadre
-          (cbp = heading,pitch) de la puerta del centro.
+          carreteras, en modo "svembed" (capa "c" = Street View, sin API
+          key). El encuadre (cbll/cbp) viene de acf.embed_url del setting de
+          WordPress (slug "maps") cuando se puede resolver; si no, se usa el
+          de respaldo definido arriba.
         -->
         <iframe
           class="footer-map__frame"
           title="Fachada de Kanbouri Psicología (Google Street View)"
-          src="https://www.google.com/maps?layer=c&cbll=38.8386523,0.1060985&cbp=12,95,,0,0&output=svembed"
+          :src="mapSrc"
           loading="lazy"
           referrerpolicy="no-referrer-when-downgrade"
         ></iframe>

@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { fetchPedirCitaPage } from '../services/dataService'
 import { processWordPressContent } from '../utils/contentProcessor'
 import { useInternalLinks } from '../composables/useInternalLinks'
+import { getRecaptchaToken } from '../utils/recaptcha'
 import type { WordPressPage } from '../types/api'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 
@@ -155,6 +156,12 @@ const submitted = ref(false)
 const errorMsg = ref('')
 const attempted = ref(false)
 
+// Trampa anti-bot: campo invisible para personas (oculto por CSS, sin
+// tabindex y con aria-hidden) que los bots que rellenan formularios a
+// ciegas sí completan. No forma parte de `form`/`PedirCitaForm` a propósito
+// para que no se guarde en sessionStorage.
+const honeypot = ref('')
+
 // María B. Kanbouri no atiende jueves ni viernes, ni por las tardes, y los
 // mediodías solo hasta las 13:30.
 const isMariaSelected = computed(() => form.profesional === 'maria')
@@ -213,9 +220,21 @@ async function handleSubmit() {
     return
   }
 
+  if (honeypot.value) {
+    // Un bot ha rellenado el campo trampa: simulamos un envío correcto sin
+    // procesar nada, para no delatar que fue detectado.
+    submitted.value = true
+    clearSavedForm()
+    return
+  }
+
   submitting.value = true
   try {
-    // TODO: conectar con el endpoint real de envío (WordPress) cuando esté disponible.
+    await getRecaptchaToken('pedir_cita')
+    // TODO: conectar con el endpoint real de envío (WordPress) cuando esté
+    // disponible, enviando el token de reCAPTCHA junto con los datos del
+    // formulario para que el backend lo verifique contra la API
+    // "siteverify" de Google antes de aceptar la solicitud.
     await new Promise((resolve) => setTimeout(resolve, 500))
     submitted.value = true
     clearSavedForm()
@@ -258,6 +277,21 @@ async function handleSubmit() {
       </div>
 
       <form v-else class="kb-appointment__form" novalidate @submit.prevent="handleSubmit">
+        <!-- Campo trampa anti-bot: invisible y no navegable por teclado para
+             personas; los bots que rellenan formularios a ciegas sí lo
+             completan. -->
+        <div class="kb-honeypot" aria-hidden="true">
+          <label for="kb-website">No rellenar este campo</label>
+          <input
+            id="kb-website"
+            v-model="honeypot"
+            type="text"
+            name="website"
+            tabindex="-1"
+            autocomplete="off"
+          />
+        </div>
+
         <!-- Datos de contacto -->
         <fieldset class="kb-field-group">
           <legend class="kb-field-group__title text-h3">Tus datos</legend>
@@ -531,6 +565,18 @@ async function handleSubmit() {
         >
           {{ submitting ? 'Enviando...' : 'Enviar solicitud' }}
         </button>
+
+        <p class="kb-appointment__recaptcha-note text-secondary">
+          Este sitio está protegido por reCAPTCHA y se aplican la
+          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer"
+            >Política de Privacidad</a
+          >
+          y los
+          <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer"
+            >Términos del Servicio</a
+          >
+          de Google.
+        </p>
       </form>
     </div>
     </template>
@@ -593,6 +639,24 @@ async function handleSubmit() {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.kb-honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.kb-appointment__recaptcha-note {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.kb-appointment__recaptcha-note a {
+  color: var(--color-rose-hover);
+  text-decoration: underline;
 }
 
 .kb-field-group__title {

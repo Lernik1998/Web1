@@ -4,8 +4,10 @@ import router from '../../router'
 import PedirCitaView from '../PedirCitaView.vue'
 
 vi.mock('../../services/dataService')
+vi.mock('../../utils/recaptcha')
 
 import { fetchPedirCitaPage } from '../../services/dataService'
+import { getRecaptchaToken } from '../../utils/recaptcha'
 
 const globalStubs = {
   directives: { 'animate-on-scroll': {}, spotlight: {}, ripple: {} },
@@ -38,10 +40,12 @@ async function fillRequiredFields(wrapper: Awaited<ReturnType<typeof mountView>>
 describe('PedirCitaView', () => {
   beforeEach(() => {
     vi.useFakeTimers()
+    vi.mocked(getRecaptchaToken).mockResolvedValue(null)
   })
 
   afterEach(() => {
     vi.useRealTimers()
+    vi.mocked(getRecaptchaToken).mockReset()
   })
 
   it('shows validation errors and does not submit when the form is empty', async () => {
@@ -71,6 +75,40 @@ describe('PedirCitaView', () => {
     expect(wrapper.find('.kb-appointment__success').exists()).toBe(true)
     expect(wrapper.text()).toContain('¡Solicitud enviada!')
     expect(wrapper.text()).toContain('Ana')
+  })
+
+  it('calls getRecaptchaToken with the pedir_cita action on submit', async () => {
+    const wrapper = await mountView()
+
+    await fillRequiredFields(wrapper)
+    await wrapper.find('form').trigger('submit.prevent')
+
+    expect(getRecaptchaToken).toHaveBeenCalledWith('pedir_cita')
+  })
+
+  it('blocks submission with an error when reCAPTCHA verification fails', async () => {
+    vi.mocked(getRecaptchaToken).mockRejectedValue(new Error('reCAPTCHA failed'))
+    const wrapper = await mountView()
+
+    await fillRequiredFields(wrapper)
+    await wrapper.find('form').trigger('submit.prevent')
+    await flushPromises()
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.kb-appointment__success').exists()).toBe(false)
+    expect(wrapper.text()).toContain('No se ha podido enviar la solicitud')
+  })
+
+  it('silently treats submission as successful when the honeypot field is filled (bot trap)', async () => {
+    const wrapper = await mountView()
+
+    await fillRequiredFields(wrapper)
+    await wrapper.find('input[name="website"]').setValue('http://spam.example')
+    await wrapper.find('form').trigger('submit.prevent')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.kb-appointment__success').exists()).toBe(true)
+    expect(getRecaptchaToken).not.toHaveBeenCalled()
   })
 
   it('disables Thursday/Friday and the afternoon slot when María is selected', async () => {

@@ -168,6 +168,18 @@ export interface CookieSettingPost extends WordPressPost {
   acf: CookieSettingAcf
 }
 
+// Campos ACF relevantes del post "setting" con slug "maps": comparte el
+// mismo grupo de campos ACF que "cookie-kanbouri" (mismo custom post type),
+// pero para esta ficha solo importan estos dos.
+export interface MapsSettingAcf {
+  enabled: boolean
+  embed_url: string
+}
+
+export interface MapsSettingPost extends WordPressPost {
+  acf: MapsSettingAcf
+}
+
 // Reseñas de Google, expuestas por un endpoint propio del WordPress
 // (wp-json/kanbouri/v1/reviews), no por la API estándar de WP.
 export interface GoogleReview {
