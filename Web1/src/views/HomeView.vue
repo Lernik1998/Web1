@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { fetchHomePage, fetchMediaById } from '../services/dataService'
+import { fetchHomePage, fetchMediaById, fetchTherapieBySlug } from '../services/dataService'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import Hero from '../components/Hero.vue'
 import TherapyCards from '../components/TherapyCards.vue'
@@ -19,10 +19,30 @@ const therapyHrefs = [
   '/terapias/padres-familia',
 ]
 
+type TherapyCardData = {
+  title: string
+  description: string
+  imageUrl: string
+  buttonText: string
+  href: string
+}
+
+// Terapias específicas dentro de "Psicología para adultos" (custom post type
+// "therapie" en WordPress, no las páginas ACF de home): se muestran además
+// de las 4 tarjetas principales, no en su lugar, para que el carrusel
+// enlace directamente a cada página concreta.
+const ADULT_SUB_THERAPIES = [
+  { slug: 'ansiedad', href: '/terapias/adultos/ansiedad' },
+  { slug: 'depresion-y-estado-de-animo', href: '/terapias/adultos/depresion' },
+  { slug: 'autoestima-y-desarrollo-personal', href: '/terapias/adultos/autoestima' },
+  { slug: 'duelo-y-perdidas', href: '/terapias/adultos/duelo' },
+]
+
 const pageData = ref<WordPressHomePage | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
 const mediaUrls = ref<Record<number, string>>({})
+const adultSubTherapyCards = ref<TherapyCardData[]>([])
 
 const heroProps = computed(() => {
   const acf = pageData.value?.acf
@@ -54,38 +74,64 @@ const therapyCards = computed(() => {
   ]
   const images = [acf.therapy_1_image, acf.therapy_2_image, acf.therapy_3_image, acf.therapy_4_image]
 
-  return titles.map((title, index) => ({
+  const mainCards = titles.map((title, index) => ({
     title,
     description: descriptions[index] ?? '',
     buttonText: buttonTexts[index] ?? 'Me interesa',
     imageUrl: mediaUrls.value[images[index] ?? 0] ?? '',
     href: therapyHrefs[index] ?? '/',
   }))
+
+  return [...mainCards, ...adultSubTherapyCards.value]
 })
 
 onMounted(async () => {
   try {
-    const response = await fetchHomePage()
+    const [response, subTherapies] = await Promise.all([
+      fetchHomePage(),
+      Promise.all(ADULT_SUB_THERAPIES.map((entry) => fetchTherapieBySlug(entry.slug))),
+    ])
     pageData.value = response
 
     const acf = response?.acf
+    const mediaIds = new Set<number>()
     if (acf) {
-      const mediaIds = [...new Set([
+      ;[
         acf.hero_image,
         acf.therapy_1_image,
         acf.therapy_2_image,
         acf.therapy_3_image,
         acf.therapy_4_image,
-      ])].filter(Boolean)
-
-      const mediaResults = await Promise.all(mediaIds.map((id) => fetchMediaById(id)))
-      const urlMap: Record<number, string> = {}
-      mediaResults.forEach((media, index) => {
-        const id = mediaIds[index]
-        if (id && media?.source_url) urlMap[id] = media.source_url
-      })
-      mediaUrls.value = urlMap
+      ]
+        .filter(Boolean)
+        .forEach((id) => mediaIds.add(id))
     }
+    subTherapies.forEach((therapy) => {
+      if (therapy?.acf.therapy_image) mediaIds.add(therapy.acf.therapy_image)
+    })
+
+    const idList = [...mediaIds]
+    const mediaResults = await Promise.all(idList.map((id) => fetchMediaById(id)))
+    const urlMap: Record<number, string> = {}
+    mediaResults.forEach((media, index) => {
+      const id = idList[index]
+      if (id && media?.source_url) urlMap[id] = media.source_url
+    })
+    mediaUrls.value = urlMap
+
+    adultSubTherapyCards.value = subTherapies
+      .map((therapy, index) => {
+        const subAcf = therapy?.acf
+        if (!subAcf) return null
+        return {
+          title: subAcf.therapy_name || therapy.title.rendered,
+          description: subAcf.therapy_description ?? '',
+          imageUrl: urlMap[subAcf.therapy_image] ?? '',
+          buttonText: 'Me interesa',
+          href: ADULT_SUB_THERAPIES[index]!.href,
+        }
+      })
+      .filter((card): card is TherapyCardData => card !== null)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Error desconocido'
     console.error('Error fetching WordPress page:', err)

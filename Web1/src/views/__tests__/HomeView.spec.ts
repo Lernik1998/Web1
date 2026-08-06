@@ -1,12 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount, flushPromises } from '@vue/test-utils'
+import { mount, flushPromises, RouterLinkStub } from '@vue/test-utils'
 import router from '../../router'
 import HomeView from '../HomeView.vue'
-import type { WordPressHomePage, WordPressMedia, GoogleReview } from '../../types/api'
+import type {
+  WordPressHomePage,
+  WordPressMedia,
+  GoogleReview,
+  TherapiePost,
+} from '../../types/api'
 
 vi.mock('../../services/dataService')
 
-import { fetchHomePage, fetchMediaById, fetchGoogleReviews } from '../../services/dataService'
+import {
+  fetchHomePage,
+  fetchMediaById,
+  fetchGoogleReviews,
+  fetchTherapieBySlug,
+} from '../../services/dataService'
 
 const globalStubs = {
   directives: { 'animate-on-scroll': {}, spotlight: {}, ripple: {} },
@@ -64,9 +74,52 @@ function makeMedia(id: number): WordPressMedia {
   return { id, source_url: 'http://example.com/img.jpg', alt_text: '' }
 }
 
+function makeTherapiePost(overrides: {
+  slug: string
+  title: string
+  description: string
+  imageId: number
+}): TherapiePost {
+  return {
+    id: 100,
+    date: '2026-01-01T00:00:00',
+    date_gmt: '2026-01-01T00:00:00',
+    guid: { rendered: 'http://example.com/?p=100' },
+    modified: '2026-01-01T00:00:00',
+    modified_gmt: '2026-01-01T00:00:00',
+    slug: overrides.slug,
+    status: 'publish',
+    type: 'therapie',
+    link: `http://example.com/${overrides.slug}`,
+    title: { rendered: overrides.title },
+    content: { rendered: '' },
+    excerpt: { rendered: '' },
+    author: 1,
+    featured_media: 0,
+    comment_status: 'closed',
+    ping_status: 'closed',
+    sticky: false,
+    template: '',
+    format: 'standard',
+    acf: {
+      therapy_name: overrides.title,
+      specialty: 'adult',
+      therapy_description: overrides.description,
+      therapy_image: overrides.imageId,
+      when_title: '',
+      when_items: '',
+      how_title: '',
+      how_description: '',
+      benefits_title: '',
+      benefits_items: '',
+    },
+  }
+}
+
 describe('HomeView', () => {
   beforeEach(() => {
     vi.mocked(fetchGoogleReviews).mockResolvedValue([] as GoogleReview[])
+    vi.mocked(fetchTherapieBySlug).mockResolvedValue(null)
   })
 
   it('shows a loading state before data arrives', async () => {
@@ -104,6 +157,66 @@ describe('HomeView', () => {
     expect(wrapper.text()).toContain('Adolescentes')
     expect(wrapper.text()).toContain('Adultos')
     expect(wrapper.text()).toContain('Padres y familia')
+  })
+
+  it('includes the adult sub-therapies alongside the main 4 cards, linking to their own pages', async () => {
+    vi.mocked(fetchHomePage).mockResolvedValue(makeHomePage())
+    vi.mocked(fetchMediaById).mockImplementation(async (id: number) => makeMedia(id))
+    vi.mocked(fetchTherapieBySlug).mockImplementation(async (slug: string) => {
+      const bySlug: Record<string, TherapiePost> = {
+        ansiedad: makeTherapiePost({
+          slug: 'ansiedad',
+          title: 'Ansiedad',
+          description: 'Descripción ansiedad',
+          imageId: 341,
+        }),
+        'depresion-y-estado-de-animo': makeTherapiePost({
+          slug: 'depresion-y-estado-de-animo',
+          title: 'Depresión y estado de ánimo',
+          description: 'Descripción depresión',
+          imageId: 241,
+        }),
+        'autoestima-y-desarrollo-personal': makeTherapiePost({
+          slug: 'autoestima-y-desarrollo-personal',
+          title: 'Autoestima y desarrollo personal',
+          description: 'Descripción autoestima',
+          imageId: 65,
+        }),
+        'duelo-y-perdidas': makeTherapiePost({
+          slug: 'duelo-y-perdidas',
+          title: 'Duelo y pérdidas',
+          description: 'Descripción duelo',
+          imageId: 240,
+        }),
+      }
+      return bySlug[slug] ?? null
+    })
+
+    await router.push('/')
+    await router.isReady()
+    const wrapper = mount(HomeView, {
+      global: { ...globalStubs, stubs: { RouterLink: RouterLinkStub } },
+    })
+
+    await flushPromises()
+    await wrapper.vm.$nextTick()
+
+    // Las 4 tarjetas principales siguen presentes...
+    expect(wrapper.text()).toContain('Infantil')
+    expect(wrapper.text()).toContain('Adultos')
+
+    // ...y también las 4 terapias específicas de "Psicología para adultos".
+    expect(wrapper.text()).toContain('Ansiedad')
+    expect(wrapper.text()).toContain('Depresión y estado de ánimo')
+    expect(wrapper.text()).toContain('Autoestima y desarrollo personal')
+    expect(wrapper.text()).toContain('Duelo y pérdidas')
+
+    const links = wrapper.findAllComponents(RouterLinkStub)
+    const hrefs = links.map((link) => link.props('to'))
+    expect(hrefs).toContain('/terapias/adultos/ansiedad')
+    expect(hrefs).toContain('/terapias/adultos/depresion')
+    expect(hrefs).toContain('/terapias/adultos/autoestima')
+    expect(hrefs).toContain('/terapias/adultos/duelo')
   })
 
   it('shows the "no data" message when the page is not found', async () => {

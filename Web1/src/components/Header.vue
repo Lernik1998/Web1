@@ -69,15 +69,25 @@
                   </router-link>
 
                   <template v-else>
-                    <button
-                      type="button"
-                      class="kb-dropdown__link kb-dropdown__link--trigger"
-                      :aria-expanded="activeSubmenu === item.label"
-                      @click="toggleSubmenu(item.label)"
-                    >
-                      {{ item.label }}
-                      <ChevronIcon :class="['kb-chevron', 'kb-chevron--nested', { 'is-open': activeSubmenu === item.label }]" />
-                    </button>
+                    <div class="kb-dropdown__row">
+                      <router-link
+                        :to="item.href"
+                        class="kb-dropdown__link"
+                        @click="closeAll"
+                      >
+                        {{ item.label }}
+                      </router-link>
+
+                      <button
+                        type="button"
+                        class="kb-dropdown__chevron-btn"
+                        :aria-expanded="activeSubmenu === item.label"
+                        :aria-label="`Mostrar terapias de ${item.label}`"
+                        @click="toggleSubmenu(item.label)"
+                      >
+                        <ChevronIcon :class="['kb-chevron', 'kb-chevron--nested', { 'is-open': activeSubmenu === item.label }]" />
+                      </button>
+                    </div>
 
                     <div
                       class="kb-submenu-wrap"
@@ -471,11 +481,47 @@ onBeforeUnmount(() => {
   transition: background-color 220ms var(--ease-base), border-color 220ms var(--ease-base), padding-left 220ms var(--ease-base);
 }
 
-.kb-dropdown__link:hover,
-.kb-dropdown__link--trigger[aria-expanded='true'] {
+/* Fila de "Psicología para adultos": el texto navega a su página, la
+   flecha (botón aparte) solo despliega el submenú. Se resaltan juntos al
+   pasar el ratón por cualquiera de los dos para que se lean como una
+   única fila, no como dos controles independientes. */
+.kb-dropdown__row {
+  display: flex;
+  align-items: stretch;
+  border-radius: 10px;
+}
+
+.kb-dropdown__row .kb-dropdown__link {
+  flex: 1;
+  min-width: 0;
+}
+
+.kb-dropdown__chevron-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  border: none;
+  border-left: 2px solid transparent;
+  background: none;
+  border-radius: 10px;
+  color: var(--color-rose-hover);
+  cursor: pointer;
+  transition: background-color 220ms var(--ease-base);
+}
+
+.kb-dropdown__item:hover .kb-dropdown__link,
+.kb-dropdown__link:focus-visible {
   background: var(--color-rose-soft-wash);
   border-left-color: var(--color-rose);
   padding-left: 18px;
+}
+
+.kb-dropdown__item:hover .kb-dropdown__chevron-btn,
+.kb-dropdown__chevron-btn[aria-expanded='true'],
+.kb-dropdown__chevron-btn:focus-visible {
+  background: var(--color-rose-soft-wash);
 }
 
 /* Submenú (nivel 2) — "Psicología para adultos" */

@@ -79,12 +79,12 @@ describe('Header', () => {
     vi.unstubAllGlobals()
   })
 
-  it('opens and closes the nested "adultos" submenu via its trigger', async () => {
+  it('opens and closes the nested "adultos" submenu via its chevron button', async () => {
     const wrapper = mount(Header, {
       global: { directives, stubs: { RouterLink: RouterLinkStub } },
     })
 
-    const submenuTrigger = wrapper.find('.kb-dropdown__link--trigger')
+    const submenuTrigger = wrapper.find('.kb-dropdown__chevron-btn')
     const submenuWrap = wrapper.find('.kb-submenu-wrap')
 
     expect(submenuTrigger.attributes('aria-expanded')).toBe('false')
@@ -96,6 +96,18 @@ describe('Header', () => {
 
     await submenuTrigger.trigger('click')
     expect(submenuTrigger.attributes('aria-expanded')).toBe('false')
+  })
+
+  it('navigates to /terapias/adultos when clicking the "Psicología para adultos" label itself', () => {
+    const wrapper = mount(Header, {
+      global: { directives, stubs: { RouterLink: RouterLinkStub } },
+    })
+
+    const adultosLink = wrapper
+      .findAllComponents(RouterLinkStub)
+      .find((link) => link.text().includes('Psicología para adultos'))
+
+    expect(adultosLink?.props('to')).toBe('/terapias/adultos')
   })
 
   it('opens the dropdown on mouseenter (desktop hover) and schedules a close on mouseleave', async () => {

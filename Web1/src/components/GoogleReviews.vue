@@ -344,9 +344,15 @@ onMounted(async () => {
   margin: 0;
 }
 
+/* Flexbox (no grid) + justify-content:center a propósito: cada página
+   muestra siempre 3 reseñas (PAGE_SIZE), así que en el corte de tablet (2
+   columnas) la tercera queda sola en su propia fila. Con grid esa tarjeta
+   suelta se quedaba pegada al lateral izquierdo; con flex-wrap se centra
+   sola en su fila, que es como debe verse. */
 .kb-reviews__grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: start;
   gap: 24px;
 }
@@ -356,6 +362,8 @@ onMounted(async () => {
   background: var(--color-paper);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-lg);
+  flex: 1 1 calc((100% - 48px) / 3);
+  max-width: calc((100% - 48px) / 3);
 }
 
 .kb-reviews__skeleton {
@@ -610,14 +618,18 @@ onMounted(async () => {
 
 /* ---------- Responsive ---------- */
 @media (max-width: 960px) {
-  .kb-reviews__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .kb-review,
+  .kb-reviews__skeleton {
+    flex-basis: calc((100% - 24px) / 2);
+    max-width: calc((100% - 24px) / 2);
   }
 }
 
 @media (max-width: 640px) {
-  .kb-reviews__grid {
-    grid-template-columns: 1fr;
+  .kb-review,
+  .kb-reviews__skeleton {
+    flex-basis: 100%;
+    max-width: 100%;
   }
 }
 </style>

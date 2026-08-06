@@ -10,43 +10,291 @@
         </p>
       </div>
 
-      <div class="kb-therapies__grid">
-        <article
-          v-for="(card, i) in cards"
-          :key="card.title"
-          class="kb-card"
-          v-animate-on-scroll
-          v-spotlight
-          :style="{ transitionDelay: `${i * 100}ms` }"
+      <div
+        v-if="cards.length"
+        ref="carouselEl"
+        class="kb-therapies__carousel"
+        role="region"
+        aria-roledescription="carrusel"
+        aria-label="Terapias"
+        @mouseenter="isHoverPaused = true"
+        @mouseleave="isHoverPaused = false"
+        @focusin="isHoverPaused = true"
+        @focusout="handleFocusOut"
+      >
+        <div class="kb-therapies__viewport">
+          <div
+            class="kb-therapies__track"
+            :style="trackStyle"
+            @transitionend="handleTransitionEnd"
+          >
+            <div
+              v-for="slide in slides"
+              :key="slide.key"
+              class="kb-therapies__slide"
+              :style="{ flexBasis: slideBasis }"
+              :aria-hidden="slide.isClone ? 'true' : undefined"
+              :inert="slide.isClone"
+            >
+              <article
+                class="kb-card"
+                v-animate-on-scroll
+                v-spotlight
+              >
+                <div class="kb-card__media">
+                  <img :src="slide.card.imageUrl" :alt="slide.card.title" class="kb-card__image" />
+                </div>
+
+                <div class="kb-card__body">
+                  <h3 class="kb-card__title text-h3">{{ slide.card.title }}</h3>
+                  <p class="kb-card__desc text-secondary">{{ slide.card.description }}</p>
+
+                  <router-link
+                    :to="slide.card.href"
+                    class="kb-card__link text-cta"
+                    :tabindex="slide.isClone ? -1 : undefined"
+                    v-ripple
+                  >
+                    {{ slide.card.buttonText }}
+                  </router-link>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+
+        <button
+          v-if="canLoop"
+          type="button"
+          class="kb-therapies__arrow kb-therapies__arrow--prev"
+          aria-label="Terapia anterior"
+          @click="handlePrev"
         >
-          <div class="kb-card__media">
-            <img :src="card.imageUrl" :alt="card.title" class="kb-card__image" />
-          </div>
+          <ChevronIcon class="kb-therapies__arrow-icon kb-therapies__arrow-icon--prev" />
+        </button>
+        <button
+          v-if="canLoop"
+          type="button"
+          class="kb-therapies__arrow kb-therapies__arrow--next"
+          aria-label="Siguiente terapia"
+          @click="handleNext"
+        >
+          <ChevronIcon class="kb-therapies__arrow-icon kb-therapies__arrow-icon--next" />
+        </button>
+      </div>
 
-          <div class="kb-card__body">
-            <h3 class="kb-card__title text-h3">{{ card.title }}</h3>
-            <p class="kb-card__desc text-secondary">{{ card.description }}</p>
+      <div v-if="canLoop" class="kb-therapies__controls">
+        <div class="kb-therapies__dots" role="tablist" aria-label="Seleccionar terapia">
+          <button
+            v-for="(card, dotIndex) in cards"
+            :key="card.title"
+            type="button"
+            class="kb-therapies__dot"
+            role="tab"
+            :class="{ 'is-active': activeDot === dotIndex }"
+            :aria-selected="activeDot === dotIndex"
+            :aria-label="`Ir a ${card.title}`"
+            @click="handleGoTo(dotIndex)"
+          ></button>
+        </div>
 
-            <router-link :to="card.href" class="kb-card__link text-cta" v-ripple>
-              {{ card.buttonText }}
-            </router-link>
-          </div>
-        </article>
+        <button
+          type="button"
+          class="kb-therapies__playpause"
+          :aria-label="isPaused ? 'Reanudar el carrusel' : 'Pausar el carrusel'"
+          @click="togglePlayPause"
+        >
+          <span v-if="isPaused" aria-hidden="true">▶</span>
+          <span v-else aria-hidden="true">❚❚</span>
+        </button>
       </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-defineProps<{
-  cards: Array<{
-    title: string
-    description: string
-    imageUrl: string
-    buttonText: string
-    href: string
-  }>
+import { ref, computed, onMounted, onBeforeUnmount, defineComponent, h } from 'vue'
+
+type TherapyCard = {
+  title: string
+  description: string
+  imageUrl: string
+  buttonText: string
+  href: string
+}
+
+const props = defineProps<{
+  cards: TherapyCard[]
 }>()
+
+/**
+ * Icono de flecha (mismo trazo fino que el del Header) para no depender de
+ * librerías de iconos externas.
+ */
+const ChevronIcon = defineComponent({
+  render() {
+    return h(
+      'svg',
+      { viewBox: '0 0 10 6', width: 10, height: 6, fill: 'none', 'aria-hidden': 'true' },
+      [
+        h('path', {
+          d: 'M1 1L5 5L9 1',
+          stroke: 'currentColor',
+          'stroke-width': 1.4,
+          'stroke-linecap': 'round',
+          'stroke-linejoin': 'round',
+        }),
+      ],
+    )
+  },
+})
+
+const AUTOPLAY_MS = 4500
+const BREAKPOINT_MOBILE = 640
+const BREAKPOINT_TABLET = 1080
+
+const carouselEl = ref<HTMLElement | null>(null)
+const itemsPerView = ref(3)
+const index = ref(3)
+const isTransitioning = ref(true)
+const isPaused = ref(false)
+const isHoverPaused = ref(false)
+const prefersReducedMotion = ref(false)
+
+const canLoop = computed(() => props.cards.length > itemsPerView.value)
+
+type Slide = { card: TherapyCard; key: string; isClone: boolean }
+
+const slides = computed<Slide[]>(() => {
+  if (!props.cards.length) return []
+  if (!canLoop.value) {
+    return props.cards.map((card, i) => ({ card, key: `real-${i}`, isClone: false }))
+  }
+
+  const n = itemsPerView.value
+  const head = props.cards.slice(-n).map((card, i) => ({ card, key: `head-${i}`, isClone: true }))
+  const middle = props.cards.map((card, i) => ({ card, key: `real-${i}`, isClone: false }))
+  const tail = props.cards.slice(0, n).map((card, i) => ({ card, key: `tail-${i}`, isClone: true }))
+  return [...head, ...middle, ...tail]
+})
+
+const slideBasis = computed(() => {
+  const n = canLoop.value
+    ? itemsPerView.value
+    : Math.max(1, Math.min(itemsPerView.value, props.cards.length))
+  return `${100 / n}%`
+})
+
+const trackStyle = computed(() => {
+  if (!canLoop.value) return { transform: 'none', transition: 'none' }
+  return {
+    transform: `translateX(-${index.value * (100 / itemsPerView.value)}%)`,
+    transition: isTransitioning.value ? 'transform 650ms cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
+  }
+})
+
+const activeDot = computed(() => {
+  const total = props.cards.length
+  if (!total) return 0
+  return (((index.value - itemsPerView.value) % total) + total) % total
+})
+
+function snapTo(newIndex: number) {
+  isTransitioning.value = false
+  index.value = newIndex
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      isTransitioning.value = true
+    })
+  })
+}
+
+function handleTransitionEnd(event: TransitionEvent) {
+  // "transitionend" burbujea: sin este filtro, la transición de cualquier
+  // hijo (el hover de una tarjeta, el fondo del botón de flecha al
+  // pulsarlo...) también dispara este handler, cortando el snap de vuelta
+  // al principio a mitad de la animación real del track.
+  if (event.target !== event.currentTarget || event.propertyName !== 'transform') return
+  if (!canLoop.value) return
+  const n = itemsPerView.value
+  const total = props.cards.length
+  if (index.value >= n + total) {
+    snapTo(index.value - total)
+  } else if (index.value < n) {
+    snapTo(index.value + total)
+  }
+}
+
+function next() {
+  if (!canLoop.value) return
+  isTransitioning.value = true
+  index.value += 1
+}
+
+function handleNext() {
+  next()
+  restartAutoplay()
+}
+
+function handlePrev() {
+  if (!canLoop.value) return
+  isTransitioning.value = true
+  index.value -= 1
+  restartAutoplay()
+}
+
+function handleGoTo(dotIndex: number) {
+  if (!canLoop.value) return
+  isTransitioning.value = true
+  index.value = itemsPerView.value + dotIndex
+  restartAutoplay()
+}
+
+function togglePlayPause() {
+  isPaused.value = !isPaused.value
+  if (!isPaused.value) restartAutoplay()
+}
+
+function handleFocusOut(event: FocusEvent) {
+  const related = event.relatedTarget as Node | null
+  if (!carouselEl.value?.contains(related)) isHoverPaused.value = false
+}
+
+function updateItemsPerView() {
+  const width = window.innerWidth
+  const next = width <= BREAKPOINT_MOBILE ? 1 : width <= BREAKPOINT_TABLET ? 2 : 3
+  if (next === itemsPerView.value) return
+  itemsPerView.value = next
+  snapTo(next)
+}
+
+function tick() {
+  if (!canLoop.value) return
+  if (isPaused.value || isHoverPaused.value || prefersReducedMotion.value) return
+  if (typeof document !== 'undefined' && document.hidden) return
+  next()
+}
+
+let autoplayTimer: ReturnType<typeof setInterval> | undefined
+
+function restartAutoplay() {
+  clearInterval(autoplayTimer)
+  autoplayTimer = setInterval(tick, AUTOPLAY_MS)
+}
+
+onMounted(() => {
+  updateItemsPerView()
+  if (typeof window.matchMedia === 'function') {
+    prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  }
+  window.addEventListener('resize', updateItemsPerView)
+  restartAutoplay()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateItemsPerView)
+  clearInterval(autoplayTimer)
+})
 </script>
 
 <style scoped>
@@ -81,10 +329,130 @@ defineProps<{
   color: var(--color-ink);
 }
 
-.kb-therapies__grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 24px;
+/* ---------- Carrusel ---------- */
+.kb-therapies__carousel {
+  position: relative;
+}
+
+.kb-therapies__viewport {
+  overflow: hidden;
+  /* Compensa el padding exterior de la primera/última tarjeta (ver
+     .kb-therapies__slide) para que sigan quedando a ras del contenedor. */
+  margin: 0 -12px;
+}
+
+.kb-therapies__track {
+  display: flex;
+  align-items: stretch;
+}
+
+.kb-therapies__slide {
+  flex-shrink: 0;
+  min-width: 0;
+  /* El espacio entre tarjetas se resuelve con padding, no con `gap`: un
+     `gap` en un flex-item con flex-basis en porcentaje NO se descuenta del
+     cálculo de ese porcentaje, así que cada `translateX` calculado en % se
+     quedaba corta por el ancho del gap. El desfase se acumulaba en cada
+     paso (24px, 48px, 72px...), dejando la tarjeta visible cada vez más
+     cortada — más notorio en móvil, donde 24px es una fracción grande del
+     ancho de pantalla. Con padding en vez de gap, el % es exacto siempre.
+  */
+  box-sizing: border-box;
+  padding: 0 12px;
+}
+
+.kb-therapies__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--color-line);
+  background: var(--color-paper);
+  color: var(--color-rose-hover);
+  cursor: pointer;
+  box-shadow: var(--shadow-popover);
+  transition: background-color var(--dur-base) var(--ease-base),
+    transform var(--dur-base) var(--ease-base);
+  z-index: 2;
+}
+
+.kb-therapies__arrow:hover {
+  background: var(--color-rose-soft-wash);
+}
+
+.kb-therapies__arrow--prev {
+  left: -22px;
+}
+
+.kb-therapies__arrow--next {
+  right: -22px;
+}
+
+.kb-therapies__arrow-icon {
+  width: 12px;
+  height: 8px;
+}
+
+.kb-therapies__arrow-icon--prev {
+  transform: rotate(90deg);
+}
+
+.kb-therapies__arrow-icon--next {
+  transform: rotate(-90deg);
+}
+
+.kb-therapies__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 28px;
+}
+
+.kb-therapies__dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kb-therapies__dot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-line);
+  cursor: pointer;
+  transition: background-color var(--dur-base) var(--ease-base), transform var(--dur-base) var(--ease-base);
+}
+
+.kb-therapies__dot.is-active {
+  background: var(--color-rose);
+  transform: scale(1.2);
+}
+
+.kb-therapies__playpause {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--color-line);
+  background: var(--color-paper);
+  color: var(--color-rose-hover);
+  font-size: 10px;
+  cursor: pointer;
+  transition: background-color var(--dur-base) var(--ease-base);
+}
+
+.kb-therapies__playpause:hover {
+  background: var(--color-rose-soft-wash);
 }
 
 .kb-card {
@@ -96,6 +464,7 @@ defineProps<{
   border: 1px solid var(--color-line);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  height: 100%;
   transition: transform var(--dur-base) var(--ease-base),
     box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
 }
@@ -191,14 +560,19 @@ defineProps<{
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1080px) {
-  .kb-therapies__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .kb-therapies__arrow--prev {
+    left: 4px;
+  }
+
+  .kb-therapies__arrow--next {
+    right: 4px;
   }
 }
 
 @media (max-width: 560px) {
-  .kb-therapies__grid {
-    grid-template-columns: 1fr;
+  .kb-therapies__arrow {
+    width: 36px;
+    height: 36px;
   }
 }
 </style>
