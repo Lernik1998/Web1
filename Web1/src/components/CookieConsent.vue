@@ -14,8 +14,16 @@ interface CategoryContent {
   description: string
 }
 
-const { consent, hasDecided, acceptAll: acceptAllConsent, rejectAll: rejectAllConsent, savePreferences: savePreferencesConsent } =
-  useCookieConsent()
+const {
+  consent,
+  hasDecided,
+  bannerVisible: visible,
+  showBanner,
+  hideBanner,
+  acceptAll: acceptAllConsent,
+  rejectAll: rejectAllConsent,
+  savePreferences: savePreferencesConsent,
+} = useCookieConsent()
 
 // Textos por defecto (se muestran de inmediato y se sustituyen, si llegan,
 // por los que gestiona la clínica desde WordPress vía fetchCookieSetting).
@@ -42,7 +50,6 @@ const categories = ref<CategoryContent[]>([
   },
 ])
 
-const visible = ref(false)
 const showDetails = ref(false)
 
 // Borrador editable de los toggles del panel "Personalizar": no se guarda en
@@ -58,7 +65,7 @@ function syncDraftFromConsent() {
 }
 
 function close() {
-  visible.value = false
+  hideBanner()
   showDetails.value = false
 }
 
@@ -80,7 +87,7 @@ function savePreferences() {
 function openPreferences() {
   syncDraftFromConsent()
   showDetails.value = true
-  visible.value = true
+  showBanner()
 }
 
 function trimmed(value: string | undefined): string {
@@ -89,7 +96,7 @@ function trimmed(value: string | undefined): string {
 
 onMounted(async () => {
   if (!hasDecided.value) {
-    visible.value = true
+    showBanner()
     syncDraftFromConsent()
   }
 
@@ -123,7 +130,7 @@ onMounted(async () => {
     ]
 
     if (!bannerEnabled.value) {
-      visible.value = false
+      hideBanner()
     }
   } catch (err) {
     console.error('Error fetching cookie banner settings:', err)

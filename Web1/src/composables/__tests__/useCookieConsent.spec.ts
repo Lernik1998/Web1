@@ -105,6 +105,32 @@ describe('useCookieConsent', () => {
     expect(getConsentCookieValue()).toBeNull()
   })
 
+  it('starts with the banner hidden until something shows it', async () => {
+    const { bannerVisible } = await loadComposable()
+    expect(bannerVisible.value).toBe(false)
+  })
+
+  it('showBanner/hideBanner toggle the shared banner visibility flag', async () => {
+    const { bannerVisible, showBanner, hideBanner } = await loadComposable()
+
+    showBanner()
+    expect(bannerVisible.value).toBe(true)
+
+    hideBanner()
+    expect(bannerVisible.value).toBe(false)
+  })
+
+  it('shares banner visibility across every call to useCookieConsent() (singleton)', async () => {
+    vi.resetModules()
+    const { useCookieConsent } = await import('../useCookieConsent')
+    const first = useCookieConsent()
+    const second = useCookieConsent()
+
+    first.showBanner()
+
+    expect(second.bannerVisible.value).toBe(true)
+  })
+
   it('shares state across every call to useCookieConsent() (singleton)', async () => {
     vi.resetModules()
     const { useCookieConsent } = await import('../useCookieConsent')

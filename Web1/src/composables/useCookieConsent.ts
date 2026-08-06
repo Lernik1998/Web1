@@ -44,8 +44,15 @@ function applySideEffects(consent: CookieConsentValue): void {
 // Estado compartido (singleton): todas las llamadas a useCookieConsent() en
 // toda la app leen/escriben el mismo estado reactivo, en vez de una copia
 // local por componente.
-const state = reactive<{ consent: CookieConsentValue | null }>({
+//
+// `bannerVisible` vive aquí (y no solo como estado local de CookieConsent.vue)
+// para que otros componentes fijos en pantalla (WhatsAppButton.vue) puedan
+// ocultarse mientras el banner está abierto: en móvil el banner ocupa casi
+// todo el ancho con z-index alto y, si no se ocultan, el botón de WhatsApp
+// queda tapado debajo de él en la primera visita.
+const state = reactive<{ consent: CookieConsentValue | null; bannerVisible: boolean }>({
   consent: readStoredConsent(),
+  bannerVisible: false,
 })
 
 // Al cargar la app, si ya existe la cookie de una visita anterior, hay que
@@ -63,6 +70,15 @@ function persist(consent: CookieConsentValue): void {
 export function useCookieConsent() {
   const consent = computed(() => state.consent)
   const hasDecided = computed(() => state.consent !== null)
+  const bannerVisible = computed(() => state.bannerVisible)
+
+  function showBanner(): void {
+    state.bannerVisible = true
+  }
+
+  function hideBanner(): void {
+    state.bannerVisible = false
+  }
 
   function isAllowed(category: ConsentCategory): boolean {
     return state.consent?.[category] === true
@@ -106,6 +122,9 @@ export function useCookieConsent() {
   return {
     consent,
     hasDecided,
+    bannerVisible,
+    showBanner,
+    hideBanner,
     isAllowed,
     acceptAll,
     rejectAll,
