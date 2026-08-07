@@ -22,6 +22,11 @@ const twoCards = [
   },
 ]
 
+const twoCardsOneCustomPosition = [
+  twoCards[0]!,
+  { ...twoCards[1]!, imagePosition: 'center 85%' },
+]
+
 const fourCards = [
   ...twoCards,
   {
@@ -111,6 +116,14 @@ describe('TherapyCards', () => {
 
       expect(wrapper.find('.kb-therapies__arrow').exists()).toBe(false)
       expect(wrapper.find('.kb-therapies__controls').exists()).toBe(false)
+    })
+
+    it('overrides object-position only for cards with a custom imagePosition, keeping cover for the rest', async () => {
+      const wrapper = await mountCards(twoCardsOneCustomPosition)
+      const images = wrapper.findAll('img.kb-card__image')
+
+      expect(images[0]!.attributes('style')).toBeUndefined()
+      expect(images[1]!.attributes('style')).toContain('object-position: center 85%')
     })
   })
 

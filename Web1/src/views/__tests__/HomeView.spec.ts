@@ -79,6 +79,7 @@ function makeTherapiePost(overrides: {
   title: string
   description: string
   imageId: number
+  cardDescription?: string
 }): TherapiePost {
   return {
     id: 100,
@@ -112,6 +113,7 @@ function makeTherapiePost(overrides: {
       how_description: '',
       benefits_title: '',
       benefits_items: '',
+      card_description: overrides.cardDescription,
     },
   }
 }
@@ -217,6 +219,55 @@ describe('HomeView', () => {
     expect(hrefs).toContain('/terapias/adultos/depresion')
     expect(hrefs).toContain('/terapias/adultos/autoestima')
     expect(hrefs).toContain('/terapias/adultos/duelo')
+  })
+
+  it('uses card_description for a sub-therapy card when set, instead of the page description', async () => {
+    vi.mocked(fetchHomePage).mockResolvedValue(makeHomePage())
+    vi.mocked(fetchMediaById).mockImplementation(async (id: number) => makeMedia(id))
+    vi.mocked(fetchTherapieBySlug).mockImplementation(async (slug: string) => {
+      if (slug !== 'ansiedad') return null
+      return makeTherapiePost({
+        slug: 'ansiedad',
+        title: 'Ansiedad',
+        description: 'Texto largo de la página propia de Ansiedad.',
+        imageId: 341,
+        cardDescription: 'Texto corto solo para la tarjeta de inicio.',
+      })
+    })
+
+    await router.push('/')
+    await router.isReady()
+    const wrapper = mount(HomeView, { global: globalStubs })
+
+    await flushPromises()
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('Texto corto solo para la tarjeta de inicio.')
+    expect(wrapper.text()).not.toContain('Texto largo de la página propia de Ansiedad.')
+  })
+
+  it('falls back to the page description when card_description is not set in WordPress', async () => {
+    vi.mocked(fetchHomePage).mockResolvedValue(makeHomePage())
+    vi.mocked(fetchMediaById).mockImplementation(async (id: number) => makeMedia(id))
+    vi.mocked(fetchTherapieBySlug).mockImplementation(async (slug: string) => {
+      if (slug !== 'ansiedad') return null
+      return makeTherapiePost({
+        slug: 'ansiedad',
+        title: 'Ansiedad',
+        description: 'Texto de la página propia de Ansiedad.',
+        imageId: 341,
+        // Sin cardDescription: debe caer en therapy_description.
+      })
+    })
+
+    await router.push('/')
+    await router.isReady()
+    const wrapper = mount(HomeView, { global: globalStubs })
+
+    await flushPromises()
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('Texto de la página propia de Ansiedad.')
   })
 
   it('shows the "no data" message when the page is not found', async () => {

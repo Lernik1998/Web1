@@ -105,6 +105,10 @@ export interface ProfesionalAcf {
   license_number: string
   academic_training: string
   extra_training: string
+  // Opcional: foto distinta para la ficha del listado de Equipo. Si se deja
+  // vacía en WordPress, el listado usa `hero_image` (la misma que la ficha
+  // de perfil) como respaldo.
+  list_image?: number
 }
 
 // WordPress REST API Post type (artículos del blog).
@@ -135,6 +139,10 @@ export interface TherapieAcf {
   how_description: string
   benefits_title: string
   benefits_items: string
+  // Opcional: texto alternativo para la tarjeta del carrusel de inicio. Si
+  // se deja vacío en WordPress, la tarjeta usa `therapy_description` (el
+  // mismo texto que la página propia de la terapia) como respaldo.
+  card_description?: string
 }
 
 export interface TherapiePost extends WordPressPost {

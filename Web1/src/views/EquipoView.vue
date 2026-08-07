@@ -31,7 +31,10 @@ const sortedProfessionals = computed(() =>
 const cards = computed(() =>
   sortedProfessionals.value.map((post) => {
     const name = post.title.rendered
-    const apiPhoto = photoUrls.value[post.acf.hero_image] ?? null
+    // `list_image` es opcional: si no se ha configurado en WordPress, la
+    // ficha del listado cae en `hero_image` (la misma foto del perfil).
+    const listImageId = post.acf.list_image || post.acf.hero_image
+    const apiPhoto = photoUrls.value[listImageId] ?? null
     return {
       slug: post.slug,
       name,
@@ -51,9 +54,11 @@ onMounted(async () => {
   try {
     professionals.value = await fetchProfesionales()
 
-    const mediaIds = [...new Set(professionals.value.map((post) => post.acf.hero_image))].filter(
-      Boolean,
-    )
+    const mediaIds = [
+      ...new Set(
+        professionals.value.flatMap((post) => [post.acf.hero_image, post.acf.list_image]),
+      ),
+    ].filter((id): id is number => Boolean(id))
     const mediaResults = await Promise.all(mediaIds.map((id) => fetchMediaById(id)))
     const urlMap: Record<number, string> = {}
     mediaResults.forEach((media, index) => {

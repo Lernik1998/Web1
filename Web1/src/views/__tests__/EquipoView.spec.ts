@@ -109,6 +109,43 @@ describe('EquipoView', () => {
     )
   })
 
+  it('uses list_image for the listing photo when set, instead of hero_image', async () => {
+    fetchProfesionalesMock.mockResolvedValue([
+      makePost({ acf: { ...makePost().acf, hero_image: 42, list_image: 99 } }),
+    ])
+    fetchMediaByIdMock.mockImplementation(async (id: number) =>
+      id === 99
+        ? { id: 99, source_url: 'https://example.com/list-photo.jpg' }
+        : { id: 42, source_url: 'https://example.com/profile-photo.jpg' },
+    )
+    await router.push('/equipo')
+    await router.isReady()
+
+    const wrapper = mount(EquipoView, { global: globalStubs })
+    await flushPromises()
+
+    expect(fetchMediaByIdMock).toHaveBeenCalledWith(99)
+    expect(wrapper.find('.kb-team-card__image').attributes('src')).toBe(
+      'https://example.com/list-photo.jpg',
+    )
+  })
+
+  it('falls back to hero_image for the listing photo when list_image is not set', async () => {
+    fetchProfesionalesMock.mockResolvedValue([
+      makePost({ acf: { ...makePost().acf, hero_image: 42 } }),
+    ])
+    fetchMediaByIdMock.mockResolvedValue({ id: 42, source_url: 'https://example.com/photo.jpg' })
+    await router.push('/equipo')
+    await router.isReady()
+
+    const wrapper = mount(EquipoView, { global: globalStubs })
+    await flushPromises()
+
+    expect(wrapper.find('.kb-team-card__image').attributes('src')).toBe(
+      'https://example.com/photo.jpg',
+    )
+  })
+
   it('falls back to an initials placeholder when there is no photo anywhere', async () => {
     fetchProfesionalesMock.mockResolvedValue([makePost({ slug: 'sin-foto', title: { rendered: 'Sin Foto' } })])
     await router.push('/equipo')

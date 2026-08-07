@@ -2,11 +2,12 @@
   <section id="terapias" class="kb-therapies">
     <div class="kb-therapies__inner">
       <div class="kb-therapies__intro">
-        <p class="kb-therapies__eyebrow text-secondary">Servicios</p>
-        <h2 class="kb-therapies__title text-h2">Te acompañamos en cada etapa</h2>
+        <p class="kb-therapies__eyebrow text-secondary">Terapias en Dénia</p>
+        <h2 class="kb-therapies__title text-h2">Terapia psicológica en Dénia para cada etapa de la vida</h2>
         <p class="kb-therapies__lead text-body">
-          Cuatro espacios terapéuticos pensados para adaptarse a cada momento
-          vital, en Dénia o desde donde estés.
+          Cuatro espacios terapéuticos —infantil, adolescentes, adultos y
+          pareja— con sesiones presenciales en Dénia y terapia online desde
+          donde estés.
         </p>
       </div>
 
@@ -42,7 +43,12 @@
                 v-spotlight
               >
                 <div class="kb-card__media">
-                  <img :src="slide.card.imageUrl" :alt="slide.card.title" class="kb-card__image" />
+                  <img
+                    :src="slide.card.imageUrl"
+                    :alt="slide.card.title"
+                    class="kb-card__image"
+                    :style="slide.card.imagePosition ? { objectPosition: slide.card.imagePosition } : undefined"
+                  />
                 </div>
 
                 <div class="kb-card__body">
@@ -121,6 +127,14 @@ type TherapyCard = {
   imageUrl: string
   buttonText: string
   href: string
+  /**
+   * Override del punto de enfoque del recorte (mismo formato que la
+   * propiedad CSS `object-position`, p. ej. "center 85%"). Por defecto
+   * todas las tarjetas usan "center 20%" (ver .kb-card__image); útil para
+   * fotos verticales donde el punto de interés no está en la parte de
+   * arriba, como las manos entrelazadas de la tarjeta de Duelo.
+   */
+  imagePosition?: string
 }
 
 const props = defineProps<{

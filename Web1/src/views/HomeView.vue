@@ -25,17 +25,23 @@ type TherapyCardData = {
   imageUrl: string
   buttonText: string
   href: string
+  imagePosition?: string
 }
 
 // Terapias específicas dentro de "Psicología para adultos" (custom post type
 // "therapie" en WordPress, no las páginas ACF de home): se muestran además
 // de las 4 tarjetas principales, no en su lugar, para que el carrusel
 // enlace directamente a cada página concreta.
-const ADULT_SUB_THERAPIES = [
+//
+// "Duelo y pérdidas" usa un `imagePosition` propio porque su foto en
+// WordPress es vertical, con el punto de interés (las manos entrelazadas)
+// en la parte baja: con el recorte por defecto ("center 20%", pensado para
+// fotos horizontales) las manos quedaban fuera del encuadre.
+const ADULT_SUB_THERAPIES: Array<{ slug: string; href: string; imagePosition?: string }> = [
   { slug: 'ansiedad', href: '/terapias/adultos/ansiedad' },
   { slug: 'depresion-y-estado-de-animo', href: '/terapias/adultos/depresion' },
   { slug: 'autoestima-y-desarrollo-personal', href: '/terapias/adultos/autoestima' },
-  { slug: 'duelo-y-perdidas', href: '/terapias/adultos/duelo' },
+  { slug: 'duelo-y-perdidas', href: '/terapias/adultos/duelo', imagePosition: 'center 85%' },
 ]
 
 const pageData = ref<WordPressHomePage | null>(null)
@@ -125,10 +131,14 @@ onMounted(async () => {
         if (!subAcf) return null
         return {
           title: subAcf.therapy_name || therapy.title.rendered,
-          description: subAcf.therapy_description ?? '',
+          // `card_description` es opcional: si en WordPress se deja vacío,
+          // la tarjeta usa el mismo texto que la página propia de la
+          // terapia (`therapy_description`) como respaldo.
+          description: subAcf.card_description?.trim() || subAcf.therapy_description || '',
           imageUrl: urlMap[subAcf.therapy_image] ?? '',
           buttonText: 'Me interesa',
           href: ADULT_SUB_THERAPIES[index]!.href,
+          imagePosition: ADULT_SUB_THERAPIES[index]!.imagePosition,
         }
       })
       .filter((card): card is TherapyCardData => card !== null)
