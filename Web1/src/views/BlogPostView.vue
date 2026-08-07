@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { fetchBlogPostBySlug } from '../services/dataService'
-import { processWordPressContent, extractFirstImageUrl } from '../utils/contentProcessor'
+import {
+  processWordPressContent,
+  extractFirstImageUrl,
+  reflowSoftLineBreaks,
+} from '../utils/contentProcessor'
 import { useInternalLinks } from '../composables/useInternalLinks'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import type { WordPressPost } from '../types/api'
@@ -65,7 +69,7 @@ const processedContent = computed(() => {
     html = withoutFigure !== html ? withoutFigure : html.replace(/<img[^>]+>/, '')
   }
 
-  return processWordPressContent(html)
+  return reflowSoftLineBreaks(processWordPressContent(html))
 })
 
 async function loadPost(slug: string) {
@@ -98,16 +102,18 @@ watch(() => props.slug, (slug) => loadPost(slug))
       </div>
 
       <article v-else-if="post" class="kb-post__article">
-        <div class="kb-post__meta text-secondary">
-          <span v-if="categoryName" class="kb-post__category">{{ categoryName }}</span>
-          <time :datetime="post.date">{{ formattedDate }}</time>
-        </div>
-
-        <h1 class="kb-post__title text-h1">{{ post.title.rendered }}</h1>
-
         <img :src="imageUrl" :alt="imageAlt" class="kb-post__image" />
 
-        <div ref="contentEl" class="kb-prose" v-html="processedContent"></div>
+        <div class="kb-post__body">
+          <div class="kb-post__meta text-secondary">
+            <span v-if="categoryName" class="kb-post__category">{{ categoryName }}</span>
+            <time :datetime="post.date">{{ formattedDate }}</time>
+          </div>
+
+          <h1 class="kb-post__title text-h1">{{ post.title.rendered }}</h1>
+
+          <div ref="contentEl" class="kb-prose" v-html="processedContent"></div>
+        </div>
       </article>
 
       <div v-else class="kb-post__error">
@@ -124,13 +130,15 @@ watch(() => props.slug, (slug) => loadPost(slug))
 }
 
 .kb-post__inner {
-  max-width: 760px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
 .kb-post__back {
-  display: inline-block;
-  margin-bottom: 28px;
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 20px;
+  color: var(--color-secondary);
   text-decoration: none;
   transition: color var(--dur-base) var(--ease-base);
 }
@@ -139,13 +147,36 @@ watch(() => props.slug, (slug) => loadPost(slug))
   color: var(--color-rose-hover);
 }
 
+/* Tarjeta de lectura: separa el artículo del fondo de la página para que la
+   vista se sienta como un espacio de lectura tranquilo y contenido, en vez
+   de texto flotando directamente sobre el fondo. */
+.kb-post__article {
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-popover);
+}
+
+.kb-post__image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.kb-post__body {
+  padding: clamp(28px, 5vw, 48px) clamp(24px, 6vw, 64px) clamp(40px, 6vw, 64px);
+}
+
 .kb-post__meta {
   display: flex;
   align-items: center;
   gap: 10px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin-bottom: 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
 }
 
 .kb-post__category {
@@ -160,17 +191,9 @@ watch(() => props.slug, (slug) => loadPost(slug))
 }
 
 .kb-post__title {
-  margin-bottom: 24px;
-}
-
-.kb-post__image {
-  display: block;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-popover);
   margin-bottom: 32px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--color-line);
 }
 
 .kb-post__error {

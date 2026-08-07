@@ -150,6 +150,32 @@ const makeAbsoluteUrl = (url: string): string => {
 }
 
 /**
+ * Cuando el contenido de un artículo se pega desde Word/Google Docs, cada
+ * salto de línea "suelto" del documento original se convierte en un `<br>`
+ * dentro del mismo `<p>` de WordPress. El resultado son párrafos cortados en
+ * fragmentos cortos que no respetan el ancho real del contenedor: en vez de
+ * un texto que fluye y se ajusta solo, quedan líneas irregulares muy cortas,
+ * con mucho hueco a la derecha (se percibe como texto "pegado a la
+ * izquierda"). Aquí se eliminan esos `<br>` internos para que cada párrafo
+ * vuelva a fluir como texto normal y se reajuste al ancho disponible.
+ *
+ * Solo actúa dentro de párrafos (`<p>`) de artículos de blog: no se aplica
+ * al resto del contenido de WordPress (páginas legales, etc.), donde un
+ * `<br>` suele ser intencional (p. ej. listar dirección, NIF y teléfono en
+ * líneas separadas dentro de un mismo párrafo).
+ */
+export const reflowSoftLineBreaks = (html: string): string => {
+  if (!html) return html
+  return html.replace(/<p\b([^>]*)>([\s\S]*?)<\/p>/gi, (match, attrs, inner) => {
+    const reflowed = inner
+      .replace(/\s*<br\s*\/?>\s*/gi, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim()
+    return `<p${attrs}>${reflowed}</p>`
+  })
+}
+
+/**
  * Extract plain text from HTML (for summaries, meta descriptions, etc.)
  *
  * Se parsea con DOMParser (documento inerte, sin renderizar) en vez de

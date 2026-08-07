@@ -255,6 +255,14 @@ button {
 .kb-prose {
   color: var(--color-ink);
   overflow-wrap: break-word;
+  /* 68ch mantiene una longitud de línea cómoda de leer (~65-75 caracteres)
+     incluso dentro de contenedores anchos como el del blog; en pantallas
+     estrechas simplemente ocupa el ancho disponible. */
+  max-width: 68ch;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 17px;
+  line-height: 1.8;
 }
 
 .kb-prose a {
@@ -270,8 +278,7 @@ button {
 }
 
 .kb-prose p {
-  margin: 0 0 1.1em;
-  line-height: var(--line-height-generous);
+  margin: 0 0 1.3em;
 }
 
 .kb-prose h1,
