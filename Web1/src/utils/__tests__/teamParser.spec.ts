@@ -88,6 +88,23 @@ describe('parseTeamContent', () => {
     expect(m.bio).toEqual(['Biografía sin ninguna sección adicional.'])
   })
 
+  it('reconstructs real paragraphs from a Word-pasted bio using single <br> for both line wraps and paragraph breaks, without merging words at the break', () => {
+    const html = `
+      <p>Maria B. Kanbouri</p>
+      <p><strong>Psicóloga para adultos y parejas en Denia</strong></p>
+      <p>Desde muy pequeña sentía una enorme curiosidad por entender a las personas. Me<br>fascinaba observar cómo cada uno vivía las dificultades.<br>El camino hasta llegar aquí no fue lineal. Antes de poder dedicarme a la psicología<br>trabajé en otros ámbitos que nada tenían que ver con esta profesión. Sin embargo,<br>siempre tuve claro que eran solo una etapa.</p>
+    `
+    const members = parseTeamContent(html)
+    const m = members[0]!
+
+    expect(m.bio).toEqual([
+      'Desde muy pequeña sentía una enorme curiosidad por entender a las personas. Me fascinaba observar cómo cada uno vivía las dificultades.',
+      'El camino hasta llegar aquí no fue lineal. Antes de poder dedicarme a la psicología trabajé en otros ámbitos que nada tenían que ver con esta profesión. Sin embargo, siempre tuve claro que eran solo una etapa.',
+    ])
+    // Ninguna palabra debe quedar pegada a la siguiente por la falta de espacio del <br>.
+    expect(m.bio.join(' ')).not.toContain('Mefascinaba')
+  })
+
   it('returns an empty array for empty input', () => {
     expect(parseTeamContent('')).toEqual([])
   })

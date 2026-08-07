@@ -47,6 +47,7 @@
                     :src="slide.card.imageUrl"
                     :alt="slide.card.title"
                     class="kb-card__image"
+                    loading="lazy"
                     :style="slide.card.imagePosition ? { objectPosition: slide.card.imagePosition } : undefined"
                   />
                 </div>

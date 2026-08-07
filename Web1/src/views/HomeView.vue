@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { fetchHomePage, fetchMediaById, fetchTherapieBySlug } from '../services/dataService'
+import { getMediaUrl } from '../utils/media'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import Hero from '../components/Hero.vue'
 import TherapyCards from '../components/TherapyCards.vue'
@@ -121,12 +122,13 @@ onMounted(async () => {
     const urlMap: Record<number, string> = {}
     mediaResults.forEach((media, index) => {
       const id = idList[index]
-      if (id && media?.source_url) urlMap[id] = media.source_url
+      const url = getMediaUrl(media)
+      if (id && url) urlMap[id] = url
     })
     mediaUrls.value = urlMap
 
     adultSubTherapyCards.value = subTherapies
-      .map((therapy, index) => {
+      .map((therapy, index): TherapyCardData | null => {
         const subAcf = therapy?.acf
         if (!subAcf) return null
         return {

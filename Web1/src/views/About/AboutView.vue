@@ -38,28 +38,35 @@ onMounted(async () => {
 
       <template v-else-if="member">
         <div class="kb-about__masthead" v-animate-on-scroll>
-          <div v-if="member.photo" class="kb-about__media">
-            <img :src="member.photo" :alt="member.name" class="kb-about__image" />
+          <div v-if="member.photo" class="kb-about__frame">
+            <div class="kb-about__media-decor" aria-hidden="true"></div>
+            <div class="kb-about__media" v-spotlight>
+              <img :src="member.photo" :alt="member.name" class="kb-about__image" />
+            </div>
           </div>
 
           <div class="kb-about__intro">
+            <p v-if="member.role" class="kb-about__role">{{ member.role }}</p>
             <h1 class="kb-about__name text-h1">{{ member.name }}</h1>
-            <p v-if="member.role" class="kb-about__role text-secondary">{{ member.role }}</p>
 
-            <div v-if="member.bio.length" class="kb-about__bio">
-              <p v-for="(paragraph, index) in member.bio" :key="index" class="text-body">
-                {{ paragraph }}
-              </p>
-            </div>
+            <p v-if="member.bio[0]" class="kb-about__lead">{{ member.bio[0] }}</p>
 
-            <router-link to="/pedir-cita" class="kb-about__cta text-cta">
+            <router-link to="/pedir-cita" class="kb-about__cta kb-glare text-cta" v-ripple>
               Pedir cita
             </router-link>
           </div>
         </div>
 
+        <div v-if="member.bio.length > 1" class="kb-about__bio" v-animate-on-scroll>
+          <span class="kb-about__ornament" aria-hidden="true"></span>
+          <p v-for="(paragraph, index) in member.bio.slice(1)" :key="index">
+            {{ paragraph }}
+          </p>
+        </div>
+
         <div class="kb-about__formacion">
           <div v-if="member.formacionAcademica.length" class="kb-about__block" v-animate-on-scroll>
+            <span class="kb-about__ornament" aria-hidden="true"></span>
             <h2 class="text-h3">Formación académica</h2>
             <ul class="kb-about__list">
               <li v-for="(item, index) in member.formacionAcademica" :key="index">{{ item }}</li>
@@ -67,11 +74,22 @@ onMounted(async () => {
           </div>
 
           <div v-if="member.formacionExtra.length" class="kb-about__block" v-animate-on-scroll>
+            <span class="kb-about__ornament" aria-hidden="true"></span>
             <h2 class="text-h3">Formación extracurricular</h2>
             <ul class="kb-about__list">
               <li v-for="(item, index) in member.formacionExtra" :key="index">{{ item }}</li>
             </ul>
           </div>
+        </div>
+
+        <div class="kb-about__closing" v-animate-on-scroll>
+          <h2 class="kb-about__closing-title">¿Empezamos a trabajar juntas?</h2>
+          <p class="kb-about__closing-text">
+            Escríbeme y reservemos tu primera sesión, presencial en Dénia u online.
+          </p>
+          <router-link to="/pedir-cita" class="kb-about__cta kb-about__cta--light kb-glare text-cta" v-ripple>
+            Pedir cita
+          </router-link>
         </div>
       </template>
 
@@ -84,16 +102,33 @@ onMounted(async () => {
 
 <style scoped>
 .kb-about {
+  position: relative;
   background: var(--color-paper);
   padding: clamp(56px, 8vw, 96px) clamp(20px, 4vw, 48px);
+  overflow: hidden;
+}
+
+.kb-about::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 96% -4%, var(--color-paper-alt) 0%, transparent 50%),
+    radial-gradient(circle at -8% 40%, var(--color-rose-soft-wash) 0%, transparent 45%);
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .kb-about__inner {
-  max-width: 880px;
+  position: relative;
+  z-index: 1;
+  max-width: 1040px;
   margin: 0 auto;
 }
 
 .kb-about__error {
+  max-width: 640px;
+  margin: 0 auto;
   background: var(--color-paper-alt);
   border: 1px solid var(--color-line);
   border-left: 3px solid #d32f2f;
@@ -108,52 +143,82 @@ onMounted(async () => {
   color: inherit;
 }
 
-/* ---------- Cabecera: retrato + presentación, a diferencia del retrato
-   pequeño y el texto centrado que usan las fichas de Equipo ---------- */
+/* ---------- Cabecera: retrato de tamaño moderado (mismo lenguaje que el
+   Hero de Inicio: sombra desplazada en degradado rosa detrás de la foto)
+   junto a la presentación. ---------- */
 .kb-about__masthead {
   display: grid;
-  grid-template-columns: minmax(0, 300px) 1fr;
-  gap: clamp(32px, 5vw, 56px);
-  align-items: start;
-  margin-bottom: clamp(48px, 7vw, 72px);
+  grid-template-columns: minmax(0, 340px) 1fr;
+  gap: clamp(32px, 5vw, 64px);
+  align-items: center;
+  margin-bottom: clamp(56px, 8vw, 80px);
+}
+
+/* El retrato va enmarcado como una pieza expuesta: un passe-partout de
+   papel alrededor de la foto, con la sombra desplazada en degradado rosa
+   detrás (mismo lenguaje que el Hero de Inicio) a modo de repisa. */
+.kb-about__frame {
+  position: relative;
+}
+
+.kb-about__media-decor {
+  position: absolute;
+  inset: 0;
+  transform: translate(12px, 12px);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--color-rose-soft) 0%, var(--color-secondary) 100%);
+  opacity: 0.45;
+  z-index: 0;
 }
 
 .kb-about__media {
-  overflow: hidden;
-  border-radius: var(--radius-lg);
+  position: relative;
+  z-index: 1;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: calc(var(--radius-lg) + 8px);
   box-shadow: var(--shadow-popover);
+  padding: 10px;
 }
 
 .kb-about__image {
   display: block;
   width: 100%;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4 / 5;
   object-fit: cover;
   object-position: center 18%;
+  border-radius: var(--radius-md);
+  transform: scale(1);
+  transition: transform 700ms var(--ease-base);
 }
 
-.kb-about__name {
-  margin-bottom: 6px;
+.kb-about__media:hover .kb-about__image {
+  transform: scale(1.025);
 }
 
 .kb-about__role {
+  font-family: var(--font-body);
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   font-size: 13px;
-  margin-bottom: 22px;
+  color: var(--color-rose-hover);
+  margin-bottom: 10px;
 }
 
-.kb-about__bio {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 26px;
+.kb-about__name {
+  margin-bottom: 20px;
 }
 
-.kb-about__bio p {
-  max-width: 60ch;
-  line-height: 1.7;
-  color: var(--color-ink);
+.kb-about__lead {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(18px, 2vw, 21px);
+  line-height: 1.55;
+  color: var(--color-heading);
+  max-width: 44ch;
+  margin-bottom: 28px;
 }
 
 .kb-about__cta {
@@ -175,21 +240,73 @@ onMounted(async () => {
   box-shadow: var(--shadow-cta-hover);
 }
 
-/* ---------- Formación: bloques apilados de ancho completo (no dos
-   columnas descuadradas cuando una lista es más larga que la otra) ---------- */
+.kb-about__cta:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: var(--shadow-cta);
+}
+
+/* ---------- Biografía: columna de lectura cómoda, con letra capitular en
+   el primer párrafo. ---------- */
+.kb-about__bio {
+  max-width: 68ch;
+  margin: 0 auto clamp(56px, 8vw, 80px);
+  padding-top: clamp(28px, 4vw, 36px);
+}
+
+/* Ornamento de separación: un motivo propio (línea + rombo) en vez de una
+   simple raya, repetido a lo largo de la página como firma visual. */
+.kb-about__ornament {
+  display: block;
+  position: relative;
+  height: 1px;
+  background: var(--color-line);
+  margin-bottom: clamp(28px, 4vw, 36px);
+}
+
+.kb-about__ornament::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  background: var(--color-rose);
+  border-radius: 1.5px;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.kb-about__bio p {
+  font-size: 17px;
+  line-height: 1.8;
+  color: var(--color-ink);
+  margin-bottom: 1.3em;
+}
+
+.kb-about__bio p:last-child {
+  margin-bottom: 0;
+}
+
+.kb-about__bio p:first-child::first-letter {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 3.2em;
+  line-height: 0.75;
+  float: left;
+  padding: 4px 8px 0 0;
+  color: var(--color-rose-hover);
+}
+
+/* ---------- Formación: bloques apilados de ancho completo (nunca lado a
+   lado), cada uno con su propia altura natural. ---------- */
 .kb-about__formacion {
   display: flex;
   flex-direction: column;
-  gap: clamp(28px, 4vw, 40px);
-}
-
-.kb-about__block {
-  padding-top: clamp(24px, 3vw, 32px);
-  border-top: 1px solid var(--color-line);
+  gap: clamp(32px, 4vw, 44px);
+  margin-bottom: clamp(56px, 8vw, 80px);
 }
 
 .kb-about__block h2 {
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   color: var(--color-heading);
 }
 
@@ -205,23 +322,61 @@ onMounted(async () => {
 .kb-about__list li {
   break-inside: avoid;
   margin-bottom: 10px;
-  overflow-wrap: anywhere;
+  padding-left: 2px;
 }
 
 .kb-about__list li::marker {
   color: var(--color-rose);
 }
 
+/* ---------- Cierre: banda destacada que invita a pedir cita ---------- */
+.kb-about__closing {
+  text-align: center;
+  background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-hover) 100%);
+  border-radius: var(--radius-lg);
+  padding: clamp(40px, 6vw, 64px) clamp(24px, 5vw, 48px);
+}
+
+.kb-about__closing-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(24px, 3vw, 32px);
+  color: var(--color-on-rose);
+  margin-bottom: 12px;
+}
+
+.kb-about__closing-text {
+  color: var(--color-on-rose);
+  opacity: 0.92;
+  max-width: 46ch;
+  margin: 0 auto 26px;
+}
+
+.kb-about__cta--light {
+  background: var(--color-on-rose);
+  color: var(--color-rose-hover);
+  box-shadow: none;
+}
+
+.kb-about__cta--light:hover {
+  background: var(--color-paper-alt);
+  color: var(--color-rose-hover);
+}
+
 /* ---------- Animación al entrar en la pantalla ---------- */
 .kb-about__masthead.kb-animate-onscroll,
-.kb-about__block.kb-animate-onscroll {
+.kb-about__bio.kb-animate-onscroll,
+.kb-about__block.kb-animate-onscroll,
+.kb-about__closing.kb-animate-onscroll {
   opacity: 0;
   transform: translateY(24px);
   transition: opacity 550ms var(--ease-base), transform 550ms var(--ease-base);
 }
 
 .kb-about__masthead.kb-animate-onscroll.is-visible,
-.kb-about__block.kb-animate-onscroll.is-visible {
+.kb-about__bio.kb-animate-onscroll.is-visible,
+.kb-about__block.kb-animate-onscroll.is-visible,
+.kb-about__closing.kb-animate-onscroll.is-visible {
   opacity: 1;
   transform: translateY(0);
 }
@@ -232,13 +387,18 @@ onMounted(async () => {
     grid-template-columns: 1fr;
   }
 
-  .kb-about__media {
-    max-width: 260px;
+  .kb-about__frame {
+    max-width: 280px;
     margin: 0 auto;
   }
 
   .kb-about__intro {
     text-align: center;
+  }
+
+  .kb-about__lead {
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .kb-about__bio {

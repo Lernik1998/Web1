@@ -34,6 +34,52 @@ function isLabelParagraph(el: Element | undefined, keyword: string): boolean {
 }
 
 /**
+ * Cuando la biografía se pega desde Word/Docs, WordPress convierte cada
+ * salto de línea del documento original en un `<br>` dentro del mismo
+ * `<p>`, sin distinguir un simple ajuste de línea de un cambio de párrafo
+ * real. `el.textContent` ignora los `<br>`, así que la palabra final de una
+ * línea queda pegada a la primera de la siguiente (p. ej. "...las personas.
+ * Me" + "fascinaba..." se leía "Mefascinaba"). Aquí se reconstruyen las
+ * líneas usando el `<br>` como separador y se detectan los párrafos reales:
+ * una línea bastante más corta que el resto (ajuste natural de línea) que
+ * además termina en punto/interrogación/exclamación es el final de un
+ * párrafo; el resto son continuaciones del mismo párrafo.
+ */
+function extractBioParagraphs(el: Element): string[] {
+  const lines: string[] = []
+  let current = ''
+  el.childNodes.forEach((node) => {
+    if (node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName === 'BR') {
+      lines.push(current.trim())
+      current = ''
+    } else {
+      current += node.textContent ?? ''
+    }
+  })
+  if (current.trim()) lines.push(current.trim())
+
+  const nonEmptyLines = lines.filter(Boolean)
+  if (nonEmptyLines.length <= 1) return nonEmptyLines
+
+  const maxLength = Math.max(...nonEmptyLines.map((line) => line.length))
+  const paragraphs: string[] = []
+  let buffer: string[] = []
+  nonEmptyLines.forEach((line, index) => {
+    buffer.push(line)
+    const isShortLine = line.length < maxLength * 0.75
+    const endsSentence = /[.!?]$/.test(line)
+    const isLastLine = index === nonEmptyLines.length - 1
+    if (isLastLine || (isShortLine && endsSentence)) {
+      paragraphs.push(buffer.join(' '))
+      buffer = []
+    }
+  })
+  if (buffer.length) paragraphs.push(buffer.join(' '))
+
+  return paragraphs
+}
+
+/**
  * La página "team" de WordPress no modela cada profesional como un bloque
  * propio: es un único chorro de <p>/<ul> donde cada ficha sigue siempre el
  * mismo patrón (nombre, cargo, párrafos de biografía, "Formación académica"
@@ -88,8 +134,7 @@ export function parseTeamContent(html: string): ParsedTeamMember[] {
 
       if (el.tagName !== 'P') break
 
-      const text = (el.textContent ?? '').trim()
-      if (text) bio.push(text)
+      bio.push(...extractBioParagraphs(el))
       i++
     }
 

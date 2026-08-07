@@ -11,6 +11,19 @@
       content="Kanbouri Psicología — centro de psicología en Dénia especializado en el acompañamiento emocional y terapéutico para niños, adultos, adolescentes y familias."
     >
     <title>Kanbouri Psicología</title>
+
+    <!-- Una sola petición de fuentes para toda la web (antes había dos
+         @import duplicados y solapados dentro del CSS empaquetado, que el
+         navegador solo podía descubrir tras parsear ese CSS). El preconnect
+         adelanta la conexión TLS con Google Fonts antes de que se pida la
+         hoja de estilos, y con ella el navegador ya sabe qué fuentes
+         necesita mientras el resto de la página sigue cargando. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600&display=swap"
+    >
   </head>
   <body>
     <div id="app"></div>

@@ -6,12 +6,9 @@
  * Regla general: la serif solo aparece en títulos y testimonios.
  * Nunca en menús, botones ni párrafos largos.
  *
- * Preferible cargar las fuentes con <link rel="preconnect"> + <link> en
- * index.html (más rápido que @import). Deja este bloque solo si prefieres
- * mantener las fuentes junto al resto de tokens CSS.
+ * Las fuentes se cargan desde <link rel="preconnect"> + <link> en
+ * index.html (una sola petición para toda la web, ver global.css).
  */
-
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap');
 
 :root {
   --font-display: 'Fraunces', Georgia, serif;

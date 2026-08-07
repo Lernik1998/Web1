@@ -27,7 +27,7 @@
 
       <div class="kb-hero__media kb-hero__reveal" style="animation-delay: 120ms">
         <div class="kb-hero__blob" aria-hidden="true"></div>
-        <img :src="imageUrl" :alt="title" class="kb-hero__image" />
+        <img :src="imageUrl" :alt="title" class="kb-hero__image" fetchpriority="high" />
       </div>
     </div>
   </section>

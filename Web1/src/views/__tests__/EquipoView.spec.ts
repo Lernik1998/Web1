@@ -6,7 +6,7 @@ import type { ProfesionalPost, WordPressMedia } from '../../types/api'
 
 const { fetchProfesionalesMock, fetchMediaByIdMock } = vi.hoisted(() => ({
   fetchProfesionalesMock: vi.fn<() => Promise<ProfesionalPost[]>>(),
-  fetchMediaByIdMock: vi.fn<() => Promise<WordPressMedia | null>>(),
+  fetchMediaByIdMock: vi.fn<(id: number) => Promise<WordPressMedia | null>>(),
 }))
 
 vi.mock('../../services/dataService', () => ({

@@ -81,7 +81,7 @@ const faqs = [
       <div class="kb-therapy__final">
         <router-link
           :to="{ path: '/pedir-cita', query: { servicio: 'adolescentes' } }"
-          class="kb-therapy__cta text-cta"
+          class="kb-therapy__cta kb-glare text-cta"
         >
           Pedir cita
         </router-link>

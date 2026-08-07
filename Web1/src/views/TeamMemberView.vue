@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { fetchProfesionalBySlug, fetchMediaById } from '../services/dataService'
 import { parseProfesionalAcf } from '../utils/profesionalAcf'
+import { getMediaUrl } from '../utils/media'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 
 defineOptions({
@@ -42,7 +43,7 @@ onMounted(async () => {
       parsed.value = parseProfesionalAcf(post.acf)
       if (post.acf.hero_image) {
         const media = await fetchMediaById(post.acf.hero_image)
-        apiPhoto.value = media?.source_url ?? null
+        apiPhoto.value = getMediaUrl(media) ?? null
       }
     }
   } catch (err) {
@@ -86,7 +87,7 @@ onMounted(async () => {
               </p>
             </div>
 
-            <router-link to="/pedir-cita" class="kb-profile__cta text-cta">
+            <router-link to="/pedir-cita" class="kb-profile__cta kb-glare text-cta">
               Pedir cita
             </router-link>
           </div>

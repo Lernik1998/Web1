@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { fetchProfesionales, fetchMediaById } from '../services/dataService'
+import { getMediaUrl } from '../utils/media'
 import type { ProfesionalPost } from '../types/api'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 
@@ -63,7 +64,10 @@ onMounted(async () => {
     const urlMap: Record<number, string> = {}
     mediaResults.forEach((media, index) => {
       const id = mediaIds[index]
-      if (id && media?.source_url) urlMap[id] = media.source_url
+      // Las fichas del listado son pequeñas (~300px): con "medium_large"
+      // (768px) sobra calidad de sobra incluso en pantallas retina.
+      const url = getMediaUrl(media, 'medium_large')
+      if (id && url) urlMap[id] = url
     })
     photoUrls.value = urlMap
   } catch (err) {
@@ -107,6 +111,7 @@ onMounted(async () => {
             :src="member.photo.image"
             :alt="member.name"
             class="kb-team-card__image"
+            loading="lazy"
           />
           <div v-else class="kb-team-card__placeholder" aria-hidden="true">
             {{ member.initials }}

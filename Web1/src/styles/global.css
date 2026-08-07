@@ -1,5 +1,7 @@
-/* Import fonts */
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600&display=swap');
+/* Las fuentes se cargan desde <link> en index.html (con preconnect), no con
+   @import aquí: un @import dentro de un CSS ya empaquetado obliga al
+   navegador a descubrir la petición mucho más tarde (solo tras parsear este
+   archivo), alargando la cadena crítica de carga y retrasando el texto. */
 
 /* CSS Variables for typography */
 :root {
