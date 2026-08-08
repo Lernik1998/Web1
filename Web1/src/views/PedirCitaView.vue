@@ -860,10 +860,12 @@ async function handleSubmit() {
     transform var(--dur-base) var(--ease-base), box-shadow var(--dur-base) var(--ease-base);
 }
 
-.kb-appointment__submit:hover:not(:disabled) {
-  background: var(--color-rose-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-cta-hover);
+@media (hover: hover) and (pointer: fine) {
+  .kb-appointment__submit:hover:not(:disabled) {
+    background: var(--color-rose-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-cta-hover);
+  }
 }
 
 .kb-appointment__submit:disabled {

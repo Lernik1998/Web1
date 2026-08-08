@@ -129,10 +129,12 @@ const EMAIL = 'gabinete@kanbouripsicologia.com'
     transform var(--dur-base) var(--ease-base), box-shadow var(--dur-base) var(--ease-base);
 }
 
-.kb-maintenance__cta:hover {
-  background: var(--color-rose-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-cta-hover);
+@media (hover: hover) and (pointer: fine) {
+  .kb-maintenance__cta:hover {
+    background: var(--color-rose-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-cta-hover);
+  }
 }
 
 .kb-maintenance__link {
@@ -143,8 +145,10 @@ const EMAIL = 'gabinete@kanbouripsicologia.com'
   transition: color var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
 }
 
-.kb-maintenance__link:hover {
-  color: var(--color-rose-hover);
-  border-color: var(--color-rose-hover);
+@media (hover: hover) and (pointer: fine) {
+  .kb-maintenance__link:hover {
+    color: var(--color-rose-hover);
+    border-color: var(--color-rose-hover);
+  }
 }
 </style>

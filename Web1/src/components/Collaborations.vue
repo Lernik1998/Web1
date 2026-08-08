@@ -99,10 +99,12 @@ const universities = [
     box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
 }
 
-.kb-collab__card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-popover);
-  border-color: transparent;
+@media (hover: hover) and (pointer: fine) {
+  .kb-collab__card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-popover);
+    border-color: transparent;
+  }
 }
 
 .kb-collab__logo {
@@ -115,9 +117,11 @@ const universities = [
   transition: filter var(--dur-base) var(--ease-base), opacity var(--dur-base) var(--ease-base);
 }
 
-.kb-collab__card:hover .kb-collab__logo {
-  filter: grayscale(0);
-  opacity: 1;
+@media (hover: hover) and (pointer: fine) {
+  .kb-collab__card:hover .kb-collab__logo {
+    filter: grayscale(0);
+    opacity: 1;
+  }
 }
 
 /* ---------- Responsive ---------- */

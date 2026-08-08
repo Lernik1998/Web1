@@ -261,10 +261,12 @@ const title = computed(() => pageData.value?.title.rendered ?? '')
     transform var(--dur-base) var(--ease-base), box-shadow var(--dur-base) var(--ease-base);
 }
 
-.kb-supervision__cta:hover {
-  background: var(--color-rose-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-cta-hover);
+@media (hover: hover) and (pointer: fine) {
+  .kb-supervision__cta:hover {
+    background: var(--color-rose-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-cta-hover);
+  }
 }
 
 .kb-supervision__inner {
@@ -340,11 +342,13 @@ const title = computed(() => pageData.value?.title.rendered ?? '')
     transform var(--dur-base) var(--ease-base);
 }
 
-.kb-pill--link:hover {
-  background: var(--color-rose);
-  border-color: var(--color-rose);
-  color: var(--color-on-rose);
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .kb-pill--link:hover {
+    background: var(--color-rose);
+    border-color: var(--color-rose);
+    color: var(--color-on-rose);
+    transform: translateY(-1px);
+  }
 }
 
 .kb-steps {
@@ -395,8 +399,10 @@ const title = computed(() => pageData.value?.title.rendered ?? '')
   transition: color var(--dur-base) var(--ease-base);
 }
 
-.kb-steps__desc :deep(a:hover) {
-  color: var(--color-rose);
+@media (hover: hover) and (pointer: fine) {
+  .kb-steps__desc :deep(a:hover) {
+    color: var(--color-rose);
+  }
 }
 
 .kb-supervision__final {

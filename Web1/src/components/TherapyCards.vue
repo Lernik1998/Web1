@@ -396,8 +396,10 @@ onBeforeUnmount(() => {
   z-index: 2;
 }
 
-.kb-therapies__arrow:hover {
-  background: var(--color-rose-soft-wash);
+@media (hover: hover) and (pointer: fine) {
+  .kb-therapies__arrow:hover {
+    background: var(--color-rose-soft-wash);
+  }
 }
 
 .kb-therapies__arrow--prev {
@@ -466,8 +468,10 @@ onBeforeUnmount(() => {
   transition: background-color var(--dur-base) var(--ease-base);
 }
 
-.kb-therapies__playpause:hover {
-  background: var(--color-rose-soft-wash);
+@media (hover: hover) and (pointer: fine) {
+  .kb-therapies__playpause:hover {
+    background: var(--color-rose-soft-wash);
+  }
 }
 
 .kb-card {
@@ -484,10 +488,12 @@ onBeforeUnmount(() => {
     box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
 }
 
-.kb-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-popover);
-  border-color: transparent;
+@media (hover: hover) and (pointer: fine) {
+  .kb-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-popover);
+    border-color: transparent;
+  }
 }
 
 /* Entrada al hacer scroll: fundido + desplazamiento vertical más marcado,
@@ -504,11 +510,13 @@ onBeforeUnmount(() => {
   transform: translateY(0);
 }
 
-/* Una vez visible, el hover recupera la velocidad rápida habitual. */
-.kb-card.kb-animate-onscroll.is-visible:hover {
-  transform: translateY(-4px);
-  transition: transform var(--dur-base) var(--ease-base),
-    box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
+@media (hover: hover) and (pointer: fine) {
+  /* Una vez visible, el hover recupera la velocidad rápida habitual. */
+  .kb-card.kb-animate-onscroll.is-visible:hover {
+    transform: translateY(-4px);
+    transition: transform var(--dur-base) var(--ease-base),
+      box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
+  }
 }
 
 .kb-card__media {
@@ -526,8 +534,10 @@ onBeforeUnmount(() => {
   transition: transform var(--dur-slow) var(--ease-base);
 }
 
-.kb-card:hover .kb-card__image {
-  transform: scale(1.06);
+@media (hover: hover) and (pointer: fine) {
+  .kb-card:hover .kb-card__image {
+    transform: scale(1.06);
+  }
 }
 
 .kb-card__body {
@@ -562,10 +572,12 @@ onBeforeUnmount(() => {
     transform var(--dur-base) var(--ease-base), box-shadow var(--dur-base) var(--ease-base);
 }
 
-.kb-card__link:hover {
-  background: var(--color-rose-hover);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-cta-hover);
+@media (hover: hover) and (pointer: fine) {
+  .kb-card__link:hover {
+    background: var(--color-rose-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-cta-hover);
+  }
 }
 
 .kb-card__link:active {

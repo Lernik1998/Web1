@@ -234,9 +234,11 @@ async function handleSubmit() {
     transform var(--dur-base) var(--ease-base);
 }
 
-.kb-newsletter__submit:hover:not(:disabled) {
-  background: #ffffff;
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .kb-newsletter__submit:hover:not(:disabled) {
+    background: #ffffff;
+    transform: translateY(-1px);
+  }
 }
 
 .kb-newsletter__submit:disabled {

@@ -278,9 +278,11 @@ onMounted(async () => {
     color var(--dur-base) var(--ease-base);
 }
 
-.kb-cookie__close:hover {
-  background: var(--color-rose-soft-wash);
-  color: var(--color-rose-hover);
+@media (hover: hover) and (pointer: fine) {
+  .kb-cookie__close:hover {
+    background: var(--color-rose-soft-wash);
+    color: var(--color-rose-hover);
+  }
 }
 
 .kb-cookie__title {
@@ -393,8 +395,10 @@ onMounted(async () => {
   padding-right: 8px;
 }
 
-.kb-cookie__btn--ghost:hover {
-  color: var(--color-rose-hover);
+@media (hover: hover) and (pointer: fine) {
+  .kb-cookie__btn--ghost:hover {
+    color: var(--color-rose-hover);
+  }
 }
 
 .kb-cookie__btn--primary {
@@ -403,10 +407,12 @@ onMounted(async () => {
   box-shadow: var(--shadow-cta);
 }
 
-.kb-cookie__btn--primary:hover {
-  background: var(--color-rose-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-cta-hover);
+@media (hover: hover) and (pointer: fine) {
+  .kb-cookie__btn--primary:hover {
+    background: var(--color-rose-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-cta-hover);
+  }
 }
 
 .kb-cookie__legal-links {
@@ -423,8 +429,10 @@ onMounted(async () => {
   text-underline-offset: 2px;
 }
 
-.kb-cookie__link:hover {
-  color: var(--color-rose-hover);
+@media (hover: hover) and (pointer: fine) {
+  .kb-cookie__link:hover {
+    color: var(--color-rose-hover);
+  }
 }
 
 .kb-cookie__legal-links .kb-cookie__link:not(:last-child)::after {
@@ -485,10 +493,12 @@ onMounted(async () => {
   color: var(--color-ink);
 }
 
-.kb-cookie-reopen:hover {
-  background: var(--color-rose-soft-wash);
-  border-color: var(--color-rose-soft);
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .kb-cookie-reopen:hover {
+    background: var(--color-rose-soft-wash);
+    border-color: var(--color-rose-soft);
+    transform: translateY(-2px);
+  }
 }
 
 @media (max-width: 640px) {

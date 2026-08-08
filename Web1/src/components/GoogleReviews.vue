@@ -399,10 +399,12 @@ onMounted(async () => {
     box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
 }
 
-.kb-review:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-popover);
-  border-color: transparent;
+@media (hover: hover) and (pointer: fine) {
+  .kb-review:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-popover);
+    border-color: transparent;
+  }
 }
 
 .kb-review.kb-animate-onscroll {
@@ -417,8 +419,10 @@ onMounted(async () => {
   transform: translateY(0);
 }
 
-.kb-review.kb-animate-onscroll.is-visible:hover {
-  transform: translateY(-3px);
+@media (hover: hover) and (pointer: fine) {
+  .kb-review.kb-animate-onscroll.is-visible:hover {
+    transform: translateY(-3px);
+  }
 }
 
 /* ---------- Cabecera: icono de Google + avatar + nombre/fecha ---------- */
@@ -540,9 +544,11 @@ onMounted(async () => {
   transition: color var(--dur-base) var(--ease-base);
 }
 
-.kb-review__toggle:hover {
-  color: var(--color-rose);
-  text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+  .kb-review__toggle:hover {
+    color: var(--color-rose);
+    text-decoration: underline;
+  }
 }
 
 .kb-review__toggle--hidden {
@@ -586,10 +592,12 @@ onMounted(async () => {
     color var(--dur-base) var(--ease-base), transform var(--dur-base) var(--ease-base);
 }
 
-.kb-reviews__nav-btn:hover {
-  background: var(--color-rose);
-  color: var(--color-on-rose);
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .kb-reviews__nav-btn:hover {
+    background: var(--color-rose);
+    color: var(--color-on-rose);
+    transform: translateY(-1px);
+  }
 }
 
 .kb-reviews__nav-btn:active {

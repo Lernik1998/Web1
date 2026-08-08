@@ -66,10 +66,16 @@ const { bannerVisible } = useCookieConsent()
     background-color var(--dur-base) var(--ease-base), color var(--dur-base) var(--ease-base);
 }
 
-.kb-whatsapp:hover {
-  background: var(--color-rose);
-  color: var(--color-on-rose);
-  transform: translateY(-2px);
+/* En pantallas táctiles no hay puntero que "abandone" el botón al soltar
+   el dedo, así que el navegador simula el :hover al tocar y se queda
+   pegado (fondo sólido y desplazado) hasta tocar otra cosa. Se limita a
+   dispositivos con puntero real (ratón/trackpad), igual que en Header.vue. */
+@media (hover: hover) and (pointer: fine) {
+  .kb-whatsapp:hover {
+    background: var(--color-rose);
+    color: var(--color-on-rose);
+    transform: translateY(-2px);
+  }
 }
 
 @media (max-width: 640px) {

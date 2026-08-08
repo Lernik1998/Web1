@@ -176,10 +176,12 @@ onMounted(() => loadPage(1))
     color var(--dur-base) var(--ease-base), transform var(--dur-base) var(--ease-base);
 }
 
-.kb-blog__page-btn:hover:not(:disabled) {
-  border-color: var(--color-rose);
-  color: var(--color-rose-hover);
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .kb-blog__page-btn:hover:not(:disabled) {
+    border-color: var(--color-rose);
+    color: var(--color-rose-hover);
+    transform: translateY(-1px);
+  }
 }
 
 .kb-blog__page-btn:disabled {

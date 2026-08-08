@@ -220,9 +220,11 @@ useFaqSchema(() => faqs)
     transform var(--dur-base) var(--ease-base), box-shadow var(--dur-base) var(--ease-base);
 }
 
-.kb-therapy__cta:hover {
-  background: var(--color-rose-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-cta-hover);
+@media (hover: hover) and (pointer: fine) {
+  .kb-therapy__cta:hover {
+    background: var(--color-rose-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-cta-hover);
+  }
 }
 </style>

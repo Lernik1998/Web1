@@ -67,10 +67,12 @@ const excerpt = computed(() => extractTextFromHtml(props.post.excerpt.rendered, 
     box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
 }
 
-.kb-blog-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-popover);
-  border-color: transparent;
+@media (hover: hover) and (pointer: fine) {
+  .kb-blog-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-popover);
+    border-color: transparent;
+  }
 }
 
 .kb-blog-card.kb-animate-onscroll {
@@ -85,10 +87,12 @@ const excerpt = computed(() => extractTextFromHtml(props.post.excerpt.rendered, 
   transform: translateY(0);
 }
 
-.kb-blog-card.kb-animate-onscroll.is-visible:hover {
-  transform: translateY(-3px);
-  transition: transform var(--dur-base) var(--ease-base),
-    box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
+@media (hover: hover) and (pointer: fine) {
+  .kb-blog-card.kb-animate-onscroll.is-visible:hover {
+    transform: translateY(-3px);
+    transition: transform var(--dur-base) var(--ease-base),
+      box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
+  }
 }
 
 .kb-blog-card__media {
@@ -107,8 +111,10 @@ const excerpt = computed(() => extractTextFromHtml(props.post.excerpt.rendered, 
   transition: transform var(--dur-slow) var(--ease-base);
 }
 
-.kb-blog-card:hover .kb-blog-card__image {
-  transform: scale(1.05);
+@media (hover: hover) and (pointer: fine) {
+  .kb-blog-card:hover .kb-blog-card__image {
+    transform: scale(1.05);
+  }
 }
 
 .kb-blog-card__body {
@@ -148,8 +154,10 @@ const excerpt = computed(() => extractTextFromHtml(props.post.excerpt.rendered, 
   transition: color var(--dur-base) var(--ease-base);
 }
 
-.kb-blog-card__title a:hover {
-  color: var(--color-rose-hover);
+@media (hover: hover) and (pointer: fine) {
+  .kb-blog-card__title a:hover {
+    color: var(--color-rose-hover);
+  }
 }
 
 .kb-blog-card__excerpt {
@@ -168,8 +176,10 @@ const excerpt = computed(() => extractTextFromHtml(props.post.excerpt.rendered, 
   transition: color var(--dur-base) var(--ease-base);
 }
 
-.kb-blog-card__link:hover {
-  color: var(--color-rose);
+@media (hover: hover) and (pointer: fine) {
+  .kb-blog-card__link:hover {
+    color: var(--color-rose);
+  }
 }
 
 /* ---------- Responsive ---------- */

@@ -173,8 +173,10 @@ onMounted(async () => {
   transition: color var(--dur-base) var(--ease-base);
 }
 
-.kb-profile__back:hover {
-  color: var(--color-rose-hover);
+@media (hover: hover) and (pointer: fine) {
+  .kb-profile__back:hover {
+    color: var(--color-rose-hover);
+  }
 }
 
 .kb-profile__error {
@@ -269,10 +271,12 @@ onMounted(async () => {
     transform var(--dur-base) var(--ease-base), box-shadow var(--dur-base) var(--ease-base);
 }
 
-.kb-profile__cta:hover {
-  background: var(--color-rose-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-cta-hover);
+@media (hover: hover) and (pointer: fine) {
+  .kb-profile__cta:hover {
+    background: var(--color-rose-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-cta-hover);
+  }
 }
 
 /* ---------- Formación: bloques apilados de ancho completo ---------- */

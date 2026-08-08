@@ -239,10 +239,12 @@ onMounted(async () => {
     color var(--dur-base) var(--ease-base), transform var(--dur-base) var(--ease-base);
 }
 
-.social-link:hover {
-  background: var(--color-rose);
-  color: var(--color-on-rose);
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .social-link:hover {
+    background: var(--color-rose);
+    color: var(--color-on-rose);
+    transform: translateY(-2px);
+  }
 }
 
 .social-icon {
@@ -280,8 +282,10 @@ onMounted(async () => {
   transition: color var(--dur-base) var(--ease-base);
 }
 
-.legal-links a:hover {
-  color: var(--color-rose-hover);
+@media (hover: hover) and (pointer: fine) {
+  .legal-links a:hover {
+    color: var(--color-rose-hover);
+  }
 }
 
 /* ---------- Contacto + mapa (fila inferior) ---------- */
@@ -332,8 +336,10 @@ onMounted(async () => {
   transition: color var(--dur-base) var(--ease-base);
 }
 
-.contact-line__link:hover {
-  color: var(--color-rose-hover);
+@media (hover: hover) and (pointer: fine) {
+  .contact-line__link:hover {
+    color: var(--color-rose-hover);
+  }
 }
 
 .footer-map {

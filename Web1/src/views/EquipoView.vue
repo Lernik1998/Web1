@@ -189,10 +189,12 @@ onMounted(async () => {
     box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
 }
 
-.kb-team-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-popover);
-  border-color: transparent;
+@media (hover: hover) and (pointer: fine) {
+  .kb-team-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-popover);
+    border-color: transparent;
+  }
 }
 
 .kb-team-card.kb-animate-onscroll {
@@ -207,10 +209,12 @@ onMounted(async () => {
   transform: translateY(0);
 }
 
-.kb-team-card.kb-animate-onscroll.is-visible:hover {
-  transform: translateY(-4px);
-  transition: transform var(--dur-base) var(--ease-base),
-    box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
+@media (hover: hover) and (pointer: fine) {
+  .kb-team-card.kb-animate-onscroll.is-visible:hover {
+    transform: translateY(-4px);
+    transition: transform var(--dur-base) var(--ease-base),
+      box-shadow var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
+  }
 }
 
 .kb-team-card__media {
@@ -229,8 +233,10 @@ onMounted(async () => {
   transition: transform var(--dur-slow) var(--ease-base);
 }
 
-.kb-team-card:hover .kb-team-card__image {
-  transform: scale(calc(var(--img-scale, 1) * 1.05));
+@media (hover: hover) and (pointer: fine) {
+  .kb-team-card:hover .kb-team-card__image {
+    transform: scale(calc(var(--img-scale, 1) * 1.05));
+  }
 }
 
 .kb-team-card__placeholder {
@@ -256,8 +262,10 @@ onMounted(async () => {
   margin-top:20px
 }
 
-.kb-team-card__name-link:hover .kb-team-card__name {
-  color: var(--color-rose-hover);
+@media (hover: hover) and (pointer: fine) {
+  .kb-team-card__name-link:hover .kb-team-card__name {
+    color: var(--color-rose-hover);
+  }
 }
 
 .kb-team-card__link {
@@ -275,10 +283,12 @@ onMounted(async () => {
     transform var(--dur-base) var(--ease-base), box-shadow var(--dur-base) var(--ease-base);
 }
 
-.kb-team-card__link:hover {
-  background: var(--color-rose-hover);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-cta-hover);
+@media (hover: hover) and (pointer: fine) {
+  .kb-team-card__link:hover {
+    background: var(--color-rose-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-cta-hover);
+  }
 }
 
 .kb-team-card__link:active {

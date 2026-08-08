@@ -195,11 +195,13 @@ useFaqSchema(() => faqs)
     transform var(--dur-base) var(--ease-base);
 }
 
-.kb-pill:hover {
-  background: var(--color-rose);
-  border-color: var(--color-rose);
-  color: var(--color-on-rose);
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .kb-pill:hover {
+    background: var(--color-rose);
+    border-color: var(--color-rose);
+    color: var(--color-on-rose);
+    transform: translateY(-1px);
+  }
 }
 
 .kb-therapy__list {
@@ -255,9 +257,11 @@ useFaqSchema(() => faqs)
     transform var(--dur-base) var(--ease-base), box-shadow var(--dur-base) var(--ease-base);
 }
 
-.kb-therapy__cta:hover {
-  background: var(--color-rose-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-cta-hover);
+@media (hover: hover) and (pointer: fine) {
+  .kb-therapy__cta:hover {
+    background: var(--color-rose-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-cta-hover);
+  }
 }
 </style>

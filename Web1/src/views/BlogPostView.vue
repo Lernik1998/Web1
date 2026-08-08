@@ -158,8 +158,10 @@ watch(() => props.slug, (slug) => loadPost(slug))
   transition: color var(--dur-base) var(--ease-base);
 }
 
-.kb-post__back:hover {
-  color: var(--color-rose-hover);
+@media (hover: hover) and (pointer: fine) {
+  .kb-post__back:hover {
+    color: var(--color-rose-hover);
+  }
 }
 
 /* Tarjeta de lectura: separa el artículo del fondo de la página para que la

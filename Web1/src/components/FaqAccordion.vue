@@ -67,8 +67,10 @@ function toggle(index: number) {
     transform var(--dur-fast) var(--ease-base);
 }
 
-.kb-faq__question:hover {
-  background: var(--color-rose-soft-wash);
+@media (hover: hover) and (pointer: fine) {
+  .kb-faq__question:hover {
+    background: var(--color-rose-soft-wash);
+  }
 }
 
 .kb-faq__question:active {

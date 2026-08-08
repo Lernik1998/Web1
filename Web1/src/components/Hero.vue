@@ -152,10 +152,12 @@ const ArrowIcon = defineComponent({
     transform var(--dur-base) var(--ease-base), box-shadow var(--dur-base) var(--ease-base);
 }
 
-.kb-hero__cta:hover {
-  background: var(--color-rose-hover);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-cta-hover);
+@media (hover: hover) and (pointer: fine) {
+  .kb-hero__cta:hover {
+    background: var(--color-rose-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-cta-hover);
+  }
 }
 
 .kb-hero__cta:active {
@@ -188,14 +190,18 @@ const ArrowIcon = defineComponent({
     color var(--dur-base) var(--ease-base), transform var(--dur-base) var(--ease-base);
 }
 
-.kb-hero__link:hover {
-  color: var(--color-rose-hover);
+@media (hover: hover) and (pointer: fine) {
+  .kb-hero__link:hover {
+    color: var(--color-rose-hover);
+  }
 }
 
-.kb-hero__link:hover .kb-hero__link-icon {
-  background: var(--color-rose);
-  color: var(--color-on-rose);
-  transform: translateX(3px);
+@media (hover: hover) and (pointer: fine) {
+  .kb-hero__link:hover .kb-hero__link-icon {
+    background: var(--color-rose);
+    color: var(--color-on-rose);
+    transform: translateX(3px);
+  }
 }
 
 .kb-hero__link:active .kb-hero__link-icon {
