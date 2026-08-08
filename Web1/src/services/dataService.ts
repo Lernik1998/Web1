@@ -135,3 +135,35 @@ export const fetchGoogleReviews = async (): Promise<GoogleReview[]> => {
 export const subscribeToNewsletter = async (name: string, email: string): Promise<void> => {
   await apiClient.post('/wp-json/kanbouri/v1/appointment', {name, email })
 }
+
+// Forma exacta que espera `kanbouri_send_appointment_email()` en el plugin
+// de WordPress (`services/mail.php`): nombres de campo en inglés, y
+// `weekdays`/`schedule` como arrays (aunque el formulario solo deje elegir
+// un día y una franja horaria, se envían como array de un elemento porque
+// el backend los recorre con `implode(', ', ...)`).
+export interface AppointmentRequestPayload {
+  name: string
+  surname: string
+  email: string
+  phone: string
+  therapy: string
+  appointment_type: string
+  psychologist: string
+  weekdays: string[]
+  schedule: string[]
+  source: string
+  message: string
+  // Token de reCAPTCHA v3 (o `null` si el sitio no tiene configurada
+  // `VITE_RECAPTCHA_SITE_KEY`); el backend lo verifica contra la API
+  // "siteverify" de Google antes de enviar el email.
+  recaptcha_token: string | null
+}
+
+// Solicitud de cita del formulario "Pedir cita" (endpoint propio del
+// WordPress, distinto del de la newsletter de arriba): el backend verifica
+// el token de reCAPTCHA y, si es válido, envía el email al centro.
+export const submitAppointmentRequest = async (
+  payload: AppointmentRequestPayload,
+): Promise<void> => {
+  await apiClient.post('/wp-json/kanbouri/v1/book-appointment', payload)
+}

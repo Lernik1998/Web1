@@ -6,7 +6,7 @@ import PedirCitaView from '../PedirCitaView.vue'
 vi.mock('../../services/dataService')
 vi.mock('../../utils/recaptcha')
 
-import { fetchPedirCitaPage } from '../../services/dataService'
+import { fetchPedirCitaPage, submitAppointmentRequest } from '../../services/dataService'
 import { getRecaptchaToken } from '../../utils/recaptcha'
 
 const globalStubs = {
@@ -41,11 +41,13 @@ describe('PedirCitaView', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     vi.mocked(getRecaptchaToken).mockResolvedValue(null)
+    vi.mocked(submitAppointmentRequest).mockResolvedValue(undefined)
   })
 
   afterEach(() => {
     vi.useRealTimers()
     vi.mocked(getRecaptchaToken).mockReset()
+    vi.mocked(submitAppointmentRequest).mockReset()
   })
 
   it('shows validation errors and does not submit when the form is empty', async () => {
@@ -68,7 +70,6 @@ describe('PedirCitaView', () => {
 
     expect(wrapper.text()).not.toContain('Falta completar algún campo obligatorio')
 
-    await vi.advanceTimersByTimeAsync(600)
     await flushPromises()
     await wrapper.vm.$nextTick()
 
@@ -86,8 +87,45 @@ describe('PedirCitaView', () => {
     expect(getRecaptchaToken).toHaveBeenCalledWith('pedir_cita')
   })
 
+  it('sends the form data and the reCAPTCHA token to the backend', async () => {
+    vi.mocked(getRecaptchaToken).mockResolvedValue('a-recaptcha-token')
+    const wrapper = await mountView()
+
+    await fillRequiredFields(wrapper)
+    await wrapper.find('form').trigger('submit.prevent')
+    await flushPromises()
+
+    expect(submitAppointmentRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Ana',
+        surname: 'García López',
+        email: 'ana@ejemplo.com',
+        phone: '600000000',
+        therapy: 'Psicología para adultos',
+        appointment_type: 'Online',
+        weekdays: ['Lunes'],
+        schedule: ['Mañana'],
+        recaptcha_token: 'a-recaptcha-token',
+      }),
+    )
+  })
+
   it('blocks submission with an error when reCAPTCHA verification fails', async () => {
     vi.mocked(getRecaptchaToken).mockRejectedValue(new Error('reCAPTCHA failed'))
+    const wrapper = await mountView()
+
+    await fillRequiredFields(wrapper)
+    await wrapper.find('form').trigger('submit.prevent')
+    await flushPromises()
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.kb-appointment__success').exists()).toBe(false)
+    expect(wrapper.text()).toContain('No se ha podido enviar la solicitud')
+    expect(submitAppointmentRequest).not.toHaveBeenCalled()
+  })
+
+  it('blocks submission with an error when the backend rejects the request', async () => {
+    vi.mocked(submitAppointmentRequest).mockRejectedValue(new Error('network error'))
     const wrapper = await mountView()
 
     await fillRequiredFields(wrapper)

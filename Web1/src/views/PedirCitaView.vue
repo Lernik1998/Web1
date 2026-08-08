@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { fetchPedirCitaPage } from '../services/dataService'
+import { fetchPedirCitaPage, submitAppointmentRequest } from '../services/dataService'
 import { processWordPressContent } from '../utils/contentProcessor'
 import { useInternalLinks } from '../composables/useInternalLinks'
 import { getRecaptchaToken } from '../utils/recaptcha'
@@ -230,12 +230,30 @@ async function handleSubmit() {
 
   submitting.value = true
   try {
-    await getRecaptchaToken('pedir_cita')
-    // TODO: conectar con el endpoint real de envío (WordPress) cuando esté
-    // disponible, enviando el token de reCAPTCHA junto con los datos del
-    // formulario para que el backend lo verifique contra la API
-    // "siteverify" de Google antes de aceptar la solicitud.
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    const recaptchaToken = await getRecaptchaToken('pedir_cita')
+    await submitAppointmentRequest({
+      name: form.nombre,
+      surname: form.apellidos,
+      email: form.email,
+      phone: form.telefono,
+      // El backend solo guarda/muestra el texto tal cual (no conoce los
+      // slugs internos del formulario), así que se envía la etiqueta
+      // legible de cada opción en vez del value ("adultos" -> "Psicología
+      // para adultos").
+      therapy: services.find((service) => service.value === form.servicio)?.label ?? form.servicio,
+      appointment_type:
+        modalityOptions.find((modality) => modality.value === form.modalidad)?.label ??
+        form.modalidad,
+      psychologist:
+        professionals.find((pro) => pro.value === form.profesional)?.label ?? form.profesional,
+      weekdays: [weekdays.find((day) => day.value === form.dia)?.label ?? form.dia],
+      schedule: [timeSlots.find((slot) => slot.value === form.horario)?.label ?? form.horario],
+      source:
+        howFoundOptions.find((option) => option.value === form.comoNosConociste)?.label ??
+        form.comoNosConociste,
+      message: form.mensaje,
+      recaptcha_token: recaptchaToken,
+    })
     submitted.value = true
     clearSavedForm()
   } catch {
