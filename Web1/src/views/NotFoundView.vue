@@ -1,9 +1,3 @@
-<script setup lang="ts">
-defineOptions({
-  name: 'NotFoundView',
-})
-</script>
-
 <template>
   <section class="kb-not-found">
     <div class="kb-not-found__inner">
@@ -20,6 +14,20 @@ defineOptions({
     </div>
   </section>
 </template>
+
+<script setup lang="ts">
+import { useSeoMeta } from '../composables/useSeoMeta'
+
+defineOptions({
+  name: 'NotFoundView',
+})
+
+useSeoMeta(() => ({
+  title: 'Página no encontrada',
+  description: 'La página que buscas no existe o se ha movido.',
+  noindex: true,
+}))
+</script>
 
 <style scoped>
 .kb-not-found {

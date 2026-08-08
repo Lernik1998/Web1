@@ -6,11 +6,70 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Título/descripción por defecto: los ve cualquier rastreador que no
+         ejecute JavaScript, y son los que se muestran un instante antes de
+         que useSeoMeta() (ver src/composables/useSeoMeta.ts) los sustituya
+         por los específicos de cada página ya con datos reales. -->
     <meta
       name="description"
-      content="Kanbouri Psicología — centro de psicología en Dénia especializado en el acompañamiento emocional y terapéutico para niños, adultos, adolescentes y familias."
+      content="Terapia psicológica en Dénia y la Marina Alta: psicología infantil, adolescentes, adultos y pareja. Sesiones presenciales en Dénia, Jávea y Ondara, y online."
     >
-    <title>Kanbouri Psicología</title>
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://kanbouripsicologia.com/">
+    <title>Kanbouri Psicología Dénia — Terapia para toda la familia</title>
+
+    <meta property="og:site_name" content="Kanbouri Psicología">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="es_ES">
+    <meta property="og:title" content="Kanbouri Psicología Dénia — Terapia para toda la familia">
+    <meta
+      property="og:description"
+      content="Terapia psicológica en Dénia y la Marina Alta: psicología infantil, adolescentes, adultos y pareja. Sesiones presenciales en Dénia, Jávea y Ondara, y online."
+    >
+    <meta property="og:url" content="https://kanbouripsicologia.com/">
+    <meta property="og:image" content="https://kanbouripsicologia.com/images/logo_kanbouri_2023.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Kanbouri Psicología Dénia — Terapia para toda la familia">
+    <meta
+      name="twitter:description"
+      content="Terapia psicológica en Dénia y la Marina Alta: psicología infantil, adolescentes, adultos y pareja. Sesiones presenciales en Dénia, Jávea y Ondara, y online."
+    >
+    <meta name="twitter:image" content="https://kanbouripsicologia.com/images/logo_kanbouri_2023.png">
+
+    <!-- Datos estructurados (Schema.org): identidad del negocio para
+         resultados enriquecidos y para el panel de negocio local de Google
+         (dirección, teléfono, horario). Solo datos reales, ya visibles en
+         el pie de página — nada inventado (valoraciones, precios...). -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "MedicalBusiness",
+      "name": "Kanbouri Psicología",
+      "image": "https://kanbouripsicologia.com/images/logo_kanbouri_2023.png",
+      "url": "https://kanbouripsicologia.com/",
+      "telephone": "+34629538062",
+      "email": "gabinete@kanbouripsicologia.com",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "C/ Sant Josep 31, Planta Baja Izquierda",
+        "addressLocality": "Dénia",
+        "addressRegion": "Alicante",
+        "addressCountry": "ES"
+      },
+      "areaServed": ["Dénia", "Jávea", "Ondara", "Marina Alta"],
+      "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        "opens": "12:00",
+        "closes": "20:00"
+      },
+      "sameAs": [
+        "https://www.facebook.com/Psicologakanbouri",
+        "https://www.instagram.com/kanbouri_psicologia/"
+      ]
+    }
+    </script>
 
     <!-- Una sola petición de fuentes para toda la web (antes había dos
          @import duplicados y solapados dentro del CSS empaquetado, que el

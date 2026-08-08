@@ -1,52 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { fetchTherapieBySlug } from '../../../services/dataService'
-import { parseTherapieAcf } from '../../../utils/therapyAcf'
-import type { ParsedTherapyContent } from '../../../utils/therapyAcf'
-import FaqAccordion from '../../../components/FaqAccordion.vue'
-import LoadingSpinner from '../../../components/LoadingSpinner.vue'
-
-defineOptions({
-  name: 'AnsiedadView',
-})
-
-const loading = ref(true)
-const content = ref<ParsedTherapyContent | null>(null)
-const title = ref('Ansiedad')
-
-onMounted(async () => {
-  try {
-    const therapy = await fetchTherapieBySlug('ansiedad')
-    if (therapy) {
-      title.value = therapy.title.rendered
-      content.value = parseTherapieAcf(therapy.acf)
-    }
-  } catch (err) {
-    console.error('Error fetching adult anxiety therapy:', err)
-  } finally {
-    loading.value = false
-  }
-})
-
-const faqs = [
-  {
-    question: '¿La terapia elimina la ansiedad por completo?',
-    answer:
-      'El objetivo no es eliminar la ansiedad, una emoción normal, sino que deje de limitarte y aprender a gestionarla cuando aparece.',
-  },
-  {
-    question: '¿Cuánto se tarda en notar mejoría?',
-    answer:
-      'Cada proceso es distinto, pero muchas personas empiezan a notar cambios en las primeras semanas al incorporar las primeras herramientas.',
-  },
-  {
-    question: '¿Necesito medicación además de terapia?',
-    answer:
-      'No siempre. Cuando es necesario, trabajamos de forma coordinada con el médico o psiquiatra de referencia.',
-  },
-]
-</script>
-
 <template>
   <section class="kb-therapy">
     <LoadingSpinner v-if="loading" message="Cargando..." />
@@ -90,6 +41,67 @@ const faqs = [
     </template>
   </section>
 </template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { fetchTherapieBySlug } from '../../../services/dataService'
+import { parseTherapieAcf } from '../../../utils/therapyAcf'
+import type { ParsedTherapyContent } from '../../../utils/therapyAcf'
+import { useSeoMeta, truncateForMeta } from '../../../composables/useSeoMeta'
+import { useFaqSchema } from '../../../composables/useFaqSchema'
+import FaqAccordion from '../../../components/FaqAccordion.vue'
+import LoadingSpinner from '../../../components/LoadingSpinner.vue'
+
+defineOptions({
+  name: 'AnsiedadView',
+})
+
+const loading = ref(true)
+const content = ref<ParsedTherapyContent | null>(null)
+const title = ref('Ansiedad')
+
+onMounted(async () => {
+  try {
+    const therapy = await fetchTherapieBySlug('ansiedad')
+    if (therapy) {
+      title.value = therapy.title.rendered
+      content.value = parseTherapieAcf(therapy.acf)
+    }
+  } catch (err) {
+    console.error('Error fetching adult anxiety therapy:', err)
+  } finally {
+    loading.value = false
+  }
+})
+
+useSeoMeta(
+  computed(() =>
+    content.value
+      ? { title: `${title.value} en Dénia`, description: truncateForMeta(content.value.intro) }
+      : null,
+  ),
+)
+
+const faqs = [
+  {
+    question: '¿La terapia elimina la ansiedad por completo?',
+    answer:
+      'El objetivo no es eliminar la ansiedad, una emoción normal, sino que deje de limitarte y aprender a gestionarla cuando aparece.',
+  },
+  {
+    question: '¿Cuánto se tarda en notar mejoría?',
+    answer:
+      'Cada proceso es distinto, pero muchas personas empiezan a notar cambios en las primeras semanas al incorporar las primeras herramientas.',
+  },
+  {
+    question: '¿Necesito medicación además de terapia?',
+    answer:
+      'No siempre. Cuando es necesario, trabajamos de forma coordinada con el médico o psiquiatra de referencia.',
+  },
+]
+
+useFaqSchema(() => faqs)
+</script>
 
 <style scoped>
 .kb-therapy {

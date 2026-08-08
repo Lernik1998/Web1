@@ -1,52 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { fetchTherapieBySlug } from '../../services/dataService'
-import { parseTherapieAcf } from '../../utils/therapyAcf'
-import type { ParsedTherapyContent } from '../../utils/therapyAcf'
-import FaqAccordion from '../../components/FaqAccordion.vue'
-import LoadingSpinner from '../../components/LoadingSpinner.vue'
-
-defineOptions({
-  name: 'InfantilView',
-})
-
-const loading = ref(true)
-const content = ref<ParsedTherapyContent | null>(null)
-const title = ref('Psicología infantil')
-
-onMounted(async () => {
-  try {
-    const therapy = await fetchTherapieBySlug('psicologia-infantil')
-    if (therapy) {
-      title.value = therapy.title.rendered
-      content.value = parseTherapieAcf(therapy.acf)
-    }
-  } catch (err) {
-    console.error('Error fetching child psychology therapy:', err)
-  } finally {
-    loading.value = false
-  }
-})
-
-const faqs = [
-  {
-    question: '¿A partir de qué edad puede empezar terapia un niño o niña?',
-    answer:
-      'Trabajamos con niños y niñas desde los 4-5 años, adaptando siempre el lenguaje y las herramientas a su etapa de desarrollo.',
-  },
-  {
-    question: '¿Tengo que estar presente en las sesiones?',
-    answer:
-      'Depende de la edad y de lo que necesite cada caso. En general dejamos un espacio propio para el niño o la niña, y mantenemos sesiones periódicas con la familia para compartir el proceso.',
-  },
-  {
-    question: '¿Cuánto dura el proceso?',
-    answer:
-      'Varía mucho según cada situación. Lo iremos revisando juntos sesión a sesión, sin prisas ni plazos cerrados.',
-  },
-]
-</script>
-
 <template>
   <section class="kb-therapy">
     <LoadingSpinner v-if="loading" message="Cargando..." />
@@ -90,6 +41,67 @@ const faqs = [
     </template>
   </section>
 </template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { fetchTherapieBySlug } from '../../services/dataService'
+import { parseTherapieAcf } from '../../utils/therapyAcf'
+import type { ParsedTherapyContent } from '../../utils/therapyAcf'
+import { useSeoMeta, truncateForMeta } from '../../composables/useSeoMeta'
+import { useFaqSchema } from '../../composables/useFaqSchema'
+import FaqAccordion from '../../components/FaqAccordion.vue'
+import LoadingSpinner from '../../components/LoadingSpinner.vue'
+
+defineOptions({
+  name: 'InfantilView',
+})
+
+const loading = ref(true)
+const content = ref<ParsedTherapyContent | null>(null)
+const title = ref('Psicología infantil')
+
+onMounted(async () => {
+  try {
+    const therapy = await fetchTherapieBySlug('psicologia-infantil')
+    if (therapy) {
+      title.value = therapy.title.rendered
+      content.value = parseTherapieAcf(therapy.acf)
+    }
+  } catch (err) {
+    console.error('Error fetching child psychology therapy:', err)
+  } finally {
+    loading.value = false
+  }
+})
+
+useSeoMeta(
+  computed(() =>
+    content.value
+      ? { title: `${title.value} en Dénia`, description: truncateForMeta(content.value.intro) }
+      : null,
+  ),
+)
+
+const faqs = [
+  {
+    question: '¿A partir de qué edad puede empezar terapia un niño o niña?',
+    answer:
+      'Trabajamos con niños y niñas desde los 4-5 años, adaptando siempre el lenguaje y las herramientas a su etapa de desarrollo.',
+  },
+  {
+    question: '¿Tengo que estar presente en las sesiones?',
+    answer:
+      'Depende de la edad y de lo que necesite cada caso. En general dejamos un espacio propio para el niño o la niña, y mantenemos sesiones periódicas con la familia para compartir el proceso.',
+  },
+  {
+    question: '¿Cuánto dura el proceso?',
+    answer:
+      'Varía mucho según cada situación. Lo iremos revisando juntos sesión a sesión, sin prisas ni plazos cerrados.',
+  },
+]
+
+useFaqSchema(() => faqs)
+</script>
 
 <style scoped>
 .kb-therapy {

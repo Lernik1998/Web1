@@ -27,4 +27,25 @@ describe('App', () => {
       true,
     )
   })
+
+  it('shows only the maintenance screen when VITE_MAINTENANCE_MODE is "true"', async () => {
+    vi.stubEnv('VITE_MAINTENANCE_MODE', 'true')
+
+    router.push('/')
+    await router.isReady()
+
+    const wrapper = mount(App, {
+      global: {
+        directives: { 'animate-on-scroll': {}, spotlight: {}, ripple: {} },
+        plugins: [router],
+      },
+    })
+    await flushPromises()
+
+    expect(wrapper.findComponent({ name: 'MaintenanceView' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'Header' }).exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'Footer' }).exists()).toBe(false)
+
+    vi.unstubAllEnvs()
+  })
 })

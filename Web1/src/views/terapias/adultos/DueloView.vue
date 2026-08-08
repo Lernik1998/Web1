@@ -1,51 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { fetchTherapieBySlug } from '../../../services/dataService'
-import { parseTherapieAcf } from '../../../utils/therapyAcf'
-import type { ParsedTherapyContent } from '../../../utils/therapyAcf'
-import FaqAccordion from '../../../components/FaqAccordion.vue'
-import LoadingSpinner from '../../../components/LoadingSpinner.vue'
-
-defineOptions({
-  name: 'DueloView',
-})
-
-const loading = ref(true)
-const content = ref<ParsedTherapyContent | null>(null)
-const title = ref('Duelo y pérdidas')
-
-onMounted(async () => {
-  try {
-    const therapy = await fetchTherapieBySlug('duelo-y-perdidas')
-    if (therapy) {
-      title.value = therapy.title.rendered
-      content.value = parseTherapieAcf(therapy.acf)
-    }
-  } catch (err) {
-    console.error('Error fetching adult grief therapy:', err)
-  } finally {
-    loading.value = false
-  }
-})
-
-const faqs = [
-  {
-    question: '¿Cuánto tiempo después de la pérdida puedo empezar terapia?',
-    answer:
-      'No hay un momento «correcto». Puedes empezar cuando sientas que lo necesitas, ya sea justo después o tiempo más tarde.',
-  },
-  {
-    question: '¿Es normal sentir alivio o rabia además de tristeza?',
-    answer:
-      'Sí, el duelo incluye emociones muy diversas y a veces contradictorias. En terapia tienen cabida todas.',
-  },
-  {
-    question: '¿Sirve para duelos que no son por una muerte?',
-    answer: 'Sí, también acompañamos duelos por rupturas, pérdida de salud u otros cambios vitales importantes.',
-  },
-]
-</script>
-
 <template>
   <section class="kb-therapy">
     <LoadingSpinner v-if="loading" message="Cargando..." />
@@ -89,6 +41,66 @@ const faqs = [
     </template>
   </section>
 </template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { fetchTherapieBySlug } from '../../../services/dataService'
+import { parseTherapieAcf } from '../../../utils/therapyAcf'
+import type { ParsedTherapyContent } from '../../../utils/therapyAcf'
+import { useSeoMeta, truncateForMeta } from '../../../composables/useSeoMeta'
+import { useFaqSchema } from '../../../composables/useFaqSchema'
+import FaqAccordion from '../../../components/FaqAccordion.vue'
+import LoadingSpinner from '../../../components/LoadingSpinner.vue'
+
+defineOptions({
+  name: 'DueloView',
+})
+
+const loading = ref(true)
+const content = ref<ParsedTherapyContent | null>(null)
+const title = ref('Duelo y pérdidas')
+
+onMounted(async () => {
+  try {
+    const therapy = await fetchTherapieBySlug('duelo-y-perdidas')
+    if (therapy) {
+      title.value = therapy.title.rendered
+      content.value = parseTherapieAcf(therapy.acf)
+    }
+  } catch (err) {
+    console.error('Error fetching adult grief therapy:', err)
+  } finally {
+    loading.value = false
+  }
+})
+
+useSeoMeta(
+  computed(() =>
+    content.value
+      ? { title: `${title.value} en Dénia`, description: truncateForMeta(content.value.intro) }
+      : null,
+  ),
+)
+
+const faqs = [
+  {
+    question: '¿Cuánto tiempo después de la pérdida puedo empezar terapia?',
+    answer:
+      'No hay un momento «correcto». Puedes empezar cuando sientas que lo necesitas, ya sea justo después o tiempo más tarde.',
+  },
+  {
+    question: '¿Es normal sentir alivio o rabia además de tristeza?',
+    answer:
+      'Sí, el duelo incluye emociones muy diversas y a veces contradictorias. En terapia tienen cabida todas.',
+  },
+  {
+    question: '¿Sirve para duelos que no son por una muerte?',
+    answer: 'Sí, también acompañamos duelos por rupturas, pérdida de salud u otros cambios vitales importantes.',
+  },
+]
+
+useFaqSchema(() => faqs)
+</script>
 
 <style scoped>
 .kb-therapy {

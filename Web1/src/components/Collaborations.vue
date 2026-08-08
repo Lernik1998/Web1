@@ -1,15 +1,3 @@
-<script setup lang="ts">
-defineOptions({
-  name: 'CollaborationsBand',
-})
-
-const universities = [
-  { name: 'UNIR', logo: '/images/logo-unir.svg', href: 'https://www.unir.net/' },
-  { name: 'UNIE', logo: '/images/logo-unie.webp', href: 'https://www.universidadunie.com/' },
-  { name: 'Universidad Isabel I', logo: '/images/logo-isabel-i.svg', href: 'https://www.ui1.es/' },
-]
-</script>
-
 <template>
   <section class="kb-collab">
     <div class="kb-collab__inner">
@@ -35,6 +23,18 @@ const universities = [
     </div>
   </section>
 </template>
+
+<script setup lang="ts">
+defineOptions({
+  name: 'CollaborationsBand',
+})
+
+const universities = [
+  { name: 'UNIR', logo: '/images/logo-unir.svg', href: 'https://www.unir.net/' },
+  { name: 'UNIE', logo: '/images/logo-unie.webp', href: 'https://www.universidadunie.com/' },
+  { name: 'Universidad Isabel I', logo: '/images/logo-isabel-i.svg', href: 'https://www.ui1.es/' },
+]
+</script>
 
 <style scoped>
 .kb-collab {

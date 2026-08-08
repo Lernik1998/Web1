@@ -1,7 +1,94 @@
+<template>
+  <section class="kb-supervision">
+    <LoadingSpinner v-if="loading" message="Cargando..." />
+
+    <div v-else-if="error" class="kb-supervision__error">
+      <p>Error: {{ error }}</p>
+      <p class="text-secondary">Verifica que la API esté accesible.</p>
+    </div>
+
+    <template v-else-if="pageData">
+      <div class="kb-supervision__header">
+        <h1 class="kb-supervision__title text-h1">{{ title }}</h1>
+        <p class="kb-supervision__lead text-body">{{ lead }}</p>
+        <router-link
+          :to="{ path: '/pedir-cita', query: { servicio: 'profesionales' } }"
+          class="kb-supervision__cta text-cta"
+        >
+          {{ buttonText }}
+        </router-link>
+      </div>
+
+      <div class="kb-supervision__inner">
+        <blockquote v-if="quote" class="kb-supervision__quote text-quote">
+          {{ quote }}
+        </blockquote>
+
+        <div class="kb-supervision__card">
+          <div
+            v-for="block in textBlocks"
+            :key="block.title"
+            class="kb-supervision__block"
+            v-animate-on-scroll
+          >
+            <h2 class="text-h2">{{ block.title }}</h2>
+            <p class="text-body">{{ block.description }}</p>
+          </div>
+
+          <div v-if="areas.length" class="kb-supervision__block" v-animate-on-scroll>
+            <h2 class="text-h2">Áreas que trabajamos</h2>
+            <div class="kb-pill-group">
+              <router-link
+                v-for="area in areas"
+                :key="area.href"
+                :to="area.href"
+                class="kb-pill kb-pill--link"
+              >
+                {{ area.label }}
+              </router-link>
+            </div>
+          </div>
+
+          <div v-if="steps.length" class="kb-supervision__block" v-animate-on-scroll>
+            <h2 class="text-h2">Cómo funciona</h2>
+            <ol class="kb-steps">
+              <li v-for="(step, index) in steps" :key="step.title" class="kb-steps__item">
+                <span class="kb-steps__number">{{ index + 1 }}</span>
+                <p class="kb-steps__title">{{ step.title }}</p>
+                <p class="kb-steps__desc text-secondary" v-html="step.description"></p>
+              </li>
+            </ol>
+          </div>
+
+          <div class="kb-supervision__block" v-animate-on-scroll>
+            <NewsletterSignup />
+          </div>
+        </div>
+
+        <div v-if="finalHeading" class="kb-supervision__final">
+          <h2 class="text-h2">{{ finalHeading }}</h2>
+          <p class="text-body">{{ finalText }}</p>
+          <router-link
+            :to="{ path: '/pedir-cita', query: { servicio: 'profesionales' } }"
+            class="kb-supervision__cta text-cta"
+          >
+            {{ buttonText }}
+          </router-link>
+        </div>
+      </div>
+    </template>
+
+    <div v-else class="kb-supervision__error">
+      <p>No se encontró la página.</p>
+    </div>
+  </section>
+</template>
+
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { fetchForPsicologosPage } from '../services/dataService'
 import { processWordPressContent } from '../utils/contentProcessor'
+import { useSeoMeta } from '../composables/useSeoMeta'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import NewsletterSignup from '../components/NewsletterSignup.vue'
 import type { WordPressPage } from '../types/api'
@@ -13,6 +100,12 @@ defineOptions({
 const pageData = ref<WordPressPage | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
+
+useSeoMeta(() => ({
+  title: 'Supervisión para psicólogos',
+  description:
+    'Espacio de supervisión clínica para psicólogos y profesionales de la salud mental, con Kanbouri Psicología en Dénia.',
+}))
 
 /**
  * Ruta interna de cada área listada en "Áreas que trabajamos". El texto de
@@ -133,92 +226,6 @@ onMounted(async () => {
 
 const title = computed(() => pageData.value?.title.rendered ?? '')
 </script>
-
-<template>
-  <section class="kb-supervision">
-    <LoadingSpinner v-if="loading" message="Cargando..." />
-
-    <div v-else-if="error" class="kb-supervision__error">
-      <p>Error: {{ error }}</p>
-      <p class="text-secondary">Verifica que la API esté accesible.</p>
-    </div>
-
-    <template v-else-if="pageData">
-      <div class="kb-supervision__header">
-        <h1 class="kb-supervision__title text-h1">{{ title }}</h1>
-        <p class="kb-supervision__lead text-body">{{ lead }}</p>
-        <router-link
-          :to="{ path: '/pedir-cita', query: { servicio: 'profesionales' } }"
-          class="kb-supervision__cta text-cta"
-        >
-          {{ buttonText }}
-        </router-link>
-      </div>
-
-      <div class="kb-supervision__inner">
-        <blockquote v-if="quote" class="kb-supervision__quote text-quote">
-          {{ quote }}
-        </blockquote>
-
-        <div class="kb-supervision__card">
-          <div
-            v-for="block in textBlocks"
-            :key="block.title"
-            class="kb-supervision__block"
-            v-animate-on-scroll
-          >
-            <h2 class="text-h2">{{ block.title }}</h2>
-            <p class="text-body">{{ block.description }}</p>
-          </div>
-
-          <div v-if="areas.length" class="kb-supervision__block" v-animate-on-scroll>
-            <h2 class="text-h2">Áreas que trabajamos</h2>
-            <div class="kb-pill-group">
-              <router-link
-                v-for="area in areas"
-                :key="area.href"
-                :to="area.href"
-                class="kb-pill kb-pill--link"
-              >
-                {{ area.label }}
-              </router-link>
-            </div>
-          </div>
-
-          <div v-if="steps.length" class="kb-supervision__block" v-animate-on-scroll>
-            <h2 class="text-h2">Cómo funciona</h2>
-            <ol class="kb-steps">
-              <li v-for="(step, index) in steps" :key="step.title" class="kb-steps__item">
-                <span class="kb-steps__number">{{ index + 1 }}</span>
-                <p class="kb-steps__title">{{ step.title }}</p>
-                <p class="kb-steps__desc text-secondary" v-html="step.description"></p>
-              </li>
-            </ol>
-          </div>
-
-          <div class="kb-supervision__block" v-animate-on-scroll>
-            <NewsletterSignup />
-          </div>
-        </div>
-
-        <div v-if="finalHeading" class="kb-supervision__final">
-          <h2 class="text-h2">{{ finalHeading }}</h2>
-          <p class="text-body">{{ finalText }}</p>
-          <router-link
-            :to="{ path: '/pedir-cita', query: { servicio: 'profesionales' } }"
-            class="kb-supervision__cta text-cta"
-          >
-            {{ buttonText }}
-          </router-link>
-        </div>
-      </div>
-    </template>
-
-    <div v-else class="kb-supervision__error">
-      <p>No se encontró la página.</p>
-    </div>
-  </section>
-</template>
 
 <style scoped>
 .kb-supervision {

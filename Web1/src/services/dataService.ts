@@ -111,13 +111,23 @@ export const fetchForPsicologosPage = async (): Promise<WordPressPage | null> =>
   return fetchPageBySlugProcessed('for-psychologists')
 }
 
+export interface BlogPostsPage {
+  posts: WordPressPost[]
+  totalPages: number
+}
+
 // Artículos del blog (WordPress posts, no páginas). `_embed` trae la imagen
 // destacada y las categorías ya resueltas para no hacer peticiones extra.
-export const fetchBlogPosts = async (page = 1, perPage = 9): Promise<WordPressPost[]> => {
+// `orderby=date&order=desc` deja explícito que los más recientes van primero
+// (es el valor por defecto de WordPress, pero así no depende de que nadie lo
+// cambie sin darse cuenta). `X-WP-TotalPages` es la cabecera que WordPress
+// devuelve con el nº de páginas real para ese `per_page`.
+export const fetchBlogPosts = async (page = 1, perPage = 3): Promise<BlogPostsPage> => {
   const response = await apiClient.get<WordPressPost[]>(
-    `/wp-json/wp/v2/posts?_embed&per_page=${perPage}&page=${page}`,
+    `/wp-json/wp/v2/posts?_embed&orderby=date&order=desc&per_page=${perPage}&page=${page}`,
   )
-  return response.data
+  const totalPages = Number(response.headers['x-wp-totalpages']) || 1
+  return { posts: response.data, totalPages }
 }
 
 export const fetchBlogPostBySlug = async (slug: string): Promise<WordPressPost | null> => {

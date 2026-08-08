@@ -1,42 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { fetchMapsSetting } from '../services/dataService'
-import { parseStreetViewUrl, buildStreetViewEmbedSrc } from '../utils/googleMapsUrl'
-
-defineOptions({
-  name: 'TheFooter',
-})
-
-// Encuadre de respaldo (fachada de C/ Sant Josep, de frente) por si el
-// "embed_url" que gestiona WordPress es un enlace corto de Google
-// (maps.app.goo.gl): esos no se pueden resolver desde el navegador, ya que
-// son una redirección 301 a otro origen y CORS impide leerla con JS.
-const FALLBACK_STREET_VIEW_SRC =
-  'https://www.google.com/maps?layer=c&cbll=38.8386523,0.1060985&cbp=12,95,,0,0&output=svembed'
-
-const mapEnabled = ref(true)
-const mapSrc = ref(FALLBACK_STREET_VIEW_SRC)
-
-onMounted(async () => {
-  try {
-    const setting = await fetchMapsSetting()
-    const acf = setting?.acf
-    if (!acf) return
-
-    mapEnabled.value = acf.enabled !== false
-
-    const parsed = parseStreetViewUrl(acf.embed_url ?? '')
-    if (parsed) {
-      mapSrc.value = buildStreetViewEmbedSrc(parsed)
-    }
-    // Si no se pudo parsear (p. ej. es un enlace corto maps.app.goo.gl), se
-    // mantiene el encuadre de respaldo ya cargado en mapSrc.
-  } catch (err) {
-    console.error('Error fetching maps setting:', err)
-  }
-})
-</script>
-
 <template>
   <footer class="the-footer">
     <div class="footer-content">
@@ -180,6 +141,45 @@ onMounted(async () => {
   </footer>
 </template>
 
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { fetchMapsSetting } from '../services/dataService'
+import { parseStreetViewUrl, buildStreetViewEmbedSrc } from '../utils/googleMapsUrl'
+
+defineOptions({
+  name: 'TheFooter',
+})
+
+// Encuadre de respaldo (fachada de C/ Sant Josep, de frente) por si el
+// "embed_url" que gestiona WordPress es un enlace corto de Google
+// (maps.app.goo.gl): esos no se pueden resolver desde el navegador, ya que
+// son una redirección 301 a otro origen y CORS impide leerla con JS.
+const FALLBACK_STREET_VIEW_SRC =
+  'https://www.google.com/maps?layer=c&cbll=38.8386523,0.1060985&cbp=12,95,,0,0&output=svembed'
+
+const mapEnabled = ref(true)
+const mapSrc = ref(FALLBACK_STREET_VIEW_SRC)
+
+onMounted(async () => {
+  try {
+    const setting = await fetchMapsSetting()
+    const acf = setting?.acf
+    if (!acf) return
+
+    mapEnabled.value = acf.enabled !== false
+
+    const parsed = parseStreetViewUrl(acf.embed_url ?? '')
+    if (parsed) {
+      mapSrc.value = buildStreetViewEmbedSrc(parsed)
+    }
+    // Si no se pudo parsear (p. ej. es un enlace corto maps.app.goo.gl), se
+    // mantiene el encuadre de respaldo ya cargado en mapSrc.
+  } catch (err) {
+    console.error('Error fetching maps setting:', err)
+  }
+})
+</script>
+
 <style scoped>
 .the-footer {
   background: var(--color-paper-alt);
@@ -296,10 +296,14 @@ onMounted(async () => {
   align-items: start;
 }
 
+/* Rejilla 2x2 (Dirección/Teléfono arriba, Email/Horario abajo) en vez de un
+   flex-wrap: con 4 elementos de ancho variable, "Horario" acababa solo en
+   una segunda línea pegado a la izquierda en vez de centrado, mientras que
+   con la rejilla queda justo debajo de "Teléfono", centrado igual que él. */
 .contact-line {
-  display: flex;
-  flex-wrap: wrap;
-  gap: clamp(20px, 3vw, 40px);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(20px, 3vw, 40px) clamp(16px, 2vw, 32px);
 }
 
 .contact-line__group {
@@ -368,7 +372,7 @@ onMounted(async () => {
   }
 
   .contact-line {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .contact-line__value {

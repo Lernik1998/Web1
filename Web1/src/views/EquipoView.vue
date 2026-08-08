@@ -1,13 +1,70 @@
+<template>
+  <section class="kb-team">
+    <div class="kb-team__header">
+      <h1 class="kb-team__title text-h1">Nuestro equipo</h1>
+      <p class="kb-team__lead text-body">
+        Un equipo de psicólogas cercano y diverso, con un objetivo común:
+        acompañarte con calidez y profesionalidad en cada etapa.
+      </p>
+    </div>
+
+    <LoadingSpinner v-if="loading" message="Cargando equipo..." />
+
+    <div v-else-if="error" class="kb-team__error">
+      <p>Error: {{ error }}</p>
+      <p class="text-secondary">Verifica que la API esté accesible.</p>
+    </div>
+
+    <div v-else class="kb-team__grid">
+      <article
+        v-for="(member, i) in cards"
+        :key="member.slug"
+        class="kb-team-card"
+        v-animate-on-scroll
+        v-spotlight
+        :style="{ transitionDelay: `${i * 100}ms` }"
+      >
+        <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__media">
+          <img
+            v-if="member.photo"
+            :src="member.photo.image"
+            :alt="member.name"
+            class="kb-team-card__image"
+            loading="lazy"
+          />
+          <div v-else class="kb-team-card__placeholder" aria-hidden="true">
+            {{ member.initials }}
+          </div>
+        </router-link>
+        <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__name-link">
+          <h3 class="kb-team-card__name text-h3">{{ member.name }}</h3>
+        </router-link>
+
+        <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__link text-cta" v-ripple>
+          Más sobre {{ member.name.split(' ')[0] }}
+        </router-link>
+      </article>
+    </div>
+  </section>
+</template>
+
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { fetchProfesionales, fetchMediaById } from '../services/dataService'
 import { getMediaUrl } from '../utils/media'
+import { useSeoMeta } from '../composables/useSeoMeta'
 import type { ProfesionalPost } from '../types/api'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 
 defineOptions({
   name: 'EquipoView',
 })
+
+useSeoMeta(() => ({
+  title: 'Nuestro equipo de psicólogas en Dénia',
+  description:
+    'Conoce al equipo de Kanbouri Psicología en Dénia: psicólogas especializadas en infantil, adolescentes, adultos y pareja.',
+}))
 
 const loading = ref(true)
 const error = ref<string | null>(null)
@@ -78,56 +135,6 @@ onMounted(async () => {
   }
 })
 </script>
-
-<template>
-  <section class="kb-team">
-    <div class="kb-team__header">
-      <h1 class="kb-team__title text-h1">Nuestro equipo</h1>
-      <p class="kb-team__lead text-body">
-        Un equipo de psicólogas cercano y diverso, con un objetivo común:
-        acompañarte con calidez y profesionalidad en cada etapa.
-      </p>
-    </div>
-
-    <LoadingSpinner v-if="loading" message="Cargando equipo..." />
-
-    <div v-else-if="error" class="kb-team__error">
-      <p>Error: {{ error }}</p>
-      <p class="text-secondary">Verifica que la API esté accesible.</p>
-    </div>
-
-    <div v-else class="kb-team__grid">
-      <article
-        v-for="(member, i) in cards"
-        :key="member.slug"
-        class="kb-team-card"
-        v-animate-on-scroll
-        v-spotlight
-        :style="{ transitionDelay: `${i * 100}ms` }"
-      >
-        <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__media">
-          <img
-            v-if="member.photo"
-            :src="member.photo.image"
-            :alt="member.name"
-            class="kb-team-card__image"
-            loading="lazy"
-          />
-          <div v-else class="kb-team-card__placeholder" aria-hidden="true">
-            {{ member.initials }}
-          </div>
-        </router-link>
-        <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__name-link">
-          <h3 class="kb-team-card__name text-h3">{{ member.name }}</h3>
-        </router-link>
-
-        <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__link text-cta" v-ripple>
-          Más sobre {{ member.name.split(' ')[0] }}
-        </router-link>
-      </article>
-    </div>
-  </section>
-</template>
 
 <style scoped>
 .kb-team {

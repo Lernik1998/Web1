@@ -1,12 +1,48 @@
+<template>
+  <section class="kb-post">
+    <div class="kb-post__inner">
+      <router-link to="/blog" class="kb-post__back text-secondary">← Volver al blog</router-link>
+
+      <LoadingSpinner v-if="loading" message="Cargando artículo..." />
+
+      <div v-else-if="error" class="kb-post__error">
+        <p>Error: {{ error }}</p>
+        <p class="text-secondary">Verifica que la API esté accesible.</p>
+      </div>
+
+      <article v-else-if="post" class="kb-post__article">
+        <img :src="imageUrl" :alt="imageAlt" class="kb-post__image" />
+
+        <div class="kb-post__body">
+          <div class="kb-post__meta text-secondary">
+            <span v-if="categoryName" class="kb-post__category">{{ categoryName }}</span>
+            <time :datetime="post.date">{{ formattedDate }}</time>
+          </div>
+
+          <h1 class="kb-post__title text-h1">{{ post.title.rendered }}</h1>
+
+          <div ref="contentEl" class="kb-prose" v-html="processedContent"></div>
+        </div>
+      </article>
+
+      <div v-else class="kb-post__error">
+        <p>No se encontró el artículo.</p>
+      </div>
+    </div>
+  </section>
+</template>
+
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { fetchBlogPostBySlug } from '../services/dataService'
 import {
   processWordPressContent,
   extractFirstImageUrl,
+  extractTextFromHtml,
   reflowSoftLineBreaks,
 } from '../utils/contentProcessor'
 import { useInternalLinks } from '../composables/useInternalLinks'
+import { useSeoMeta, truncateForMeta } from '../composables/useSeoMeta'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import type { WordPressPost } from '../types/api'
 
@@ -51,6 +87,19 @@ const imageAlt = computed(
 
 const categoryName = computed(() => post.value?._embedded?.['wp:term']?.[0]?.[0]?.name ?? null)
 
+useSeoMeta(
+  computed(() => {
+    if (!post.value) return null
+    const rawExcerpt = post.value.excerpt.rendered || post.value.content.rendered
+    return {
+      title: extractTextFromHtml(post.value.title.rendered, 70),
+      description: truncateForMeta(extractTextFromHtml(rawExcerpt, 400)),
+      image: featuredMediaUrl.value ?? undefined,
+      type: 'article',
+    }
+  }),
+)
+
 const formattedDate = computed(() => {
   if (!post.value) return ''
   return new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }).format(
@@ -88,40 +137,6 @@ async function loadPost(slug: string) {
 onMounted(() => loadPost(props.slug))
 watch(() => props.slug, (slug) => loadPost(slug))
 </script>
-
-<template>
-  <section class="kb-post">
-    <div class="kb-post__inner">
-      <router-link to="/blog" class="kb-post__back text-secondary">← Volver al blog</router-link>
-
-      <LoadingSpinner v-if="loading" message="Cargando artículo..." />
-
-      <div v-else-if="error" class="kb-post__error">
-        <p>Error: {{ error }}</p>
-        <p class="text-secondary">Verifica que la API esté accesible.</p>
-      </div>
-
-      <article v-else-if="post" class="kb-post__article">
-        <img :src="imageUrl" :alt="imageAlt" class="kb-post__image" />
-
-        <div class="kb-post__body">
-          <div class="kb-post__meta text-secondary">
-            <span v-if="categoryName" class="kb-post__category">{{ categoryName }}</span>
-            <time :datetime="post.date">{{ formattedDate }}</time>
-          </div>
-
-          <h1 class="kb-post__title text-h1">{{ post.title.rendered }}</h1>
-
-          <div ref="contentEl" class="kb-prose" v-html="processedContent"></div>
-        </div>
-      </article>
-
-      <div v-else class="kb-post__error">
-        <p>No se encontró el artículo.</p>
-      </div>
-    </div>
-  </section>
-</template>
 
 <style scoped>
 .kb-post {

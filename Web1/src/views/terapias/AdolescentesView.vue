@@ -1,51 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { fetchTherapieBySlug } from '../../services/dataService'
-import { parseTherapieAcf } from '../../utils/therapyAcf'
-import type { ParsedTherapyContent } from '../../utils/therapyAcf'
-import FaqAccordion from '../../components/FaqAccordion.vue'
-import LoadingSpinner from '../../components/LoadingSpinner.vue'
-
-defineOptions({
-  name: 'AdolescentesView',
-})
-
-const loading = ref(true)
-const content = ref<ParsedTherapyContent | null>(null)
-const title = ref('Psicología para adolescentes')
-
-onMounted(async () => {
-  try {
-    const therapy = await fetchTherapieBySlug('psicologia-para-adolescentes')
-    if (therapy) {
-      title.value = therapy.title.rendered
-      content.value = parseTherapieAcf(therapy.acf)
-    }
-  } catch (err) {
-    console.error('Error fetching adolescent psychology therapy:', err)
-  } finally {
-    loading.value = false
-  }
-})
-
-const faqs = [
-  {
-    question: '¿Los padres tendrán acceso a lo que se habla en sesión?',
-    answer:
-      'La confidencialidad es clave para que el adolescente confíe en el proceso. Compartimos con la familia pautas generales, nunca el contenido literal de las sesiones, salvo que exista un riesgo real.',
-  },
-  {
-    question: '¿Y si no quiere venir a terapia?',
-    answer:
-      'Es habitual al principio. Buscamos que la primera sesión sea un espacio de conocimiento mutuo, sin presión, para que decida si quiere continuar.',
-  },
-  {
-    question: '¿Las sesiones son solo online?',
-    answer: 'Puede elegir sesión presencial en Dénia u online, lo que le resulte más cómodo.',
-  },
-]
-</script>
-
 <template>
   <section class="kb-therapy">
     <LoadingSpinner v-if="loading" message="Cargando..." />
@@ -89,6 +41,66 @@ const faqs = [
     </template>
   </section>
 </template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { fetchTherapieBySlug } from '../../services/dataService'
+import { parseTherapieAcf } from '../../utils/therapyAcf'
+import type { ParsedTherapyContent } from '../../utils/therapyAcf'
+import { useSeoMeta, truncateForMeta } from '../../composables/useSeoMeta'
+import { useFaqSchema } from '../../composables/useFaqSchema'
+import FaqAccordion from '../../components/FaqAccordion.vue'
+import LoadingSpinner from '../../components/LoadingSpinner.vue'
+
+defineOptions({
+  name: 'AdolescentesView',
+})
+
+const loading = ref(true)
+const content = ref<ParsedTherapyContent | null>(null)
+const title = ref('Psicología para adolescentes')
+
+onMounted(async () => {
+  try {
+    const therapy = await fetchTherapieBySlug('psicologia-para-adolescentes')
+    if (therapy) {
+      title.value = therapy.title.rendered
+      content.value = parseTherapieAcf(therapy.acf)
+    }
+  } catch (err) {
+    console.error('Error fetching adolescent psychology therapy:', err)
+  } finally {
+    loading.value = false
+  }
+})
+
+useSeoMeta(
+  computed(() =>
+    content.value
+      ? { title: `${title.value} en Dénia`, description: truncateForMeta(content.value.intro) }
+      : null,
+  ),
+)
+
+const faqs = [
+  {
+    question: '¿Los padres tendrán acceso a lo que se habla en sesión?',
+    answer:
+      'La confidencialidad es clave para que el adolescente confíe en el proceso. Compartimos con la familia pautas generales, nunca el contenido literal de las sesiones, salvo que exista un riesgo real.',
+  },
+  {
+    question: '¿Y si no quiere venir a terapia?',
+    answer:
+      'Es habitual al principio. Buscamos que la primera sesión sea un espacio de conocimiento mutuo, sin presión, para que decida si quiere continuar.',
+  },
+  {
+    question: '¿Las sesiones son solo online?',
+    answer: 'Puede elegir sesión presencial en Dénia u online, lo que le resulte más cómodo.',
+  },
+]
+
+useFaqSchema(() => faqs)
+</script>
 
 <style scoped>
 .kb-therapy {

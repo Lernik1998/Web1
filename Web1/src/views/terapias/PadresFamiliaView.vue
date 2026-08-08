@@ -1,52 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { fetchTherapieBySlug } from '../../services/dataService'
-import { parseTherapieAcf } from '../../utils/therapyAcf'
-import type { ParsedTherapyContent } from '../../utils/therapyAcf'
-import FaqAccordion from '../../components/FaqAccordion.vue'
-import LoadingSpinner from '../../components/LoadingSpinner.vue'
-
-defineOptions({
-  name: 'PadresFamiliaView',
-})
-
-const loading = ref(true)
-const content = ref<ParsedTherapyContent | null>(null)
-const title = ref('Psicología para padres y familia')
-
-onMounted(async () => {
-  try {
-    const therapy = await fetchTherapieBySlug('psicologia-para-padres-y-familia')
-    if (therapy) {
-      title.value = therapy.title.rendered
-      content.value = parseTherapieAcf(therapy.acf)
-    }
-  } catch (err) {
-    console.error('Error fetching psychology parents therapy:', err)
-  } finally {
-    loading.value = false
-  }
-})
-
-const faqs = [
-  {
-    question: '¿Vienen todos los miembros de la familia a la vez?',
-    answer:
-      'Depende del caso: a veces trabajamos solo con los padres, otras con toda la familia junta, según lo que sea más útil.',
-  },
-  {
-    question: '¿Esto es terapia de pareja?',
-    answer:
-      'No necesariamente; nos centramos en la dinámica familiar y la crianza, aunque puede complementarse con terapia de pareja si hace falta.',
-  },
-  {
-    question: '¿Cuánto dura el acompañamiento?',
-    answer:
-      'Muchas familias notan mejoras con un número limitado de sesiones centradas en pautas concretas; otras prefieren un acompañamiento más largo.',
-  },
-]
-</script>
-
 <template>
   <section class="kb-therapy">
     <LoadingSpinner v-if="loading" message="Cargando..." />
@@ -90,6 +41,67 @@ const faqs = [
     </template>
   </section>
 </template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { fetchTherapieBySlug } from '../../services/dataService'
+import { parseTherapieAcf } from '../../utils/therapyAcf'
+import type { ParsedTherapyContent } from '../../utils/therapyAcf'
+import { useSeoMeta, truncateForMeta } from '../../composables/useSeoMeta'
+import { useFaqSchema } from '../../composables/useFaqSchema'
+import FaqAccordion from '../../components/FaqAccordion.vue'
+import LoadingSpinner from '../../components/LoadingSpinner.vue'
+
+defineOptions({
+  name: 'PadresFamiliaView',
+})
+
+const loading = ref(true)
+const content = ref<ParsedTherapyContent | null>(null)
+const title = ref('Psicología para padres y familia')
+
+onMounted(async () => {
+  try {
+    const therapy = await fetchTherapieBySlug('psicologia-para-padres-y-familia')
+    if (therapy) {
+      title.value = therapy.title.rendered
+      content.value = parseTherapieAcf(therapy.acf)
+    }
+  } catch (err) {
+    console.error('Error fetching psychology parents therapy:', err)
+  } finally {
+    loading.value = false
+  }
+})
+
+useSeoMeta(
+  computed(() =>
+    content.value
+      ? { title: `${title.value} en Dénia`, description: truncateForMeta(content.value.intro) }
+      : null,
+  ),
+)
+
+const faqs = [
+  {
+    question: '¿Vienen todos los miembros de la familia a la vez?',
+    answer:
+      'Depende del caso: a veces trabajamos solo con los padres, otras con toda la familia junta, según lo que sea más útil.',
+  },
+  {
+    question: '¿Esto es terapia de pareja?',
+    answer:
+      'No necesariamente; nos centramos en la dinámica familiar y la crianza, aunque puede complementarse con terapia de pareja si hace falta.',
+  },
+  {
+    question: '¿Cuánto dura el acompañamiento?',
+    answer:
+      'Muchas familias notan mejoras con un número limitado de sesiones centradas en pautas concretas; otras prefieren un acompañamiento más largo.',
+  },
+]
+
+useFaqSchema(() => faqs)
+</script>
 
 <style scoped>
 .kb-therapy {

@@ -1,22 +1,3 @@
-<script setup lang="ts">
-import { useCookieConsent } from '../composables/useCookieConsent'
-
-defineOptions({
-  name: 'WhatsAppButton',
-})
-
-// Mismo teléfono que aparece en el footer, en formato wa.me (sin "+" ni espacios).
-const PHONE = '34629538062'
-const MESSAGE = 'Hola, me gustaría más información sobre las terapias.'
-
-const href = `https://wa.me/${PHONE}?text=${encodeURIComponent(MESSAGE)}`
-
-// En móvil el banner de cookies ocupa casi todo el ancho y queda por encima
-// (más z-index) de este botón: sin ocultarlo mientras el banner está
-// abierto, quedaba tapado debajo en la primera visita.
-const { bannerVisible } = useCookieConsent()
-</script>
-
 <template>
   <div v-if="!bannerVisible" class="kb-whatsapp-slot">
     <a
@@ -35,6 +16,25 @@ const { bannerVisible } = useCookieConsent()
     </a>
   </div>
 </template>
+
+<script setup lang="ts">
+import { useCookieConsent } from '../composables/useCookieConsent'
+
+defineOptions({
+  name: 'WhatsAppButton',
+})
+
+// Mismo teléfono que aparece en el footer, en formato wa.me (sin "+" ni espacios).
+const PHONE = '34629538062'
+const MESSAGE = 'Hola, me gustaría más información sobre las terapias.'
+
+const href = `https://wa.me/${PHONE}?text=${encodeURIComponent(MESSAGE)}`
+
+// En móvil el banner de cookies ocupa casi todo el ancho y queda por encima
+// (más z-index) de este botón: sin ocultarlo mientras el banner está
+// abierto, quedaba tapado debajo en la primera visita.
+const { bannerVisible } = useCookieConsent()
+</script>
 
 <style scoped>
 /*

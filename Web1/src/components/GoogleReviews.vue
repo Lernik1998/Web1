@@ -1,127 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { fetchGoogleReviews } from '../services/dataService'
-import type { GoogleReview } from '../types/api'
-
-defineOptions({
-  name: 'GoogleReviews',
-})
-
-const props = withDefaults(
-  defineProps<{
-    /** Cuántas reseñas mostrar como máximo (por defecto, todas las que llegue). */
-    limit?: number
-    title?: string
-  }>(),
-  {
-    limit: undefined,
-    title: 'Lo que dicen de nosotros',
-  },
-)
-
-const loading = ref(true)
-const reviews = ref<GoogleReview[]>([])
-const brokenPhotos = ref<Set<string>>(new Set())
-const expanded = ref<Set<string>>(new Set())
-
-const visibleReviews = computed(() =>
-  props.limit ? reviews.value.slice(0, props.limit) : reviews.value,
-)
-
-// Se muestran de 3 en 3, con botones para pasar a las siguientes/anteriores,
-// igual que el widget de reseñas de la propia web de Kanbouri. Si el total no
-// es múltiplo de 3, se descartan las últimas (sobrantes) para no dejar una
-// página final con una o dos tarjetas sueltas.
-const PAGE_SIZE = 3
-const page = ref(0)
-
-const pageableReviews = computed(() => {
-  const fullPagesCount = Math.floor(visibleReviews.value.length / PAGE_SIZE) * PAGE_SIZE
-  return visibleReviews.value.slice(0, fullPagesCount)
-})
-
-const totalPages = computed(() => Math.max(1, pageableReviews.value.length / PAGE_SIZE))
-
-const pagedReviews = computed(() => {
-  const start = page.value * PAGE_SIZE
-  return pageableReviews.value.slice(start, start + PAGE_SIZE)
-})
-
-function nextPage() {
-  page.value = (page.value + 1) % totalPages.value
-}
-
-function prevPage() {
-  page.value = (page.value - 1 + totalPages.value) % totalPages.value
-}
-
-function initials(name: string): string {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
-}
-
-function starCount(rating: string): number {
-  return Math.round(parseFloat(rating)) || 0
-}
-
-// Aproximación por longitud de texto (~45 caracteres por línea a 5 líneas)
-// para no mostrar "Leer más" en reseñas que ya se ven completas.
-const TRUNCATE_THRESHOLD = 220
-
-function needsToggle(text: string): boolean {
-  return text.length > TRUNCATE_THRESHOLD
-}
-
-/**
- * Recorte en JS (en vez de "-webkit-line-clamp") para no depender de la
- * elipsis automática del navegador y no mostrar puntos suspensivos: se
- * corta en el último espacio antes del límite. Al recortar se colapsan los
- * saltos de párrafo en espacios simples para que todas las tarjetas
- * truncadas ocupen la misma altura (y así "Leer más" quede a la misma
- * altura); al expandir se recupera el texto original con sus párrafos.
- */
-function displayText(review: GoogleReview): string {
-  if (expanded.value.has(review.id) || !needsToggle(review.text)) return review.text
-  const collapsed = review.text.replace(/\s+/g, ' ').trim()
-  const cut = collapsed.slice(0, TRUNCATE_THRESHOLD)
-  const lastSpace = cut.lastIndexOf(' ')
-  return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trimEnd()
-}
-
-function formattedDate(date: string): string {
-  const parsed = new Date(date)
-  if (Number.isNaN(parsed.getTime())) return ''
-  return new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }).format(
-    parsed,
-  )
-}
-
-function onPhotoError(id: string) {
-  brokenPhotos.value.add(id)
-}
-
-// Solo una reseña puede estar expandida a la vez: al abrir una se cierra
-// cualquier otra que estuviera abierta.
-function toggleExpanded(id: string) {
-  expanded.value = expanded.value.has(id) ? new Set() : new Set([id])
-}
-
-onMounted(async () => {
-  try {
-    reviews.value = await fetchGoogleReviews()
-  } catch (err) {
-    console.error('Error fetching Google reviews:', err)
-  } finally {
-    loading.value = false
-  }
-})
-</script>
-
 <template>
   <section v-if="loading || visibleReviews.length" class="kb-reviews">
     <div class="kb-reviews__inner">
@@ -298,6 +174,130 @@ onMounted(async () => {
     </div>
   </section>
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue'
+import { fetchGoogleReviews } from '../services/dataService'
+import type { GoogleReview } from '../types/api'
+
+defineOptions({
+  name: 'GoogleReviews',
+})
+
+const props = withDefaults(
+  defineProps<{
+    /** Cuántas reseñas mostrar como máximo (por defecto, todas las que llegue). */
+    limit?: number
+    title?: string
+  }>(),
+  {
+    limit: undefined,
+    title: 'Lo que dicen de nosotros',
+  },
+)
+
+const loading = ref(true)
+const reviews = ref<GoogleReview[]>([])
+const brokenPhotos = ref<Set<string>>(new Set())
+const expanded = ref<Set<string>>(new Set())
+
+const visibleReviews = computed(() =>
+  props.limit ? reviews.value.slice(0, props.limit) : reviews.value,
+)
+
+// Se muestran de 3 en 3, con botones para pasar a las siguientes/anteriores,
+// igual que el widget de reseñas de la propia web de Kanbouri. Si el total no
+// es múltiplo de 3, se descartan las últimas (sobrantes) para no dejar una
+// página final con una o dos tarjetas sueltas.
+const PAGE_SIZE = 3
+const page = ref(0)
+
+const pageableReviews = computed(() => {
+  const fullPagesCount = Math.floor(visibleReviews.value.length / PAGE_SIZE) * PAGE_SIZE
+  return visibleReviews.value.slice(0, fullPagesCount)
+})
+
+const totalPages = computed(() => Math.max(1, pageableReviews.value.length / PAGE_SIZE))
+
+const pagedReviews = computed(() => {
+  const start = page.value * PAGE_SIZE
+  return pageableReviews.value.slice(start, start + PAGE_SIZE)
+})
+
+function nextPage() {
+  page.value = (page.value + 1) % totalPages.value
+}
+
+function prevPage() {
+  page.value = (page.value - 1 + totalPages.value) % totalPages.value
+}
+
+function initials(name: string): string {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase()
+}
+
+function starCount(rating: string): number {
+  return Math.round(parseFloat(rating)) || 0
+}
+
+// Aproximación por longitud de texto (~45 caracteres por línea a 5 líneas)
+// para no mostrar "Leer más" en reseñas que ya se ven completas.
+const TRUNCATE_THRESHOLD = 220
+
+function needsToggle(text: string): boolean {
+  return text.length > TRUNCATE_THRESHOLD
+}
+
+/**
+ * Recorte en JS (en vez de "-webkit-line-clamp") para no depender de la
+ * elipsis automática del navegador y no mostrar puntos suspensivos: se
+ * corta en el último espacio antes del límite. Al recortar se colapsan los
+ * saltos de párrafo en espacios simples para que todas las tarjetas
+ * truncadas ocupen la misma altura (y así "Leer más" quede a la misma
+ * altura); al expandir se recupera el texto original con sus párrafos.
+ */
+function displayText(review: GoogleReview): string {
+  if (expanded.value.has(review.id) || !needsToggle(review.text)) return review.text
+  const collapsed = review.text.replace(/\s+/g, ' ').trim()
+  const cut = collapsed.slice(0, TRUNCATE_THRESHOLD)
+  const lastSpace = cut.lastIndexOf(' ')
+  return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trimEnd()
+}
+
+function formattedDate(date: string): string {
+  const parsed = new Date(date)
+  if (Number.isNaN(parsed.getTime())) return ''
+  return new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }).format(
+    parsed,
+  )
+}
+
+function onPhotoError(id: string) {
+  brokenPhotos.value.add(id)
+}
+
+// Solo una reseña puede estar expandida a la vez: al abrir una se cierra
+// cualquier otra que estuviera abierta.
+function toggleExpanded(id: string) {
+  expanded.value = expanded.value.has(id) ? new Set() : new Set([id])
+}
+
+onMounted(async () => {
+  try {
+    reviews.value = await fetchGoogleReviews()
+  } catch (err) {
+    console.error('Error fetching Google reviews:', err)
+  } finally {
+    loading.value = false
+  }
+})
+</script>
 
 <style scoped>
 .kb-reviews {

@@ -1,51 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { fetchTherapieBySlug } from '../../../services/dataService'
-import { parseTherapieAcf } from '../../../utils/therapyAcf'
-import type { ParsedTherapyContent } from '../../../utils/therapyAcf'
-import FaqAccordion from '../../../components/FaqAccordion.vue'
-import LoadingSpinner from '../../../components/LoadingSpinner.vue'
-
-defineOptions({
-  name: 'AutoestimaView',
-})
-
-const loading = ref(true)
-const content = ref<ParsedTherapyContent | null>(null)
-const title = ref('Autoestima y desarrollo personal')
-
-onMounted(async () => {
-  try {
-    const therapy = await fetchTherapieBySlug('autoestima-y-desarrollo-personal')
-    if (therapy) {
-      title.value = therapy.title.rendered
-      content.value = parseTherapieAcf(therapy.acf)
-    }
-  } catch (err) {
-    console.error('Error fetching adult self-esteem therapy:', err)
-  } finally {
-    loading.value = false
-  }
-})
-
-const faqs = [
-  {
-    question: '¿La autoestima se puede trabajar en terapia?',
-    answer:
-      'Sí, es uno de los procesos más habituales. Trabajamos el origen de esa autocrítica y construimos, paso a paso, una mirada más amable hacia ti mismo/a.',
-  },
-  {
-    question: '¿Cuánto tiempo lleva ver cambios?',
-    answer: 'Los primeros cambios suelen notarse en pocas semanas, aunque consolidarlos lleva su tiempo.',
-  },
-  {
-    question: '¿Sirve si el problema es de siempre, no algo puntual?',
-    answer:
-      'Sí, de hecho es habitual trabajar patrones de larga duración; el proceso puede requerir algo más de tiempo, pero funciona igual.',
-  },
-]
-</script>
-
 <template>
   <section class="kb-therapy">
     <LoadingSpinner v-if="loading" message="Cargando..." />
@@ -89,6 +41,66 @@ const faqs = [
     </template>
   </section>
 </template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { fetchTherapieBySlug } from '../../../services/dataService'
+import { parseTherapieAcf } from '../../../utils/therapyAcf'
+import type { ParsedTherapyContent } from '../../../utils/therapyAcf'
+import { useSeoMeta, truncateForMeta } from '../../../composables/useSeoMeta'
+import { useFaqSchema } from '../../../composables/useFaqSchema'
+import FaqAccordion from '../../../components/FaqAccordion.vue'
+import LoadingSpinner from '../../../components/LoadingSpinner.vue'
+
+defineOptions({
+  name: 'AutoestimaView',
+})
+
+const loading = ref(true)
+const content = ref<ParsedTherapyContent | null>(null)
+const title = ref('Autoestima y desarrollo personal')
+
+onMounted(async () => {
+  try {
+    const therapy = await fetchTherapieBySlug('autoestima-y-desarrollo-personal')
+    if (therapy) {
+      title.value = therapy.title.rendered
+      content.value = parseTherapieAcf(therapy.acf)
+    }
+  } catch (err) {
+    console.error('Error fetching adult self-esteem therapy:', err)
+  } finally {
+    loading.value = false
+  }
+})
+
+useSeoMeta(
+  computed(() =>
+    content.value
+      ? { title: `${title.value} en Dénia`, description: truncateForMeta(content.value.intro) }
+      : null,
+  ),
+)
+
+const faqs = [
+  {
+    question: '¿La autoestima se puede trabajar en terapia?',
+    answer:
+      'Sí, es uno de los procesos más habituales. Trabajamos el origen de esa autocrítica y construimos, paso a paso, una mirada más amable hacia ti mismo/a.',
+  },
+  {
+    question: '¿Cuánto tiempo lleva ver cambios?',
+    answer: 'Los primeros cambios suelen notarse en pocas semanas, aunque consolidarlos lleva su tiempo.',
+  },
+  {
+    question: '¿Sirve si el problema es de siempre, no algo puntual?',
+    answer:
+      'Sí, de hecho es habitual trabajar patrones de larga duración; el proceso puede requerir algo más de tiempo, pero funciona igual.',
+  },
+]
+
+useFaqSchema(() => faqs)
+</script>
 
 <style scoped>
 .kb-therapy {

@@ -1,23 +1,33 @@
+<template>
+  <MaintenanceView v-if="maintenanceMode" />
+
+  <template v-else>
+    <Header />
+    <main>
+      <router-view v-slot="{ Component }">
+        <transition name="page-fade" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
+    </main>
+    <Footer />
+    <WhatsAppButton />
+    <CookieConsent />
+  </template>
+</template>
+
 <script setup lang="ts">
 import Header from "./components/Header.vue";
 import Footer from './components/Footer.vue';
 import CookieConsent from './components/CookieConsent.vue';
 import WhatsAppButton from './components/WhatsAppButton.vue';
-</script>
+import MaintenanceView from './views/MaintenanceView.vue';
 
-<template>
-  <Header />
-  <main>
-    <router-view v-slot="{ Component }">
-      <transition name="page-fade" mode="out-in">
-        <component :is="Component" />
-      </transition>
-    </router-view>
-  </main>
-  <Footer />
-  <WhatsAppButton />
-  <CookieConsent />
-</template>
+// Interruptor general de mantenimiento (ver .env, VITE_MAINTENANCE_MODE):
+// activado, sustituye toda la web -- cualquier URL -- por el aviso, sin
+// cabecera, pie ni el resto de la navegación normal.
+const maintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE === 'true'
+</script>
 
 <style scoped>
 .page-fade-enter-active,

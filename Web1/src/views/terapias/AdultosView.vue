@@ -1,42 +1,3 @@
-<script setup lang="ts">
-import FaqAccordion from '../../components/FaqAccordion.vue'
-
-defineOptions({
-  name: 'AdultosView',
-})
-
-const areas = [
-  { label: 'Ansiedad', href: '/terapias/adultos/ansiedad' },
-  { label: 'Depresión y estado de ánimo', href: '/terapias/adultos/depresion' },
-  { label: 'Autoestima y desarrollo personal', href: '/terapias/adultos/autoestima' },
-  { label: 'Duelo y pérdidas', href: '/terapias/adultos/duelo' },
-]
-
-const beneficios = [
-  'Más herramientas para gestionar el malestar emocional',
-  'Mayor autoconocimiento',
-  'Mejora en las relaciones personales',
-  'Un espacio propio, sin prisas ni juicios',
-]
-
-const faqs = [
-  {
-    question: '¿Cuánto dura cada sesión?',
-    answer:
-      'Las sesiones individuales duran 50-60 minutos, con la frecuencia que decidamos juntas según tu proceso.',
-  },
-  {
-    question: '¿Puedo hacer terapia online?',
-    answer: 'Sí, ofrecemos sesiones online para toda España, además de consulta presencial en Dénia.',
-  },
-  {
-    question: '¿Cómo sé si necesito ayuda profesional?',
-    answer:
-      'Si sientes que algo te sobrepasa, se repiten patrones que no puedes cambiar por tu cuenta o el malestar afecta a tu día a día, ya es un buen momento para pedir ayuda.',
-  },
-]
-</script>
-
 <template>
   <section class="kb-therapy">
     <div class="kb-therapy__header">
@@ -96,6 +57,55 @@ const faqs = [
     </div>
   </section>
 </template>
+
+<script setup lang="ts">
+import FaqAccordion from '../../components/FaqAccordion.vue'
+import { useSeoMeta } from '../../composables/useSeoMeta'
+import { useFaqSchema } from '../../composables/useFaqSchema'
+
+defineOptions({
+  name: 'AdultosView',
+})
+
+useSeoMeta(() => ({
+  title: 'Psicología para adultos en Dénia',
+  description:
+    'Terapia individual para adultos en Dénia y online: ansiedad, depresión, autoestima, duelo y momentos de transición vital, a tu ritmo.',
+}))
+
+const areas = [
+  { label: 'Ansiedad', href: '/terapias/adultos/ansiedad' },
+  { label: 'Depresión y estado de ánimo', href: '/terapias/adultos/depresion' },
+  { label: 'Autoestima y desarrollo personal', href: '/terapias/adultos/autoestima' },
+  { label: 'Duelo y pérdidas', href: '/terapias/adultos/duelo' },
+]
+
+const beneficios = [
+  'Más herramientas para gestionar el malestar emocional',
+  'Mayor autoconocimiento',
+  'Mejora en las relaciones personales',
+  'Un espacio propio, sin prisas ni juicios',
+]
+
+const faqs = [
+  {
+    question: '¿Cuánto dura cada sesión?',
+    answer:
+      'Las sesiones individuales duran 50-60 minutos, con la frecuencia que decidamos juntas según tu proceso.',
+  },
+  {
+    question: '¿Puedo hacer terapia online?',
+    answer: 'Sí, ofrecemos sesiones online para toda España, además de consulta presencial en Dénia.',
+  },
+  {
+    question: '¿Cómo sé si necesito ayuda profesional?',
+    answer:
+      'Si sientes que algo te sobrepasa, se repiten patrones que no puedes cambiar por tu cuenta o el malestar afecta a tu día a día, ya es un buen momento para pedir ayuda.',
+  },
+]
+
+useFaqSchema(() => faqs)
+</script>
 
 <style scoped>
 .kb-therapy {

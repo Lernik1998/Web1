@@ -1,0 +1,43 @@
+User-agent: *
+Allow: /
+
+# Rastreadores de asistentes de IA: se permiten explícitamente para que el
+# centro pueda aparecer citado/recomendado en ChatGPT, Claude, Perplexity,
+# Copilot y las respuestas generativas de Google.
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+Sitemap: https://kanbouripsicologia.com/sitemap.xml

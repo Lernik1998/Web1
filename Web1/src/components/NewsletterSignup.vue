@@ -1,61 +1,3 @@
-<script setup lang="ts">
-import { reactive, ref, computed } from 'vue'
-import { subscribeToNewsletter } from '../services/dataService'
-
-withDefaults(
-  defineProps<{
-    title?: string
-    description?: string
-    extra?: string
-    buttonText?: string
-  }>(),
-  {
-    title: 'Recursos para profesionales',
-    description:
-      'Descarga gratis nuestra guía "Claves para derivar y colaborar con otros profesionales": un documento breve con ideas prácticas para construir una red de derivación de confianza.',
-    extra: 'Además recibirás nuestra newsletter con recursos y novedades para profesionales de la psicología.',
-    buttonText: 'Quiero descargarlo',
-  },
-)
-
-const form = reactive({
-  nombre: '',
-  email: '',
-  privacidad: false,
-})
-
-const submitting = ref(false)
-const submitted = ref(false)
-const errorMsg = ref('')
-const attempted = ref(false)
-
-const nombreInvalid = computed(() => attempted.value && !form.nombre.trim())
-const emailInvalid = computed(() => attempted.value && !form.email.trim())
-const privacidadInvalid = computed(() => attempted.value && !form.privacidad)
-
-const hasErrors = computed(() => nombreInvalid.value || emailInvalid.value || privacidadInvalid.value)
-
-async function handleSubmit() {
-  attempted.value = true
-  errorMsg.value = ''
-
-  if (hasErrors.value) {
-    errorMsg.value = 'Falta completar algún campo obligatorio.'
-    return
-  }
-
-  submitting.value = true
-  try {
-    await subscribeToNewsletter(form.nombre, form.email)
-    submitted.value = true
-  } catch {
-    errorMsg.value = 'No se ha podido enviar la solicitud. Inténtalo de nuevo en unos minutos.'
-  } finally {
-    submitting.value = false
-  }
-}
-</script>
-
 <template>
   <div class="kb-newsletter">
     <div class="kb-newsletter__intro">
@@ -118,6 +60,64 @@ async function handleSubmit() {
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { reactive, ref, computed } from 'vue'
+import { subscribeToNewsletter } from '../services/dataService'
+
+withDefaults(
+  defineProps<{
+    title?: string
+    description?: string
+    extra?: string
+    buttonText?: string
+  }>(),
+  {
+    title: 'Recursos para profesionales',
+    description:
+      'Descarga gratis nuestra guía "Claves para derivar y colaborar con otros profesionales": un documento breve con ideas prácticas para construir una red de derivación de confianza.',
+    extra: 'Además recibirás nuestra newsletter con recursos y novedades para profesionales de la psicología.',
+    buttonText: 'Quiero descargarlo',
+  },
+)
+
+const form = reactive({
+  nombre: '',
+  email: '',
+  privacidad: false,
+})
+
+const submitting = ref(false)
+const submitted = ref(false)
+const errorMsg = ref('')
+const attempted = ref(false)
+
+const nombreInvalid = computed(() => attempted.value && !form.nombre.trim())
+const emailInvalid = computed(() => attempted.value && !form.email.trim())
+const privacidadInvalid = computed(() => attempted.value && !form.privacidad)
+
+const hasErrors = computed(() => nombreInvalid.value || emailInvalid.value || privacidadInvalid.value)
+
+async function handleSubmit() {
+  attempted.value = true
+  errorMsg.value = ''
+
+  if (hasErrors.value) {
+    errorMsg.value = 'Falta completar algún campo obligatorio.'
+    return
+  }
+
+  submitting.value = true
+  try {
+    await subscribeToNewsletter(form.nombre, form.email)
+    submitted.value = true
+  } catch {
+    errorMsg.value = 'No se ha podido enviar la solicitud. Inténtalo de nuevo en unos minutos.'
+  } finally {
+    submitting.value = false
+  }
+}
+</script>
 
 <style scoped>
 .kb-newsletter__intro {

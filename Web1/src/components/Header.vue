@@ -282,7 +282,15 @@ onBeforeUnmount(() => {
 .kb-header {
   position: sticky;
   top: 0;
-  z-index: 100;
+  /* `.kb-header` crea su propio contexto de apilamiento (position + z-index),
+     así que el menú móvil y su overlay (`.kb-nav`, `.kb-nav-scrim`), aunque
+     tengan z-index altos dentro de ese contexto, nunca podían superar a
+     elementos fuera de él con un z-index mayor al de `.kb-header` mismo: el
+     botón de WhatsApp (140), el de Cookies (150) y la paginación del blog
+     (160) se veían por encima del menú abierto. Elevando `.kb-header` por
+     encima de todos ellos, el menú queda siempre en la capa superior real.
+   */
+  z-index: 250;
   width: 100%;
   font-family: var(--font-body);
   color: var(--color-ink);
@@ -369,7 +377,6 @@ onBeforeUnmount(() => {
   transition: transform 360ms var(--ease-base);
 }
 
-.kb-nav__link:hover::after,
 .kb-nav__link--trigger[aria-expanded='true']::after {
   transform: scaleX(1);
 }
@@ -406,12 +413,6 @@ onBeforeUnmount(() => {
   white-space: nowrap;
   box-shadow: var(--shadow-cta);
   transition: background-color 320ms var(--ease-base), transform 320ms var(--ease-base), box-shadow 320ms var(--ease-base);
-}
-
-.kb-cta:hover {
-  background: var(--color-rose-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-cta-hover);
 }
 
 .kb-cta:active {
@@ -511,14 +512,12 @@ onBeforeUnmount(() => {
   transition: background-color 220ms var(--ease-base);
 }
 
-.kb-dropdown__item:hover .kb-dropdown__link,
 .kb-dropdown__link:focus-visible {
   background: var(--color-rose-soft-wash);
   border-left-color: var(--color-rose);
   padding-left: 18px;
 }
 
-.kb-dropdown__item:hover .kb-dropdown__chevron-btn,
 .kb-dropdown__chevron-btn[aria-expanded='true'],
 .kb-dropdown__chevron-btn:focus-visible {
   background: var(--color-rose-soft-wash);
@@ -568,8 +567,38 @@ onBeforeUnmount(() => {
   transition: background-color 220ms var(--ease-base);
 }
 
-.kb-submenu__link:hover {
-  background: var(--color-rose-soft-wash);
+/* Los estados ":hover" de arriba abajo (subrayado del enlace, fondo rosa
+   de las filas del desplegable, CTA) son solo para ratón: en pantallas
+   táctiles no existe un puntero que "deje" el elemento al levantar el
+   dedo, así que el navegador simula el hover al tocar y se queda
+   pegado — el enlace de "Terapias" se quedaba con la línea rosa
+   encendida y "Psicología para adultos" con el fondo rosa fijo hasta
+   tocar otra cosa. Se agrupan aquí, sólo para dispositivos con puntero
+   fino (ratón/trackpad) real. */
+@media (hover: hover) and (pointer: fine) {
+  .kb-nav__link:hover::after {
+    transform: scaleX(1);
+  }
+
+  .kb-cta:hover {
+    background: var(--color-rose-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-cta-hover);
+  }
+
+  .kb-dropdown__item:hover .kb-dropdown__link {
+    background: var(--color-rose-soft-wash);
+    border-left-color: var(--color-rose);
+    padding-left: 18px;
+  }
+
+  .kb-dropdown__item:hover .kb-dropdown__chevron-btn {
+    background: var(--color-rose-soft-wash);
+  }
+
+  .kb-submenu__link:hover {
+    background: var(--color-rose-soft-wash);
+  }
 }
 
 /* Botón hamburguesa (móvil) */
@@ -724,6 +753,13 @@ onBeforeUnmount(() => {
     padding: 0 0 8px 20px;
     background: none;
     border-radius: 0;
+    /* Heredaba `border`/`box-shadow` de la versión de escritorio (pensada
+       como popover flotante): colapsado, ese borde de 1px se pintaba como
+       una línea horizontal suelta aunque la altura fuera 0; abierto, la
+       sombra grande de "tarjeta" se derramaba sobre las filas de arriba y
+       abajo, dando la sensación de quedar superpuesto. */
+    border: none;
+    box-shadow: none;
   }
 
   .kb-cta {

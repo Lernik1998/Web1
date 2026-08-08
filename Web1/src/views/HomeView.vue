@@ -1,7 +1,30 @@
+<template>
+  <div>
+    <LoadingSpinner v-if="loading" message="Cargando..." />
+
+    <div v-else-if="error" class="state-box error">
+      <p>Error: {{ error }}</p>
+      <p>Verifica que la API https://kanbouripsicologia.com esté accesible</p>
+    </div>
+
+    <template v-else-if="heroProps">
+      <Hero v-bind="heroProps" />
+      <TherapyCards :cards="therapyCards" />
+      <Collaborations />
+      <GoogleReviews />
+    </template>
+
+    <div v-else class="state-box no-data">
+      <p>No se encontró la página con slug 'home'</p>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { fetchHomePage, fetchMediaById, fetchTherapieBySlug } from '../services/dataService'
 import { getMediaUrl } from '../utils/media'
+import { useSeoMeta } from '../composables/useSeoMeta'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import Hero from '../components/Hero.vue'
 import TherapyCards from '../components/TherapyCards.vue'
@@ -50,6 +73,16 @@ const loading = ref(true)
 const error = ref<string | null>(null)
 const mediaUrls = ref<Record<number, string>>({})
 const adultSubTherapyCards = ref<TherapyCardData[]>([])
+
+// Título/descripción pensados para el resultado de búsqueda (distintos del
+// titular del Hero, que es para la persona que ya está en la página): busca
+// "Dénia" + las poblaciones cercanas donde también hay pacientes buscando
+// psicólogo, como ya hacía la web anterior con buenos resultados.
+useSeoMeta(() => ({
+  title: 'Kanbouri Psicología Dénia — Terapia para toda la familia',
+  description:
+    'Psicología en Dénia y la Marina Alta: terapia infantil, adolescentes, adultos y pareja. Sesiones presenciales en Dénia, Jávea y Ondara, y online allá donde estés.',
+}))
 
 const heroProps = computed(() => {
   const acf = pageData.value?.acf
@@ -152,28 +185,6 @@ onMounted(async () => {
   }
 })
 </script>
-
-<template>
-  <div>
-    <LoadingSpinner v-if="loading" message="Cargando..." />
-
-    <div v-else-if="error" class="state-box error">
-      <p>Error: {{ error }}</p>
-      <p>Verifica que la API https://kanbouripsicologia.com esté accesible</p>
-    </div>
-
-    <template v-else-if="heroProps">
-      <Hero v-bind="heroProps" />
-      <TherapyCards :cards="therapyCards" />
-      <Collaborations />
-      <GoogleReviews />
-    </template>
-
-    <div v-else class="state-box no-data">
-      <p>No se encontró la página con slug 'home'</p>
-    </div>
-  </div>
-</template>
 
 <style scoped>
 .state-box {

@@ -1,40 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { processWordPressContent } from '../../utils/contentProcessor'
-import { useInternalLinks } from '../../composables/useInternalLinks'
-import { fetchPoliticaCookiesPage } from '../../services/dataService'
-import LoadingSpinner from '../../components/LoadingSpinner.vue'
-import type { WordPressPage } from '../../types/api'
-
-defineOptions({
-  name: 'PoliticaCookiesView',
-})
-
-const pageData = ref<WordPressPage | null>(null)
-const loading = ref(true)
-const error = ref<string | null>(null)
-const contentEl = ref<HTMLElement | null>(null)
-
-useInternalLinks(contentEl)
-
-const processedContent = computed(() => {
-  if (!pageData.value) return ''
-  return processWordPressContent(pageData.value.content.rendered)
-})
-
-onMounted(async () => {
-  try {
-    const response = await fetchPoliticaCookiesPage()
-    pageData.value = response
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Error desconocido'
-    console.error('Error fetching política de cookies:', err)
-  } finally {
-    loading.value = false
-  }
-})
-</script>
-
 <template>
   <section class="kb-legal">
     <div class="kb-legal__header">
@@ -60,6 +23,49 @@ onMounted(async () => {
     </div>
   </section>
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue'
+import { processWordPressContent } from '../../utils/contentProcessor'
+import { useInternalLinks } from '../../composables/useInternalLinks'
+import { fetchPoliticaCookiesPage } from '../../services/dataService'
+import { useSeoMeta } from '../../composables/useSeoMeta'
+import LoadingSpinner from '../../components/LoadingSpinner.vue'
+import type { WordPressPage } from '../../types/api'
+
+defineOptions({
+  name: 'PoliticaCookiesView',
+})
+
+useSeoMeta(() => ({
+  title: 'Política de cookies',
+  description: 'Política de cookies de Kanbouri Psicología, centro de psicología en Dénia.',
+}))
+
+const pageData = ref<WordPressPage | null>(null)
+const loading = ref(true)
+const error = ref<string | null>(null)
+const contentEl = ref<HTMLElement | null>(null)
+
+useInternalLinks(contentEl)
+
+const processedContent = computed(() => {
+  if (!pageData.value) return ''
+  return processWordPressContent(pageData.value.content.rendered)
+})
+
+onMounted(async () => {
+  try {
+    const response = await fetchPoliticaCookiesPage()
+    pageData.value = response
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Error desconocido'
+    console.error('Error fetching política de cookies:', err)
+  } finally {
+    loading.value = false
+  }
+})
+</script>
 
 <style scoped>
 .kb-legal {

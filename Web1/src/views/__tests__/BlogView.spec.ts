@@ -44,10 +44,13 @@ function makePost(id: number, slug: string, title: string): WordPressPost {
 
 describe('BlogView', () => {
   it('renders a card for each post once loaded', async () => {
-    vi.mocked(fetchBlogPosts).mockResolvedValue([
-      makePost(1, 'primer-articulo', 'Primer artículo'),
-      makePost(2, 'segundo-articulo', 'Segundo artículo'),
-    ])
+    vi.mocked(fetchBlogPosts).mockResolvedValue({
+      posts: [
+        makePost(1, 'primer-articulo', 'Primer artículo'),
+        makePost(2, 'segundo-articulo', 'Segundo artículo'),
+      ],
+      totalPages: 1,
+    })
 
     await router.push('/blog')
     await router.isReady()
@@ -62,7 +65,7 @@ describe('BlogView', () => {
   })
 
   it('shows an empty state when there are no posts', async () => {
-    vi.mocked(fetchBlogPosts).mockResolvedValue([])
+    vi.mocked(fetchBlogPosts).mockResolvedValue({ posts: [], totalPages: 1 })
 
     await router.push('/blog')
     await router.isReady()
@@ -85,5 +88,45 @@ describe('BlogView', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.text()).toContain('boom')
+  })
+
+  it('does not show pagination controls when there is only one page', async () => {
+    vi.mocked(fetchBlogPosts).mockResolvedValue({
+      posts: [makePost(1, 'primer-articulo', 'Primer artículo')],
+      totalPages: 1,
+    })
+
+    await router.push('/blog')
+    await router.isReady()
+    const wrapper = mount(BlogView, { global: globalStubs })
+
+    await flushPromises()
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.kb-blog__pagination').exists()).toBe(false)
+  })
+
+  it('requests the next page and disables the boundary buttons', async () => {
+    vi.mocked(fetchBlogPosts).mockResolvedValue({
+      posts: [makePost(1, 'primer-articulo', 'Primer artículo')],
+      totalPages: 3,
+    })
+
+    await router.push('/blog')
+    await router.isReady()
+    const wrapper = mount(BlogView, { global: globalStubs })
+
+    await flushPromises()
+    await wrapper.vm.$nextTick()
+
+    const [prevButton, nextButton] = wrapper.findAll('.kb-blog__page-btn')
+    expect(prevButton?.attributes('disabled')).toBeDefined()
+    expect(nextButton?.attributes('disabled')).toBeUndefined()
+
+    await nextButton?.trigger('click')
+    await flushPromises()
+
+    expect(fetchBlogPosts).toHaveBeenLastCalledWith(2)
+    expect(wrapper.text()).toContain('Página 2 de 3')
   })
 })

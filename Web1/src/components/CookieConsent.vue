@@ -1,3 +1,111 @@
+<template>
+  <div>
+    <transition name="kb-cookie-fade">
+      <div
+        v-if="visible && bannerEnabled"
+        class="kb-cookie"
+        role="region"
+        aria-label="Consentimiento de cookies"
+        aria-describedby="kb-cookie-desc"
+      >
+        <button type="button" class="kb-cookie__close" aria-label="Rechazar y cerrar" @click="rejectAll">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+            <path
+              d="M6 6l12 12M18 6L6 18"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              fill="none"
+            />
+          </svg>
+        </button>
+
+        <h2 class="kb-cookie__title text-h3 text-h3--strong">{{ title }}</h2>
+        <p id="kb-cookie-desc" class="kb-cookie__text text-body">{{ description }}</p>
+
+        <div v-if="showDetails" class="kb-cookie__categories">
+          <div v-for="category in categories" :key="category.key" class="kb-cookie__category">
+            <div class="kb-cookie__category-row">
+              <span class="kb-cookie__category-title">{{ category.label }}</span>
+              <button
+                type="button"
+                class="kb-cookie__toggle"
+                role="switch"
+                :aria-checked="draft[category.key]"
+                :aria-label="category.label"
+                :class="{ 'is-on': draft[category.key] }"
+                @click="draft[category.key] = !draft[category.key]"
+              >
+                <span class="kb-cookie__toggle-knob" aria-hidden="true"></span>
+              </button>
+            </div>
+            <p class="kb-cookie__category-desc text-secondary">{{ category.description }}</p>
+          </div>
+        </div>
+
+        <div class="kb-cookie__actions">
+          <template v-if="!showDetails">
+            <button type="button" class="kb-cookie__btn kb-cookie__btn--ghost" @click="rejectAll">
+              {{ denyLabel }}
+            </button>
+            <button
+              type="button"
+              class="kb-cookie__btn kb-cookie__btn--ghost"
+              @click="showDetails = true"
+            >
+              Ver preferencias
+            </button>
+            <button type="button" class="kb-cookie__btn kb-cookie__btn--primary" @click="acceptAll">
+              {{ acceptLabel }}
+            </button>
+          </template>
+          <template v-else>
+            <button type="button" class="kb-cookie__btn kb-cookie__btn--ghost" @click="acceptAll">
+              {{ acceptLabel }}
+            </button>
+            <button
+              type="button"
+              class="kb-cookie__btn kb-cookie__btn--primary"
+              @click="savePreferences"
+            >
+              {{ saveLabel }}
+            </button>
+          </template>
+        </div>
+
+        <div class="kb-cookie__legal-links">
+          <router-link to="/politica-cookies" class="kb-cookie__link text-secondary" @click="close">
+            Política de cookies
+          </router-link>
+          <router-link to="/politica-privacidad" class="kb-cookie__link text-secondary" @click="close">
+            Política de privacidad
+          </router-link>
+          <router-link to="/aviso-legal" class="kb-cookie__link text-secondary" @click="close">
+            Aviso Legal
+          </router-link>
+        </div>
+      </div>
+    </transition>
+
+    <div v-if="!visible && hasDecided && bannerEnabled" class="kb-cookie-reopen-slot">
+      <button
+        type="button"
+        class="kb-cookie-reopen"
+        aria-label="Configurar preferencias de cookies"
+        @click="openPreferences"
+      >
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path
+            d="M12 3a9 9 0 100 18 9 9 0 000-18zm-2.2 3.6a1.1 1.1 0 110 2.2 1.1 1.1 0 010-2.2zM15 8.6a1 1 0 110 2 1 1 0 010-2zm-6.4 4a1.1 1.1 0 110 2.2 1.1 1.1 0 010-2.2zm4.6 3.4a1 1 0 110 2 1 1 0 010-2zM12 5a7 7 0 016.93 6.03A3 3 0 0116 14a2.98 2.98 0 01-1.34-.32A3 3 0 0111 17a3 3 0 01-2.83-2 3 3 0 01-3.08-3.9A7 7 0 0112 5z"
+            fill="currentColor"
+          />
+        </svg>
+        <span class="kb-cookie-reopen__label">Cookies</span>
+      </button>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { fetchCookieSetting } from '../services/dataService'
@@ -137,114 +245,6 @@ onMounted(async () => {
   }
 })
 </script>
-
-<template>
-  <div>
-    <transition name="kb-cookie-fade">
-      <div
-        v-if="visible && bannerEnabled"
-        class="kb-cookie"
-        role="region"
-        aria-label="Consentimiento de cookies"
-        aria-describedby="kb-cookie-desc"
-      >
-        <button type="button" class="kb-cookie__close" aria-label="Rechazar y cerrar" @click="rejectAll">
-          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
-            <path
-              d="M6 6l12 12M18 6L6 18"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              fill="none"
-            />
-          </svg>
-        </button>
-
-        <h2 class="kb-cookie__title text-h3 text-h3--strong">{{ title }}</h2>
-        <p id="kb-cookie-desc" class="kb-cookie__text text-body">{{ description }}</p>
-
-        <div v-if="showDetails" class="kb-cookie__categories">
-          <div v-for="category in categories" :key="category.key" class="kb-cookie__category">
-            <div class="kb-cookie__category-row">
-              <span class="kb-cookie__category-title">{{ category.label }}</span>
-              <button
-                type="button"
-                class="kb-cookie__toggle"
-                role="switch"
-                :aria-checked="draft[category.key]"
-                :aria-label="category.label"
-                :class="{ 'is-on': draft[category.key] }"
-                @click="draft[category.key] = !draft[category.key]"
-              >
-                <span class="kb-cookie__toggle-knob" aria-hidden="true"></span>
-              </button>
-            </div>
-            <p class="kb-cookie__category-desc text-secondary">{{ category.description }}</p>
-          </div>
-        </div>
-
-        <div class="kb-cookie__actions">
-          <template v-if="!showDetails">
-            <button type="button" class="kb-cookie__btn kb-cookie__btn--ghost" @click="rejectAll">
-              {{ denyLabel }}
-            </button>
-            <button
-              type="button"
-              class="kb-cookie__btn kb-cookie__btn--ghost"
-              @click="showDetails = true"
-            >
-              Ver preferencias
-            </button>
-            <button type="button" class="kb-cookie__btn kb-cookie__btn--primary" @click="acceptAll">
-              {{ acceptLabel }}
-            </button>
-          </template>
-          <template v-else>
-            <button type="button" class="kb-cookie__btn kb-cookie__btn--ghost" @click="acceptAll">
-              {{ acceptLabel }}
-            </button>
-            <button
-              type="button"
-              class="kb-cookie__btn kb-cookie__btn--primary"
-              @click="savePreferences"
-            >
-              {{ saveLabel }}
-            </button>
-          </template>
-        </div>
-
-        <div class="kb-cookie__legal-links">
-          <router-link to="/politica-cookies" class="kb-cookie__link text-secondary" @click="close">
-            Política de cookies
-          </router-link>
-          <router-link to="/politica-privacidad" class="kb-cookie__link text-secondary" @click="close">
-            Política de privacidad
-          </router-link>
-          <router-link to="/aviso-legal" class="kb-cookie__link text-secondary" @click="close">
-            Aviso Legal
-          </router-link>
-        </div>
-      </div>
-    </transition>
-
-    <div v-if="!visible && hasDecided && bannerEnabled" class="kb-cookie-reopen-slot">
-      <button
-        type="button"
-        class="kb-cookie-reopen"
-        aria-label="Configurar preferencias de cookies"
-        @click="openPreferences"
-      >
-        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-          <path
-            d="M12 3a9 9 0 100 18 9 9 0 000-18zm-2.2 3.6a1.1 1.1 0 110 2.2 1.1 1.1 0 010-2.2zM15 8.6a1 1 0 110 2 1 1 0 010-2zm-6.4 4a1.1 1.1 0 110 2.2 1.1 1.1 0 010-2.2zm4.6 3.4a1 1 0 110 2 1 1 0 010-2zM12 5a7 7 0 016.93 6.03A3 3 0 0116 14a2.98 2.98 0 01-1.34-.32A3 3 0 0111 17a3 3 0 01-2.83-2 3 3 0 01-3.08-3.9A7 7 0 0112 5z"
-            fill="currentColor"
-          />
-        </svg>
-        <span class="kb-cookie-reopen__label">Cookies</span>
-      </button>
-    </div>
-  </div>
-</template>
 
 <style scoped>
 .kb-cookie {

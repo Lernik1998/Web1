@@ -113,18 +113,28 @@ describe('dataService', () => {
   })
 
   describe('fetchBlogPosts', () => {
-    it('requests posts with default page/perPage params', async () => {
+    it('requests posts ordered by date desc with default page/perPage params (3 per page)', async () => {
       const posts = [{ id: 1 }]
-      mockedGet.mockResolvedValueOnce({ data: posts })
+      mockedGet.mockResolvedValueOnce({ data: posts, headers: { 'x-wp-totalpages': '4' } })
       const result = await fetchBlogPosts()
-      expect(mockedGet).toHaveBeenCalledWith('/wp-json/wp/v2/posts?_embed&per_page=9&page=1')
-      expect(result).toEqual(posts)
+      expect(mockedGet).toHaveBeenCalledWith(
+        '/wp-json/wp/v2/posts?_embed&orderby=date&order=desc&per_page=3&page=1',
+      )
+      expect(result).toEqual({ posts, totalPages: 4 })
     })
 
     it('requests posts with custom page/perPage params', async () => {
-      mockedGet.mockResolvedValueOnce({ data: [] })
+      mockedGet.mockResolvedValueOnce({ data: [], headers: {} })
       await fetchBlogPosts(3, 5)
-      expect(mockedGet).toHaveBeenCalledWith('/wp-json/wp/v2/posts?_embed&per_page=5&page=3')
+      expect(mockedGet).toHaveBeenCalledWith(
+        '/wp-json/wp/v2/posts?_embed&orderby=date&order=desc&per_page=5&page=3',
+      )
+    })
+
+    it('falls back to 1 total page when the header is missing', async () => {
+      mockedGet.mockResolvedValueOnce({ data: [], headers: {} })
+      const result = await fetchBlogPosts()
+      expect(result.totalPages).toBe(1)
     })
   })
 

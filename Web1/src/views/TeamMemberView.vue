@@ -1,60 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { fetchProfesionalBySlug, fetchMediaById } from '../services/dataService'
-import { parseProfesionalAcf } from '../utils/profesionalAcf'
-import { getMediaUrl } from '../utils/media'
-import LoadingSpinner from '../components/LoadingSpinner.vue'
-
-defineOptions({
-  name: 'TeamMemberView',
-})
-
-const props = defineProps<{
-  slug: string
-}>()
-
-const loading = ref(true)
-const error = ref<string | null>(null)
-const name = ref('')
-const parsed = ref<ReturnType<typeof parseProfesionalAcf> | null>(null)
-const apiPhoto = ref<string | null>(null)
-
-const member = computed(() => (parsed.value ? { name: name.value, ...parsed.value } : null))
-// La foto viene de la propia API (`hero_image`, un ID de la biblioteca de
-// medios); si no hay ninguna asignada, se muestra el placeholder de iniciales.
-const photo = computed(() => (apiPhoto.value ? { image: apiPhoto.value } : null))
-const initials = computed(() =>
-  member.value
-    ? member.value.name
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0])
-        .join('')
-        .toUpperCase()
-    : '',
-)
-
-onMounted(async () => {
-  try {
-    const post = await fetchProfesionalBySlug(props.slug)
-    if (post) {
-      name.value = post.title.rendered
-      parsed.value = parseProfesionalAcf(post.acf)
-      if (post.acf.hero_image) {
-        const media = await fetchMediaById(post.acf.hero_image)
-        apiPhoto.value = getMediaUrl(media) ?? null
-      }
-    }
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Error desconocido'
-    console.error('Error fetching profesional:', err)
-  } finally {
-    loading.value = false
-  }
-})
-</script>
-
 <template>
   <section class="kb-profile">
     <div class="kb-profile__inner">
@@ -122,6 +65,95 @@ onMounted(async () => {
     </div>
   </section>
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue'
+import { fetchProfesionalBySlug, fetchMediaById } from '../services/dataService'
+import { parseProfesionalAcf } from '../utils/profesionalAcf'
+import { getMediaUrl } from '../utils/media'
+import { useSeoMeta, truncateForMeta, SITE_ORIGIN } from '../composables/useSeoMeta'
+import { usePersonSchema } from '../composables/usePersonSchema'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
+
+defineOptions({
+  name: 'TeamMemberView',
+})
+
+const props = defineProps<{
+  slug: string
+}>()
+
+const loading = ref(true)
+const error = ref<string | null>(null)
+const name = ref('')
+const parsed = ref<ReturnType<typeof parseProfesionalAcf> | null>(null)
+const apiPhoto = ref<string | null>(null)
+
+const member = computed(() => (parsed.value ? { name: name.value, ...parsed.value } : null))
+// La foto viene de la propia API (`hero_image`, un ID de la biblioteca de
+// medios); si no hay ninguna asignada, se muestra el placeholder de iniciales.
+const photo = computed(() => (apiPhoto.value ? { image: apiPhoto.value } : null))
+const initials = computed(() =>
+  member.value
+    ? member.value.name
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0])
+        .join('')
+        .toUpperCase()
+    : '',
+)
+
+useSeoMeta(
+  computed(() =>
+    member.value
+      ? {
+          title: `${member.value.name}${member.value.role ? ` — ${member.value.role}` : ''}`,
+          description: member.value.bio[0]
+            ? truncateForMeta(member.value.bio[0])
+            : `${member.value.name}, psicóloga en Kanbouri Psicología, Dénia.`,
+          image: apiPhoto.value ?? undefined,
+          type: 'profile',
+        }
+      : null,
+  ),
+)
+
+usePersonSchema(
+  computed(() =>
+    member.value
+      ? {
+          name: member.value.name,
+          jobTitle: member.value.role || undefined,
+          description: member.value.bio[0],
+          image: apiPhoto.value ?? undefined,
+          licenseNumber: member.value.licenseNumber || undefined,
+          url: `${SITE_ORIGIN}/equipo/${props.slug}`,
+        }
+      : null,
+  ),
+)
+
+onMounted(async () => {
+  try {
+    const post = await fetchProfesionalBySlug(props.slug)
+    if (post) {
+      name.value = post.title.rendered
+      parsed.value = parseProfesionalAcf(post.acf)
+      if (post.acf.hero_image) {
+        const media = await fetchMediaById(post.acf.hero_image)
+        apiPhoto.value = getMediaUrl(media) ?? null
+      }
+    }
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Error desconocido'
+    console.error('Error fetching profesional:', err)
+  } finally {
+    loading.value = false
+  }
+})
+</script>
 
 <style scoped>
 .kb-profile {

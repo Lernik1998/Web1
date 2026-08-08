@@ -1,50 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { fetchTherapieBySlug } from '../../../services/dataService'
-import { parseTherapieAcf } from '../../../utils/therapyAcf'
-import type { ParsedTherapyContent } from '../../../utils/therapyAcf'
-import FaqAccordion from '../../../components/FaqAccordion.vue'
-import LoadingSpinner from '../../../components/LoadingSpinner.vue'
-
-defineOptions({
-  name: 'DepresionView',
-})
-
-const loading = ref(true)
-const content = ref<ParsedTherapyContent | null>(null)
-const title = ref('Depresión y estado de ánimo')
-
-onMounted(async () => {
-  try {
-    const therapy = await fetchTherapieBySlug('depresion-y-estado-de-animo')
-    if (therapy) {
-      title.value = therapy.title.rendered
-      content.value = parseTherapieAcf(therapy.acf)
-    }
-  } catch (err) {
-    console.error('Error fetching adult depression therapy:', err)
-  } finally {
-    loading.value = false
-  }
-})
-
-const faqs = [
-  {
-    question: '¿Es normal no saber muy bien qué me pasa?',
-    answer: 'Sí, es habitual. Parte del trabajo en terapia es precisamente ir poniendo nombre a lo que sientes.',
-  },
-  {
-    question: '¿Cuánto dura el proceso?',
-    answer: 'Depende de cada persona y situación; lo iremos valorando juntas conforme avancemos.',
-  },
-  {
-    question: '¿Puedo empezar aunque no esté seguro/a de necesitarlo?',
-    answer:
-      'Por supuesto. La primera sesión sirve precisamente para conoceros y valorar juntas qué necesitas.',
-  },
-]
-</script>
-
 <template>
   <section class="kb-therapy">
     <LoadingSpinner v-if="loading" message="Cargando..." />
@@ -88,6 +41,65 @@ const faqs = [
     </template>
   </section>
 </template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { fetchTherapieBySlug } from '../../../services/dataService'
+import { parseTherapieAcf } from '../../../utils/therapyAcf'
+import type { ParsedTherapyContent } from '../../../utils/therapyAcf'
+import { useSeoMeta, truncateForMeta } from '../../../composables/useSeoMeta'
+import { useFaqSchema } from '../../../composables/useFaqSchema'
+import FaqAccordion from '../../../components/FaqAccordion.vue'
+import LoadingSpinner from '../../../components/LoadingSpinner.vue'
+
+defineOptions({
+  name: 'DepresionView',
+})
+
+const loading = ref(true)
+const content = ref<ParsedTherapyContent | null>(null)
+const title = ref('Depresión y estado de ánimo')
+
+onMounted(async () => {
+  try {
+    const therapy = await fetchTherapieBySlug('depresion-y-estado-de-animo')
+    if (therapy) {
+      title.value = therapy.title.rendered
+      content.value = parseTherapieAcf(therapy.acf)
+    }
+  } catch (err) {
+    console.error('Error fetching adult depression therapy:', err)
+  } finally {
+    loading.value = false
+  }
+})
+
+useSeoMeta(
+  computed(() =>
+    content.value
+      ? { title: `${title.value} en Dénia`, description: truncateForMeta(content.value.intro) }
+      : null,
+  ),
+)
+
+const faqs = [
+  {
+    question: '¿Es normal no saber muy bien qué me pasa?',
+    answer: 'Sí, es habitual. Parte del trabajo en terapia es precisamente ir poniendo nombre a lo que sientes.',
+  },
+  {
+    question: '¿Cuánto dura el proceso?',
+    answer: 'Depende de cada persona y situación; lo iremos valorando juntas conforme avancemos.',
+  },
+  {
+    question: '¿Puedo empezar aunque no esté seguro/a de necesitarlo?',
+    answer:
+      'Por supuesto. La primera sesión sirve precisamente para conoceros y valorar juntas qué necesitas.',
+  },
+]
+
+useFaqSchema(() => faqs)
+</script>
 
 <style scoped>
 .kb-therapy {

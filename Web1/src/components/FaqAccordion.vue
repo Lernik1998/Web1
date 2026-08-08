@@ -1,17 +1,3 @@
-<script setup lang="ts">
-import { ref } from 'vue'
-
-defineProps<{
-  items: Array<{ question: string; answer: string }>
-}>()
-
-const openIndex = ref<number | null>(0)
-
-function toggle(index: number) {
-  openIndex.value = openIndex.value === index ? null : index
-}
-</script>
-
 <template>
   <div class="kb-faq">
     <div v-for="(item, index) in items" :key="item.question" class="kb-faq__item">
@@ -33,6 +19,20 @@ function toggle(index: number) {
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+
+defineProps<{
+  items: Array<{ question: string; answer: string }>
+}>()
+
+const openIndex = ref<number | null>(0)
+
+function toggle(index: number) {
+  openIndex.value = openIndex.value === index ? null : index
+}
+</script>
 
 <style scoped>
 .kb-faq {

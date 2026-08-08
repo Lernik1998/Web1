@@ -1,29 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { fetchBlogPosts } from '../services/dataService'
-import BlogCard from '../components/BlogCard.vue'
-import type { WordPressPost } from '../types/api'
-
-defineOptions({
-  name: 'BlogView',
-})
-
-const posts = ref<WordPressPost[]>([])
-const loading = ref(true)
-const error = ref<string | null>(null)
-
-onMounted(async () => {
-  try {
-    posts.value = await fetchBlogPosts()
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Error desconocido'
-    console.error('Error fetching blog posts:', err)
-  } finally {
-    loading.value = false
-  }
-})
-</script>
-
 <template>
   <section class="kb-blog">
     <div class="kb-blog__header">
@@ -60,19 +34,89 @@ onMounted(async () => {
         <p>Todavía no hay artículos publicados. ¡Vuelve pronto!</p>
       </div>
 
-      <div v-else class="kb-blog__list">
-        <BlogCard
-          v-for="(post, i) in posts"
-          :key="post.id"
-          :post="post"
-          v-animate-on-scroll
-          v-spotlight
-          :style="{ transitionDelay: `${Math.min(i, 4) * 100}ms` }"
-        />
-      </div>
+      <template v-else>
+        <div class="kb-blog__list">
+          <BlogCard
+            v-for="(post, i) in posts"
+            :key="post.id"
+            :post="post"
+            v-animate-on-scroll
+            v-spotlight
+            :style="{ transitionDelay: `${Math.min(i, 4) * 100}ms` }"
+          />
+        </div>
+
+        <nav v-if="totalPages > 1" class="kb-blog__pagination" aria-label="Paginación del blog">
+          <button
+            type="button"
+            class="kb-blog__page-btn"
+            :disabled="page <= 1"
+            @click="goToPage(page - 1)"
+          >
+            ← Anteriores
+          </button>
+          <span class="kb-blog__page-status text-secondary">Página {{ page }} de {{ totalPages }}</span>
+          <button
+            type="button"
+            class="kb-blog__page-btn"
+            :disabled="page >= totalPages"
+            @click="goToPage(page + 1)"
+          >
+            Siguientes →
+          </button>
+        </nav>
+      </template>
     </div>
   </section>
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { fetchBlogPosts } from '../services/dataService'
+import { useSeoMeta } from '../composables/useSeoMeta'
+import BlogCard from '../components/BlogCard.vue'
+import type { WordPressPost } from '../types/api'
+
+defineOptions({
+  name: 'BlogView',
+})
+
+useSeoMeta(() => ({
+  title: 'Blog de psicología en Dénia',
+  description:
+    'Artículos sobre bienestar emocional, ansiedad, autoestima y terapia, escritos por el equipo de Kanbouri Psicología en Dénia.',
+}))
+
+const posts = ref<WordPressPost[]>([])
+const loading = ref(true)
+const error = ref<string | null>(null)
+const page = ref(1)
+const totalPages = ref(1)
+
+async function loadPage(targetPage: number) {
+  loading.value = true
+  error.value = null
+  try {
+    const result = await fetchBlogPosts(targetPage)
+    posts.value = result.posts
+    totalPages.value = result.totalPages
+    page.value = targetPage
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Error desconocido'
+    console.error('Error fetching blog posts:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+function goToPage(targetPage: number) {
+  if (targetPage < 1 || targetPage > totalPages.value || targetPage === page.value) return
+  loadPage(targetPage)
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+onMounted(() => loadPage(1))
+</script>
 
 <style scoped>
 .kb-blog {
@@ -103,6 +147,59 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 28px;
+}
+
+.kb-blog__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(16px, 3vw, 28px);
+  margin-top: clamp(40px, 6vw, 56px);
+  /* El botón flotante de WhatsApp/Cookies (WhatsAppButton.vue,
+     CookieConsent.vue) usa z-index 140-150 y puede coincidir en pantalla
+     con esta franja al hacer scroll en móvil. Con `position: relative` y un
+     z-index mayor, la paginación queda siempre por encima y pulsable, sin
+     tener que sacrificar el layout centrado. */
+  position: relative;
+  z-index: 160;
+}
+
+.kb-blog__page-btn {
+  padding: 10px 22px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color var(--dur-base) var(--ease-base),
+    color var(--dur-base) var(--ease-base), transform var(--dur-base) var(--ease-base);
+}
+
+.kb-blog__page-btn:hover:not(:disabled) {
+  border-color: var(--color-rose);
+  color: var(--color-rose-hover);
+  transform: translateY(-1px);
+}
+
+.kb-blog__page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.kb-blog__page-status {
+  min-width: 110px;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .kb-blog__pagination {
+    gap: 12px;
+  }
+
+  .kb-blog__page-status {
+    min-width: auto;
+  }
 }
 
 .kb-blog__error,

@@ -1,3 +1,28 @@
+<template>
+  <article class="kb-blog-card">
+    <router-link :to="`/blog/${post.slug}`" class="kb-blog-card__media">
+      <img :src="imageUrl" :alt="imageAlt" class="kb-blog-card__image" loading="lazy" />
+    </router-link>
+
+    <div class="kb-blog-card__body">
+      <div class="kb-blog-card__meta text-secondary">
+        <span v-if="categoryName" class="kb-blog-card__category">{{ categoryName }}</span>
+        <time :datetime="post.date">{{ formattedDate }}</time>
+      </div>
+
+      <h3 class="kb-blog-card__title text-h3">
+        <router-link :to="`/blog/${post.slug}`">{{ post.title.rendered }}</router-link>
+      </h3>
+
+      <p class="kb-blog-card__excerpt text-secondary">{{ excerpt }}</p>
+
+      <router-link :to="`/blog/${post.slug}`" class="kb-blog-card__link text-cta">
+        Leer más
+      </router-link>
+    </div>
+  </article>
+</template>
+
 <script setup lang="ts">
 import { computed } from 'vue'
 import { extractTextFromHtml, extractFirstImageUrl } from '../utils/contentProcessor'
@@ -28,31 +53,6 @@ const formattedDate = computed(() =>
 
 const excerpt = computed(() => extractTextFromHtml(props.post.excerpt.rendered, 180))
 </script>
-
-<template>
-  <article class="kb-blog-card">
-    <router-link :to="`/blog/${post.slug}`" class="kb-blog-card__media">
-      <img :src="imageUrl" :alt="imageAlt" class="kb-blog-card__image" loading="lazy" />
-    </router-link>
-
-    <div class="kb-blog-card__body">
-      <div class="kb-blog-card__meta text-secondary">
-        <span v-if="categoryName" class="kb-blog-card__category">{{ categoryName }}</span>
-        <time :datetime="post.date">{{ formattedDate }}</time>
-      </div>
-
-      <h3 class="kb-blog-card__title text-h3">
-        <router-link :to="`/blog/${post.slug}`">{{ post.title.rendered }}</router-link>
-      </h3>
-
-      <p class="kb-blog-card__excerpt text-secondary">{{ excerpt }}</p>
-
-      <router-link :to="`/blog/${post.slug}`" class="kb-blog-card__link text-cta">
-        Leer más
-      </router-link>
-    </div>
-  </article>
-</template>
 
 <style scoped>
 .kb-blog-card {
@@ -180,6 +180,20 @@ const excerpt = computed(() => extractTextFromHtml(props.post.excerpt.rendered, 
 
   .kb-blog-card__body {
     padding: 20px;
+  }
+
+  /* En pantallas estrechas "SIN CATEGORÍA" + la fecha no caben en una sola
+     línea; dejarlos en fila hacía que el "·" separador quedase suelto en
+     una línea propia. Apilados se lee limpio y el separador sobra. */
+  .kb-blog-card__meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .kb-blog-card__category::after {
+    content: '';
+    margin-left: 0;
   }
 }
 </style>

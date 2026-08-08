@@ -1,269 +1,3 @@
-<script setup lang="ts">
-import { reactive, ref, computed, watch, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { fetchPedirCitaPage, submitAppointmentRequest } from '../services/dataService'
-import { processWordPressContent } from '../utils/contentProcessor'
-import { useInternalLinks } from '../composables/useInternalLinks'
-import { getRecaptchaToken } from '../utils/recaptcha'
-import type { WordPressPage } from '../types/api'
-import LoadingSpinner from '../components/LoadingSpinner.vue'
-
-const route = useRoute()
-
-defineOptions({
-  name: 'PedirCitaView',
-})
-
-const pageLoading = ref(true)
-const pageData = ref<WordPressPage | null>(null)
-const leadEl = ref<HTMLElement | null>(null)
-
-useInternalLinks(leadEl)
-
-const processedLead = computed(() => {
-  if (!pageData.value?.content.rendered) return ''
-  return processWordPressContent(pageData.value.content.rendered)
-})
-
-onMounted(async () => {
-  try {
-    pageData.value = await fetchPedirCitaPage()
-  } catch (err) {
-    console.error('Error fetching pedir cita:', err)
-  } finally {
-    pageLoading.value = false
-  }
-})
-
-const services = [
-  { value: 'infantil', label: 'Psicología infantil' },
-  { value: 'adolescentes', label: 'Psicología para adolescentes' },
-  { value: 'adultos', label: 'Psicología para adultos' },
-  { value: 'padres-familia', label: 'Psicología para padres y familia' },
-  { value: 'profesionales', label: 'Supervisión para profesionales' },
-]
-
-const modalityOptions = [
-  { value: 'presencial', label: 'Presencial' },
-  { value: 'online', label: 'Online' },
-]
-
-const professionals = [
-  { value: 'sin-preferencia', label: 'Sin preferencia' },
-  { value: 'maria', label: 'María B. Kanbouri' },
-  { value: 'beatriz', label: 'Beatriz Donet' },
-  { value: 'ester', label: 'Ester Pinedo Gil' },
-]
-
-const weekdays = [
-  { value: 'lunes', label: 'Lunes' },
-  { value: 'martes', label: 'Martes' },
-  { value: 'miercoles', label: 'Miércoles' },
-  { value: 'jueves', label: 'Jueves' },
-  { value: 'viernes', label: 'Viernes' },
-]
-
-const timeSlots = [
-  { value: 'manana', label: 'Mañana', hint: '9:00 – 12:00' },
-  { value: 'mediodia', label: 'Mediodía', hint: '12:00 – 15:00' },
-  { value: 'tarde', label: 'Tarde', hint: '15:00 – 20:00' },
-]
-
-const howFoundOptions = [
-  { value: 'instagram', label: 'Instagram' },
-  { value: 'internet', label: 'Internet' },
-  { value: 'familiar', label: 'Un familiar' },
-]
-
-const MENSAJE_MAX_LENGTH = 500
-
-const initialServicio = services.some((service) => service.value === route.query.servicio)
-  ? (route.query.servicio as string)
-  : ''
-
-/**
- * Recordamos lo que el cliente ya ha escrito mientras dura la pestaña: es
- * habitual que entre a Pedir Cita, se vaya a mirar otra sección y vuelva, y
- * no queremos que tenga que rellenar todo de nuevo.
- */
-const STORAGE_KEY = 'kb-pedir-cita-form'
-
-type PedirCitaForm = {
-  nombre: string
-  apellidos: string
-  email: string
-  telefono: string
-  servicio: string
-  modalidad: string
-  profesional: string
-  dia: string
-  horario: string
-  comoNosConociste: string
-  mensaje: string
-  privacidad: boolean
-  contacto: boolean
-}
-
-function loadSavedForm(): Partial<PedirCitaForm> | null {
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as Partial<PedirCitaForm>) : null
-  } catch {
-    return null
-  }
-}
-
-const savedForm = loadSavedForm()
-
-const form = reactive<PedirCitaForm>({
-  nombre: savedForm?.nombre ?? '',
-  apellidos: savedForm?.apellidos ?? '',
-  email: savedForm?.email ?? '',
-  telefono: savedForm?.telefono ?? '',
-  servicio: savedForm?.servicio || initialServicio,
-  modalidad: savedForm?.modalidad ?? '',
-  profesional: savedForm?.profesional ?? 'sin-preferencia',
-  dia: savedForm?.dia ?? '',
-  horario: savedForm?.horario ?? '',
-  comoNosConociste: savedForm?.comoNosConociste ?? '',
-  mensaje: savedForm?.mensaje ?? '',
-  privacidad: savedForm?.privacidad ?? false,
-  contacto: savedForm?.contacto ?? false,
-})
-
-watch(
-  form,
-  (value) => {
-    try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(value))
-    } catch {
-      // Almacenamiento no disponible (modo privado, cuota llena, etc.): no es crítico.
-    }
-  },
-  { deep: true },
-)
-
-function clearSavedForm() {
-  try {
-    sessionStorage.removeItem(STORAGE_KEY)
-  } catch {
-    // Ignorar si sessionStorage no está disponible.
-  }
-}
-
-const submitting = ref(false)
-const submitted = ref(false)
-const errorMsg = ref('')
-const attempted = ref(false)
-
-// Trampa anti-bot: campo invisible para personas (oculto por CSS, sin
-// tabindex y con aria-hidden) que los bots que rellenan formularios a
-// ciegas sí completan. No forma parte de `form`/`PedirCitaForm` a propósito
-// para que no se guarde en sessionStorage.
-const honeypot = ref('')
-
-// María B. Kanbouri no atiende jueves ni viernes, ni por las tardes, y los
-// mediodías solo hasta las 13:30.
-const isMariaSelected = computed(() => form.profesional === 'maria')
-
-function isSlotDisabled(slotValue: string) {
-  return isMariaSelected.value && slotValue === 'tarde'
-}
-
-function isDayDisabled(dayValue: string) {
-  return isMariaSelected.value && (dayValue === 'jueves' || dayValue === 'viernes')
-}
-
-function slotHint(slot: { value: string; hint: string }) {
-  if (isMariaSelected.value && slot.value === 'mediodia') return '12:00 – 13:30'
-  return slot.hint
-}
-
-watch(isMariaSelected, (selected) => {
-  if (selected) {
-    if (form.horario === 'tarde') form.horario = ''
-    if (form.dia === 'jueves' || form.dia === 'viernes') form.dia = ''
-  }
-})
-
-const nombreInvalid = computed(() => attempted.value && !form.nombre.trim())
-const apellidosInvalid = computed(() => attempted.value && !form.apellidos.trim())
-const emailInvalid = computed(() => attempted.value && !form.email.trim())
-const telefonoInvalid = computed(() => attempted.value && !form.telefono.trim())
-const servicioInvalid = computed(() => attempted.value && !form.servicio)
-const modalidadInvalid = computed(() => attempted.value && !form.modalidad)
-const diasInvalid = computed(() => attempted.value && !form.dia)
-const horariosInvalid = computed(() => attempted.value && !form.horario)
-const privacidadInvalid = computed(() => attempted.value && !form.privacidad)
-const contactoInvalid = computed(() => attempted.value && !form.contacto)
-
-const hasErrors = computed(
-  () =>
-    nombreInvalid.value ||
-    apellidosInvalid.value ||
-    emailInvalid.value ||
-    telefonoInvalid.value ||
-    servicioInvalid.value ||
-    modalidadInvalid.value ||
-    diasInvalid.value ||
-    horariosInvalid.value ||
-    privacidadInvalid.value ||
-    contactoInvalid.value,
-)
-
-async function handleSubmit() {
-  attempted.value = true
-  errorMsg.value = ''
-
-  if (hasErrors.value) {
-    errorMsg.value = 'Falta completar algún campo obligatorio. Revisa los campos marcados en rojo.'
-    return
-  }
-
-  if (honeypot.value) {
-    // Un bot ha rellenado el campo trampa: simulamos un envío correcto sin
-    // procesar nada, para no delatar que fue detectado.
-    submitted.value = true
-    clearSavedForm()
-    return
-  }
-
-  submitting.value = true
-  try {
-    const recaptchaToken = await getRecaptchaToken('pedir_cita')
-    await submitAppointmentRequest({
-      name: form.nombre,
-      surname: form.apellidos,
-      email: form.email,
-      phone: form.telefono,
-      // El backend solo guarda/muestra el texto tal cual (no conoce los
-      // slugs internos del formulario), así que se envía la etiqueta
-      // legible de cada opción en vez del value ("adultos" -> "Psicología
-      // para adultos").
-      therapy: services.find((service) => service.value === form.servicio)?.label ?? form.servicio,
-      appointment_type:
-        modalityOptions.find((modality) => modality.value === form.modalidad)?.label ??
-        form.modalidad,
-      psychologist:
-        professionals.find((pro) => pro.value === form.profesional)?.label ?? form.profesional,
-      weekdays: [weekdays.find((day) => day.value === form.dia)?.label ?? form.dia],
-      schedule: [timeSlots.find((slot) => slot.value === form.horario)?.label ?? form.horario],
-      source:
-        howFoundOptions.find((option) => option.value === form.comoNosConociste)?.label ??
-        form.comoNosConociste,
-      message: form.mensaje,
-      recaptcha_token: recaptchaToken,
-    })
-    submitted.value = true
-    clearSavedForm()
-  } catch {
-    errorMsg.value = 'No se ha podido enviar la solicitud. Inténtalo de nuevo en unos minutos.'
-  } finally {
-    submitting.value = false
-  }
-}
-</script>
-
 <template>
   <section class="kb-appointment">
     <LoadingSpinner v-if="pageLoading" message="Cargando..." />
@@ -600,6 +334,279 @@ async function handleSubmit() {
     </template>
   </section>
 </template>
+
+<script setup lang="ts">
+import { reactive, ref, computed, watch, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { fetchPedirCitaPage, submitAppointmentRequest } from '../services/dataService'
+import { processWordPressContent } from '../utils/contentProcessor'
+import { useInternalLinks } from '../composables/useInternalLinks'
+import { getRecaptchaToken } from '../utils/recaptcha'
+import { useSeoMeta } from '../composables/useSeoMeta'
+import type { WordPressPage } from '../types/api'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
+
+const route = useRoute()
+
+defineOptions({
+  name: 'PedirCitaView',
+})
+
+useSeoMeta(() => ({
+  title: 'Pedir cita',
+  description:
+    'Reserva tu primera sesión de psicología en Dénia, presencial u online. Cuéntanos tu disponibilidad y te contactamos para confirmar la cita.',
+}))
+
+const pageLoading = ref(true)
+const pageData = ref<WordPressPage | null>(null)
+const leadEl = ref<HTMLElement | null>(null)
+
+useInternalLinks(leadEl)
+
+const processedLead = computed(() => {
+  if (!pageData.value?.content.rendered) return ''
+  return processWordPressContent(pageData.value.content.rendered)
+})
+
+onMounted(async () => {
+  try {
+    pageData.value = await fetchPedirCitaPage()
+  } catch (err) {
+    console.error('Error fetching pedir cita:', err)
+  } finally {
+    pageLoading.value = false
+  }
+})
+
+const services = [
+  { value: 'infantil', label: 'Psicología infantil' },
+  { value: 'adolescentes', label: 'Psicología para adolescentes' },
+  { value: 'adultos', label: 'Psicología para adultos' },
+  { value: 'padres-familia', label: 'Psicología para padres y familia' },
+  { value: 'profesionales', label: 'Supervisión para profesionales' },
+]
+
+const modalityOptions = [
+  { value: 'presencial', label: 'Presencial' },
+  { value: 'online', label: 'Online' },
+]
+
+const professionals = [
+  { value: 'sin-preferencia', label: 'Sin preferencia' },
+  { value: 'maria', label: 'María B. Kanbouri' },
+  { value: 'beatriz', label: 'Beatriz Donet' },
+  { value: 'ester', label: 'Ester Pinedo Gil' },
+]
+
+const weekdays = [
+  { value: 'lunes', label: 'Lunes' },
+  { value: 'martes', label: 'Martes' },
+  { value: 'miercoles', label: 'Miércoles' },
+  { value: 'jueves', label: 'Jueves' },
+  { value: 'viernes', label: 'Viernes' },
+]
+
+const timeSlots = [
+  { value: 'manana', label: 'Mañana', hint: '9:00 – 12:00' },
+  { value: 'mediodia', label: 'Mediodía', hint: '12:00 – 15:00' },
+  { value: 'tarde', label: 'Tarde', hint: '15:00 – 20:00' },
+]
+
+const howFoundOptions = [
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'internet', label: 'Internet' },
+  { value: 'familiar', label: 'Un familiar' },
+]
+
+const MENSAJE_MAX_LENGTH = 500
+
+const initialServicio = services.some((service) => service.value === route.query.servicio)
+  ? (route.query.servicio as string)
+  : ''
+
+/**
+ * Recordamos lo que el cliente ya ha escrito mientras dura la pestaña: es
+ * habitual que entre a Pedir Cita, se vaya a mirar otra sección y vuelva, y
+ * no queremos que tenga que rellenar todo de nuevo.
+ */
+const STORAGE_KEY = 'kb-pedir-cita-form'
+
+type PedirCitaForm = {
+  nombre: string
+  apellidos: string
+  email: string
+  telefono: string
+  servicio: string
+  modalidad: string
+  profesional: string
+  dia: string
+  horario: string
+  comoNosConociste: string
+  mensaje: string
+  privacidad: boolean
+  contacto: boolean
+}
+
+function loadSavedForm(): Partial<PedirCitaForm> | null {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY)
+    return raw ? (JSON.parse(raw) as Partial<PedirCitaForm>) : null
+  } catch {
+    return null
+  }
+}
+
+const savedForm = loadSavedForm()
+
+const form = reactive<PedirCitaForm>({
+  nombre: savedForm?.nombre ?? '',
+  apellidos: savedForm?.apellidos ?? '',
+  email: savedForm?.email ?? '',
+  telefono: savedForm?.telefono ?? '',
+  servicio: savedForm?.servicio || initialServicio,
+  modalidad: savedForm?.modalidad ?? '',
+  profesional: savedForm?.profesional ?? 'sin-preferencia',
+  dia: savedForm?.dia ?? '',
+  horario: savedForm?.horario ?? '',
+  comoNosConociste: savedForm?.comoNosConociste ?? '',
+  mensaje: savedForm?.mensaje ?? '',
+  privacidad: savedForm?.privacidad ?? false,
+  contacto: savedForm?.contacto ?? false,
+})
+
+watch(
+  form,
+  (value) => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(value))
+    } catch {
+      // Almacenamiento no disponible (modo privado, cuota llena, etc.): no es crítico.
+    }
+  },
+  { deep: true },
+)
+
+function clearSavedForm() {
+  try {
+    sessionStorage.removeItem(STORAGE_KEY)
+  } catch {
+    // Ignorar si sessionStorage no está disponible.
+  }
+}
+
+const submitting = ref(false)
+const submitted = ref(false)
+const errorMsg = ref('')
+const attempted = ref(false)
+
+// Trampa anti-bot: campo invisible para personas (oculto por CSS, sin
+// tabindex y con aria-hidden) que los bots que rellenan formularios a
+// ciegas sí completan. No forma parte de `form`/`PedirCitaForm` a propósito
+// para que no se guarde en sessionStorage.
+const honeypot = ref('')
+
+// María B. Kanbouri no atiende jueves ni viernes, ni por las tardes, y los
+// mediodías solo hasta las 13:30.
+const isMariaSelected = computed(() => form.profesional === 'maria')
+
+function isSlotDisabled(slotValue: string) {
+  return isMariaSelected.value && slotValue === 'tarde'
+}
+
+function isDayDisabled(dayValue: string) {
+  return isMariaSelected.value && (dayValue === 'jueves' || dayValue === 'viernes')
+}
+
+function slotHint(slot: { value: string; hint: string }) {
+  if (isMariaSelected.value && slot.value === 'mediodia') return '12:00 – 13:30'
+  return slot.hint
+}
+
+watch(isMariaSelected, (selected) => {
+  if (selected) {
+    if (form.horario === 'tarde') form.horario = ''
+    if (form.dia === 'jueves' || form.dia === 'viernes') form.dia = ''
+  }
+})
+
+const nombreInvalid = computed(() => attempted.value && !form.nombre.trim())
+const apellidosInvalid = computed(() => attempted.value && !form.apellidos.trim())
+const emailInvalid = computed(() => attempted.value && !form.email.trim())
+const telefonoInvalid = computed(() => attempted.value && !form.telefono.trim())
+const servicioInvalid = computed(() => attempted.value && !form.servicio)
+const modalidadInvalid = computed(() => attempted.value && !form.modalidad)
+const diasInvalid = computed(() => attempted.value && !form.dia)
+const horariosInvalid = computed(() => attempted.value && !form.horario)
+const privacidadInvalid = computed(() => attempted.value && !form.privacidad)
+const contactoInvalid = computed(() => attempted.value && !form.contacto)
+
+const hasErrors = computed(
+  () =>
+    nombreInvalid.value ||
+    apellidosInvalid.value ||
+    emailInvalid.value ||
+    telefonoInvalid.value ||
+    servicioInvalid.value ||
+    modalidadInvalid.value ||
+    diasInvalid.value ||
+    horariosInvalid.value ||
+    privacidadInvalid.value ||
+    contactoInvalid.value,
+)
+
+async function handleSubmit() {
+  attempted.value = true
+  errorMsg.value = ''
+
+  if (hasErrors.value) {
+    errorMsg.value = 'Falta completar algún campo obligatorio. Revisa los campos marcados en rojo.'
+    return
+  }
+
+  if (honeypot.value) {
+    // Un bot ha rellenado el campo trampa: simulamos un envío correcto sin
+    // procesar nada, para no delatar que fue detectado.
+    submitted.value = true
+    clearSavedForm()
+    return
+  }
+
+  submitting.value = true
+  try {
+    const recaptchaToken = await getRecaptchaToken('pedir_cita')
+    await submitAppointmentRequest({
+      name: form.nombre,
+      surname: form.apellidos,
+      email: form.email,
+      phone: form.telefono,
+      // El backend solo guarda/muestra el texto tal cual (no conoce los
+      // slugs internos del formulario), así que se envía la etiqueta
+      // legible de cada opción en vez del value ("adultos" -> "Psicología
+      // para adultos").
+      therapy: services.find((service) => service.value === form.servicio)?.label ?? form.servicio,
+      appointment_type:
+        modalityOptions.find((modality) => modality.value === form.modalidad)?.label ??
+        form.modalidad,
+      psychologist:
+        professionals.find((pro) => pro.value === form.profesional)?.label ?? form.profesional,
+      weekdays: [weekdays.find((day) => day.value === form.dia)?.label ?? form.dia],
+      schedule: [timeSlots.find((slot) => slot.value === form.horario)?.label ?? form.horario],
+      source:
+        howFoundOptions.find((option) => option.value === form.comoNosConociste)?.label ??
+        form.comoNosConociste,
+      message: form.mensaje,
+      recaptcha_token: recaptchaToken,
+    })
+    submitted.value = true
+    clearSavedForm()
+  } catch {
+    errorMsg.value = 'No se ha podido enviar la solicitud. Inténtalo de nuevo en unos minutos.'
+  } finally {
+    submitting.value = false
+  }
+}
+</script>
 
 <style scoped>
 .kb-appointment {

@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/generate-sitemap.mjs && node scripts/generate-llms-txt.mjs",
     "build": "run-p type-check \"build-only {@}\" --",
+    "sitemap": "node scripts/generate-sitemap.mjs",
+    "llms-txt": "node scripts/generate-llms-txt.mjs",
     "preview": "vite preview",
     "test:unit": "vitest",
     "test:coverage": "vitest run --coverage",

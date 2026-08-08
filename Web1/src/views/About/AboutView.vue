@@ -1,31 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { fetchAboutMePage } from '../../services/dataService'
-import { parseTeamContent } from '../../utils/teamParser'
-import LoadingSpinner from '../../components/LoadingSpinner.vue'
-
-defineOptions({
-  name: 'AboutView',
-})
-
-const loading = ref(true)
-const error = ref<string | null>(null)
-const member = ref<ReturnType<typeof parseTeamContent>[number] | null>(null)
-
-onMounted(async () => {
-  try {
-    const page = await fetchAboutMePage()
-    const parsed = page ? parseTeamContent(page.content.rendered) : []
-    member.value = parsed[0] ?? null
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Error desconocido'
-    console.error('Error fetching about me page:', err)
-  } finally {
-    loading.value = false
-  }
-})
-</script>
-
 <template>
   <section class="kb-about">
     <div class="kb-about__inner">
@@ -99,6 +71,50 @@ onMounted(async () => {
     </div>
   </section>
 </template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { fetchAboutMePage } from '../../services/dataService'
+import { parseTeamContent } from '../../utils/teamParser'
+import { useSeoMeta, truncateForMeta } from '../../composables/useSeoMeta'
+import LoadingSpinner from '../../components/LoadingSpinner.vue'
+
+defineOptions({
+  name: 'AboutView',
+})
+
+const loading = ref(true)
+const error = ref<string | null>(null)
+const member = ref<ReturnType<typeof parseTeamContent>[number] | null>(null)
+
+useSeoMeta(
+  computed(() =>
+    member.value
+      ? {
+          title: `${member.value.name} — Sobre mí`,
+          description: member.value.bio[0]
+            ? truncateForMeta(member.value.bio[0])
+            : `Conoce a ${member.value.name}, psicóloga en Dénia.`,
+          image: member.value.photo ?? undefined,
+          type: 'profile',
+        }
+      : null,
+  ),
+)
+
+onMounted(async () => {
+  try {
+    const page = await fetchAboutMePage()
+    const parsed = page ? parseTeamContent(page.content.rendered) : []
+    member.value = parsed[0] ?? null
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Error desconocido'
+    console.error('Error fetching about me page:', err)
+  } finally {
+    loading.value = false
+  }
+})
+</script>
 
 <style scoped>
 .kb-about {
