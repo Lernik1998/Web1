@@ -73,6 +73,44 @@ describe('useInternalLinks', () => {
     expect(push).toHaveBeenCalledWith('/blog')
   })
 
+  it('intercepts same-origin absolute links (as produced by processWordPressContent for hand-typed relative hrefs)', async () => {
+    const wrapper = mount(
+      makeHost('<a href="https://kanbouripsicologia.com/politica-privacidad">Política</a>'),
+    )
+    await nextTick()
+
+    const link = wrapper.find('a')
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true })
+    link.element.dispatchEvent(event)
+
+    expect(push).toHaveBeenCalledWith('/politica-privacidad')
+    expect(event.defaultPrevented).toBe(true)
+  })
+
+  it('ignores clicks on links with target="_blank"', async () => {
+    const wrapper = mount(makeHost('<a href="/pedir-cita" target="_blank">Pedir cita</a>'))
+    await nextTick()
+
+    const link = wrapper.find('a')
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true })
+    link.element.dispatchEvent(event)
+
+    expect(push).not.toHaveBeenCalled()
+    expect(event.defaultPrevented).toBe(false)
+  })
+
+  it('ignores clicks with a modifier key held (opening in a new tab)', async () => {
+    const wrapper = mount(makeHost('<a href="/pedir-cita">Pedir cita</a>'))
+    await nextTick()
+
+    const link = wrapper.find('a')
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true })
+    link.element.dispatchEvent(event)
+
+    expect(push).not.toHaveBeenCalled()
+    expect(event.defaultPrevented).toBe(false)
+  })
+
   it('removes the click listener on unmount', async () => {
     const wrapper = mount(makeHost('<a href="/pedir-cita">Pedir cita</a>'))
     await nextTick()

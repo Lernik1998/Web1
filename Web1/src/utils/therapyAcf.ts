@@ -53,28 +53,36 @@ export function parseTherapieAcf(acf: TherapieAcf): ParsedTherapyContent {
     }))
     .filter((item) => item.question && item.answer)
 
+  // Si en WordPress se ha rellenado el título de una sección pero no su
+  // contenido (o al revés), se descarta el bloque entero en vez de mostrar
+  // un encabezado vacío con su separador y nada debajo.
+  const allBlocks: TherapyBlock[] = [
+    {
+      title: (acf.when_title ?? '').trim(),
+      type: 'list',
+      items: splitIntoListItems(acf.when_items ?? ''),
+      text: '',
+    },
+    {
+      title: (acf.how_title ?? '').trim(),
+      type: 'text',
+      items: [],
+      text: collapseWhitespace(acf.how_description ?? ''),
+    },
+    {
+      title: (acf.benefits_title ?? '').trim(),
+      type: 'list',
+      items: splitIntoListItems(acf.benefits_items ?? ''),
+      text: '',
+    },
+  ]
+  const blocks = allBlocks.filter(
+    (block) => block.title && (block.items.length > 0 || block.text.length > 0),
+  )
+
   return {
     intro: collapseWhitespace(acf.therapy_description ?? ''),
-    blocks: [
-      {
-        title: (acf.when_title ?? '').trim(),
-        type: 'list',
-        items: splitIntoListItems(acf.when_items ?? ''),
-        text: '',
-      },
-      {
-        title: (acf.how_title ?? '').trim(),
-        type: 'text',
-        items: [],
-        text: collapseWhitespace(acf.how_description ?? ''),
-      },
-      {
-        title: (acf.benefits_title ?? '').trim(),
-        type: 'list',
-        items: splitIntoListItems(acf.benefits_items ?? ''),
-        text: '',
-      },
-    ],
+    blocks,
     faqLabel: (acf.faq_label ?? '').trim() || 'Preguntas frecuentes',
     faqs,
   }

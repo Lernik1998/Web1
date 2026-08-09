@@ -142,7 +142,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, defineComponent, h } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount, defineComponent, h } from 'vue'
 
 defineOptions({
   name: 'TheHeader',
@@ -261,6 +261,14 @@ function closeAll() {
   mobileOpen.value = false
 }
 
+// El panel móvil es `position: fixed`, así que sin esto la página de
+// fondo seguía siendo desplazable con el dedo por debajo del panel
+// abierto -- desorientador, y el scroll del fondo se notaba a través
+// del overlay semitransparente.
+watch(mobileOpen, (open) => {
+  document.body.style.overflow = open ? 'hidden' : ''
+})
+
 function handleScroll() {
   // Histéresis: evita que la clase cambie en bucle si el scroll oscila
   // justo alrededor del umbral.
@@ -287,6 +295,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('scroll', handleScroll)
   window.removeEventListener('keydown', handleKeydown)
   window.removeEventListener('resize', updateIsDesktopNav)
+  document.body.style.overflow = ''
 })
 </script>
 

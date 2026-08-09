@@ -10,10 +10,15 @@
 
       <template v-else-if="member">
         <div class="kb-about__masthead" v-animate-on-scroll>
-          <div v-if="member.photo" class="kb-about__frame">
+          <div v-if="member.photo && !photoLoadFailed" class="kb-about__frame">
             <div class="kb-about__media-decor" aria-hidden="true"></div>
             <div class="kb-about__media" v-spotlight>
-              <img :src="member.photo" :alt="member.name" class="kb-about__image" />
+              <img
+                :src="member.photo"
+                :alt="member.name"
+                class="kb-about__image"
+                @error="photoLoadFailed = true"
+              />
             </div>
           </div>
 
@@ -32,6 +37,19 @@
         <div v-if="member.bio.length > 1" class="kb-about__bio" v-animate-on-scroll>
           <span class="kb-about__ornament" aria-hidden="true"></span>
           <p v-for="(paragraph, index) in member.bio.slice(1)" :key="index">
+            {{ paragraph }}
+          </p>
+        </div>
+
+        <div
+          v-for="(section, sIndex) in member.sections"
+          :key="sIndex"
+          class="kb-about__bio kb-about__bio--section"
+          v-animate-on-scroll
+        >
+          <span class="kb-about__ornament" aria-hidden="true"></span>
+          <h2 class="text-h2">{{ section.heading }}</h2>
+          <p v-for="(paragraph, index) in section.paragraphs" :key="index">
             {{ paragraph }}
           </p>
         </div>
@@ -86,6 +104,10 @@ defineOptions({
 const loading = ref(true)
 const error = ref<string | null>(null)
 const member = ref<ReturnType<typeof parseTeamContent>[number] | null>(null)
+// Si la URL de la foto llega rota (404, medio borrado en WordPress...), se
+// oculta el marco de la foto igual que cuando no hay ninguna asignada, en
+// vez de mostrar el icono de imagen rota del navegador.
+const photoLoadFailed = ref(false)
 
 useSeoMeta(
   computed(() =>
@@ -314,6 +336,19 @@ onMounted(async () => {
   float: left;
   padding: 4px 8px 0 0;
   color: var(--color-rose-hover);
+}
+
+/* Los subtítulos intermedios de la biografía (<h2> en WordPress) son cada
+   uno su propio bloque ".kb-about__bio": la letra capitular de arriba solo
+   debe verse una vez, al principio de la biografía completa, no repetida en
+   el primer párrafo de cada subtítulo. */
+.kb-about__bio--section p:first-child::first-letter {
+  all: unset;
+}
+
+.kb-about__bio--section h2 {
+  margin-bottom: 16px;
+  color: var(--color-heading);
 }
 
 /* ---------- Formación: bloques apilados de ancho completo (nunca lado a

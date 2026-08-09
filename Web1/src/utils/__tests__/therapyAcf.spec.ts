@@ -61,6 +61,22 @@ describe('parseTherapieAcf', () => {
     expect(() => parseTherapieAcf(acf)).not.toThrow()
   })
 
+  it('drops a block whose title is set but has no items/text (incomplete WordPress entry)', () => {
+    const acf = makeAcf({ how_title: 'Cómo trabajamos', how_description: '' })
+    const result = parseTherapieAcf(acf)
+    expect(result.blocks.some((block) => block.title === 'Cómo trabajamos')).toBe(false)
+    expect(result.blocks).toHaveLength(2)
+  })
+
+  it('drops a block whose content is set but has no title (incomplete WordPress entry)', () => {
+    const acf = makeAcf({ when_title: '' })
+    const result = parseTherapieAcf(acf)
+    expect(result.blocks.some((block) => block.type === 'list' && block.items.includes('Preocupación excesiva'))).toBe(
+      false,
+    )
+    expect(result.blocks).toHaveLength(2)
+  })
+
   it('builds the FAQ list from the question_N/answer_N fields', () => {
     const acf = makeAcf({
       faq_label: 'Dudas frecuentes',

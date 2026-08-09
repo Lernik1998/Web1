@@ -84,8 +84,18 @@
             </span>
           </div>
 
-          <div class="kb-review__stars" aria-hidden="true">
-            <svg v-for="n in starCount(review.rating)" :key="n" viewBox="0 0 20 20" width="15" height="15">
+          <div class="kb-review__stars">
+            <span class="kb-visually-hidden">
+              Valoración: {{ starCount(review.rating) }} de 5 estrellas.
+            </span>
+            <svg
+              v-for="n in starCount(review.rating)"
+              :key="n"
+              viewBox="0 0 20 20"
+              width="15"
+              height="15"
+              aria-hidden="true"
+            >
               <path
                 fill="currentColor"
                 d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1 1 5.79L10 14.77l-5.21 2.74 1-5.79-4.21-4.1 5.82-.85z"
@@ -507,6 +517,20 @@ onMounted(async () => {
   gap: 3px;
   color: #f0a93a;
   margin-bottom: 14px;
+}
+
+/* Visible solo para lectores de pantalla: da la valoración en texto donde
+   las estrellas son puramente decorativas (aria-hidden). */
+.kb-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .kb-review__verified {

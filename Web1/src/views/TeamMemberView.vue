@@ -13,7 +13,13 @@
       <template v-else-if="member">
         <div class="kb-profile__masthead" v-animate-on-scroll>
           <div class="kb-profile__media">
-            <img v-if="photo" :src="photo.image" :alt="member.name" class="kb-profile__image" />
+            <img
+              v-if="photo && !photoLoadFailed"
+              :src="photo.image"
+              :alt="member.name"
+              class="kb-profile__image"
+              @error="photoLoadFailed = true"
+            />
             <div v-else class="kb-profile__placeholder" aria-hidden="true">{{ initials }}</div>
           </div>
 
@@ -88,6 +94,10 @@ const error = ref<string | null>(null)
 const name = ref('')
 const parsed = ref<ReturnType<typeof parseProfesionalAcf> | null>(null)
 const apiPhoto = ref<string | null>(null)
+// Si la URL de la foto llega rota (404, medio borrado en WordPress...), se
+// trata igual que si no hubiera foto: cae al placeholder de iniciales en vez
+// de mostrar el icono de imagen rota del navegador.
+const photoLoadFailed = ref(false)
 
 const member = computed(() => (parsed.value ? { name: name.value, ...parsed.value } : null))
 // La foto viene de la propia API (`hero_image`, un ID de la biblioteca de

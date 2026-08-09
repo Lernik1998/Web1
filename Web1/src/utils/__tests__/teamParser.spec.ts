@@ -105,6 +105,93 @@ describe('parseTeamContent', () => {
     expect(m.bio.join(' ')).not.toContain('Mefascinaba')
   })
 
+  it('does not stop the bio at a paragraph that only PARTLY bolds a phrase mid-sentence', () => {
+    const html = `
+      <p>Maria B. Kanbouri</p>
+      <p><strong>Psicóloga en Denia</strong></p>
+      <p>Soy Maria, <strong>psicóloga en Denia</strong> especializada en adultos.</p>
+      <p>Segundo párrafo de biografía.</p>
+    `
+    const members = parseTeamContent(html)
+    expect(members).toHaveLength(1)
+    const m = members[0]!
+    expect(m.bio).toEqual([
+      'Soy Maria, psicóloga en Denia especializada en adultos.',
+      'Segundo párrafo de biografía.',
+    ])
+  })
+
+  it('still recognizes the role paragraph when a single stray character splits one <strong> into two (e.g. an accent edited in without extending the bold selection)', () => {
+    const html = `
+      <p>Maria B. Kanbouri</p>
+      <p><strong>Psicóloga en D</strong>é<strong>nia para adultos y parejas</strong></p>
+      <p>Biografía.</p>
+    `
+    const members = parseTeamContent(html)
+    expect(members).toHaveLength(1)
+    const m = members[0]!
+    expect(m.role).toBe('Psicóloga en Dénia para adultos y parejas')
+    expect(m.bio).toEqual(['Biografía.'])
+  })
+
+  it('recognizes <h2> section headings for "Formación" labels, and groups paragraphs after an intermediate <h2> subheading into a named section instead of dropping them', () => {
+    const html = `
+      <p>Maria B. Kanbouri</p>
+      <p><strong>Psicóloga en Denia</strong></p>
+      <p>Primer párrafo.</p>
+      <h2 class="wp-block-heading">Mi trayectoria</h2>
+      <p>Segundo párrafo, después del subtítulo.</p>
+      <figure><img src="/foto.jpg" /></figure>
+      <h2 class="wp-block-heading">Formación Académica</h2>
+      <ul><li>Grado en Psicología</li></ul>
+      <h2 class="wp-block-heading">Formación extracurricular</h2>
+      <ul><li>Curso de EMDR</li></ul>
+    `
+    const members = parseTeamContent(html)
+    expect(members).toHaveLength(1)
+    const m = members[0]!
+    expect(m.bio).toEqual(['Primer párrafo.'])
+    expect(m.sections).toEqual([
+      { heading: 'Mi trayectoria', paragraphs: ['Segundo párrafo, después del subtítulo.'] },
+    ])
+    expect(m.photo).toBe('/foto.jpg')
+    expect(m.formacionAcademica).toEqual(['Grado en Psicología'])
+    expect(m.formacionExtra).toEqual(['Curso de EMDR'])
+  })
+
+  it('drops an <h2> subheading that has no paragraphs after it (e.g. immediately followed by another heading)', () => {
+    const html = `
+      <p>Maria B. Kanbouri</p>
+      <p><strong>Psicóloga en Denia</strong></p>
+      <p>Primer párrafo.</p>
+      <h2 class="wp-block-heading">Subtítulo vacío</h2>
+      <h2 class="wp-block-heading">Formación Académica</h2>
+      <ul><li>Grado en Psicología</li></ul>
+    `
+    const members = parseTeamContent(html)
+    const m = members[0]!
+    expect(m.sections).toEqual([])
+    expect(m.formacionAcademica).toEqual(['Grado en Psicología'])
+  })
+
+  it('groups multiple consecutive <h2> subheadings each with their own following paragraphs, in order', () => {
+    const html = `
+      <p>Maria B. Kanbouri</p>
+      <p><strong>Psicóloga en Denia</strong></p>
+      <h2 class="wp-block-heading">Primera sección</h2>
+      <p>Texto de la primera sección.</p>
+      <h2 class="wp-block-heading">Segunda sección</h2>
+      <p>Texto de la segunda sección.</p>
+    `
+    const members = parseTeamContent(html)
+    const m = members[0]!
+    expect(m.bio).toEqual([])
+    expect(m.sections).toEqual([
+      { heading: 'Primera sección', paragraphs: ['Texto de la primera sección.'] },
+      { heading: 'Segunda sección', paragraphs: ['Texto de la segunda sección.'] },
+    ])
+  })
+
   it('returns an empty array for empty input', () => {
     expect(parseTeamContent('')).toEqual([])
   })

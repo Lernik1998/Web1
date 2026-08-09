@@ -28,11 +28,12 @@
       >
         <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__media">
           <img
-            v-if="member.photo"
+            v-if="member.photo && !brokenPhotos.has(member.slug)"
             :src="member.photo.image"
             :alt="member.name"
             class="kb-team-card__image"
             loading="lazy"
+            @error="brokenPhotos.add(member.slug)"
           />
           <div v-else class="kb-team-card__placeholder" aria-hidden="true">
             {{ member.initials }}
@@ -74,6 +75,10 @@ const professionals = ref<ProfesionalPost[]>([])
 // `hero_image` es un ID de la biblioteca de medios, no la imagen destacada
 // del post (que estas fichas no usan), así que hay que resolverlo aparte.
 const photoUrls = ref<Record<number, string>>({})
+// Si la URL de una foto llega rota (404, medio borrado en WordPress...), se
+// trata igual que si no hubiera foto: cae al placeholder de iniciales en vez
+// de mostrar el icono de imagen rota del navegador.
+const brokenPhotos = ref<Set<string>>(new Set())
 
 // María B. Kanbouri (directora del centro) va siempre primera; el resto, por
 // orden alfabético. WordPress por defecto las devuelve por fecha de creación,

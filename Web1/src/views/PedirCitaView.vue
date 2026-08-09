@@ -90,7 +90,9 @@
                 required
                 :class="{ 'is-invalid': emailInvalid }"
               />
-              <span v-if="emailInvalid" class="kb-field-error">Este campo es obligatorio.</span>
+              <span v-if="emailInvalid" class="kb-field-error">
+                {{ emailMalformed ? 'Introduce un email válido.' : 'Este campo es obligatorio.' }}
+              </span>
             </label>
 
             <label class="kb-field">
@@ -311,7 +313,7 @@
           Debes aceptar el contacto para gestionar tu solicitud.
         </span>
 
-        <p v-if="errorMsg" class="kb-appointment__error">{{ errorMsg }}</p>
+        <p v-if="errorMsg" class="kb-appointment__error" role="alert">{{ errorMsg }}</p>
 
         <button
           type="submit"
@@ -534,9 +536,15 @@ watch(isMariaSelected, (selected) => {
   }
 })
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 const nombreInvalid = computed(() => attempted.value && !form.nombre.trim())
 const apellidosInvalid = computed(() => attempted.value && !form.apellidos.trim())
-const emailInvalid = computed(() => attempted.value && !form.email.trim())
+const emailEmpty = computed(() => attempted.value && !form.email.trim())
+const emailMalformed = computed(
+  () => attempted.value && !!form.email.trim() && !EMAIL_PATTERN.test(form.email.trim()),
+)
+const emailInvalid = computed(() => emailEmpty.value || emailMalformed.value)
 const telefonoInvalid = computed(() => attempted.value && !form.telefono.trim())
 const servicioInvalid = computed(() => attempted.value && !form.servicio)
 const modalidadInvalid = computed(() => attempted.value && !form.modalidad)

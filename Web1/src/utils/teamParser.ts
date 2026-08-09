@@ -1,9 +1,17 @@
+export interface TeamBioSection {
+  heading: string
+  paragraphs: string[]
+}
+
 export interface ParsedTeamMember {
   slug: string
   name: string
   role: string
   photo: string | null
+  /** Párrafos de biografía antes del primer subtítulo (<h2>/<h3>), si lo hay. */
   bio: string[]
+  /** Tramos de biografía agrupados bajo cada subtítulo, en el orden en que aparecen. */
+  sections: TeamBioSection[]
   formacionAcademica: string[]
   formacionExtra: string[]
 }
@@ -19,17 +27,39 @@ function slugify(text: string): string {
     .replace(/^-+|-+$/g, '')
 }
 
+// Un párrafo "de etiqueta" (nombre, cargo) es TODO negrita, nada de texto
+// normal de verdad alrededor: no basta con que tenga hijos <strong>, porque
+// un párrafo de biografía normal que solo resalta una frase en negrita en
+// mitad de una oración ("Soy Fulana, **psicóloga en Denia**, especializada
+// en...") también tiene contenido en negrita, y sin esta comprobación se
+// confundía con un verdadero separador de sección, cortando la biografía en
+// ese punto.
+//
+// Se admiten VARIOS <strong> (no solo uno) y una pequeña cantidad de texto
+// suelto entre ellos (hasta `LOOSE_TEXT_TOLERANCE` caracteres): al editar
+// una tilde a mano ("Denia" -> "Dénia") es fácil que la letra nueva quede
+// fuera de la negrita sin querer, partiendo un único <strong> en dos -- eso
+// no debería bastar para que todo el cargo deje de reconocerse.
+const LOOSE_TEXT_TOLERANCE = 2
+
 function isPureStrongParagraph(el: Element): boolean {
-  return (
-    el.tagName === 'P' &&
-    el.children.length === 1 &&
-    el.children[0]?.tagName === 'STRONG' &&
-    !!el.textContent?.trim()
-  )
+  if (el.tagName !== 'P') return false
+  const full = (el.textContent ?? '').trim()
+  if (!full) return false
+
+  const children = [...el.children]
+  if (!children.length || !children.every((child) => child.tagName === 'STRONG')) return false
+
+  const strongLength = children.reduce((sum, child) => sum + (child.textContent ?? '').length, 0)
+  return full.length - strongLength <= LOOSE_TEXT_TOLERANCE
 }
 
+// Los títulos de sección ("Formación académica"...) pueden llegar como
+// párrafo en negrita (convención antigua) o como un encabezado real de
+// WordPress (<h2>/<h3>, al usar el bloque "Encabezado" del editor).
 function isLabelParagraph(el: Element | undefined, keyword: string): boolean {
-  if (!el || el.tagName !== 'P') return false
+  if (!el) return false
+  if (el.tagName !== 'P' && el.tagName !== 'H2' && el.tagName !== 'H3') return false
   return (el.textContent ?? '').toLowerCase().includes(keyword)
 }
 
@@ -118,6 +148,12 @@ export function parseTeamContent(html: string): ParsedTeamMember[] {
     i += role ? 2 : 1
 
     const bio: string[] = []
+    const sections: TeamBioSection[] = []
+    // Mientras no se haya visto ningún subtítulo, los párrafos van a `bio`
+    // (se muestran como intro, antes de cualquier encabezado). En cuanto
+    // aparece un <h2>/<h3> intermedio, los siguientes párrafos se agrupan
+    // bajo ese subtítulo en `sections`, en vez de perderse.
+    let currentSection: TeamBioSection | null = null
     let photo: string | null = null
     while (i < children.length) {
       const el = children[i]
@@ -132,9 +168,25 @@ export function parseTeamContent(html: string): ParsedTeamMember[] {
         continue
       }
 
+      // Subtítulo intermedio dentro de la propia biografía (p. ej. "Mi
+      // trayectoria como psicóloga en Dénia"), no una etiqueta de "Formación"
+      // ni el nombre/cargo de otra ficha.
+      if (el.tagName === 'H2' || el.tagName === 'H3') {
+        const heading = (el.textContent ?? '').replace(/\s+/g, ' ').trim()
+        currentSection = heading ? { heading, paragraphs: [] } : null
+        if (currentSection) sections.push(currentSection)
+        i++
+        continue
+      }
+
       if (el.tagName !== 'P') break
 
-      bio.push(...extractBioParagraphs(el))
+      const paragraphs = extractBioParagraphs(el)
+      if (currentSection) {
+        currentSection.paragraphs.push(...paragraphs)
+      } else {
+        bio.push(...paragraphs)
+      }
       i++
     }
 
@@ -165,7 +217,21 @@ export function parseTeamContent(html: string): ParsedTeamMember[] {
     slugCounts.set(baseSlug, count + 1)
     const slug = count === 0 ? baseSlug : `${baseSlug}-${count + 1}`
 
-    members.push({ slug, name, role, photo, bio, formacionAcademica, formacionExtra })
+    // Un subtítulo sin ningún párrafo detrás (p. ej. dos <h2> seguidos) no
+    // aporta nada que mostrar: se descarta en vez de dejar un encabezado
+    // vacío en la página.
+    const nonEmptySections = sections.filter((section) => section.paragraphs.length > 0)
+
+    members.push({
+      slug,
+      name,
+      role,
+      photo,
+      bio,
+      sections: nonEmptySections,
+      formacionAcademica,
+      formacionExtra,
+    })
   }
 
   return members

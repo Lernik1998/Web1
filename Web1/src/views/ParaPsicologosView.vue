@@ -148,6 +148,16 @@ function splitByBr(html: string): string[] {
     .filter(Boolean)
 }
 
+// `splitByBr` trabaja sobre `innerHTML` (para poder pasar los fragmentos de
+// descripción, con su HTML intacto, por `processWordPressContent`). Los
+// campos que se muestran con interpolación de texto ({{ }}) en vez de
+// `v-html` (título de cada paso, encabezado y texto final) necesitan el
+// texto ya decodificado -- si no, cualquier entidad HTML del original (p.
+// ej. "&amp;") se vería literalmente en pantalla en vez de como "&".
+function toPlainText(html: string): string {
+  return new DOMParser().parseFromString(html, 'text/html').body.textContent?.trim() ?? ''
+}
+
 function parseContent(html: string) {
   const doc = new DOMParser().parseFromString(html, 'text/html')
   const children = Array.from(doc.body.children)
@@ -198,7 +208,7 @@ function parseContent(html: string) {
     const parsedSteps: Step[] = []
     for (let i = 0; i < lines.length; i += 2) {
       parsedSteps.push({
-        title: lines[i] ?? '',
+        title: toPlainText(lines[i] ?? ''),
         description: processWordPressContent(lines[i + 1] ?? ''),
       })
     }
@@ -206,8 +216,8 @@ function parseContent(html: string) {
 
     if (finalParagraph) {
       const finalLines = splitByBr(finalParagraph.innerHTML)
-      finalHeading.value = finalLines[0] ?? ''
-      finalText.value = finalLines[1] ?? ''
+      finalHeading.value = toPlainText(finalLines[0] ?? '')
+      finalText.value = toPlainText(finalLines[1] ?? '')
     }
   }
 }

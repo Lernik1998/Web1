@@ -9,7 +9,11 @@ function escapeForRegExp(value: string): string {
 
 export function setCookie(name: string, value: string, days: number): void {
   const maxAgeSeconds = Math.round(days * 24 * 60 * 60)
-  document.cookie = `${name}=${encodeURIComponent(value)}; max-age=${maxAgeSeconds}; path=/; SameSite=Lax`
+  // `Secure` exige HTTPS para leer/escribir la cookie: se omite en
+  // localhost/http (desarrollo) porque el navegador la rechazaría en ese
+  // contexto, pero se aplica siempre en producción (servida por HTTPS).
+  const secure = location.protocol === 'https:' ? '; Secure' : ''
+  document.cookie = `${name}=${encodeURIComponent(value)}; max-age=${maxAgeSeconds}; path=/; SameSite=Lax${secure}`
 }
 
 export function getCookie(name: string): string | null {

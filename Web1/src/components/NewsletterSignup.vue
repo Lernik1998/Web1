@@ -13,6 +13,21 @@
       </div>
 
       <form v-else class="kb-newsletter__form" novalidate @submit.prevent="handleSubmit">
+        <!-- Campo trampa anti-bot: invisible y no navegable por teclado para
+             personas; los bots que rellenan formularios a ciegas sí lo
+             completan. -->
+        <div class="kb-honeypot" aria-hidden="true">
+          <label for="kb-newsletter-website">No rellenar este campo</label>
+          <input
+            id="kb-newsletter-website"
+            v-model="honeypot"
+            type="text"
+            name="website"
+            tabindex="-1"
+            autocomplete="off"
+          />
+        </div>
+
         <label class="kb-newsletter__field">
           <span class="kb-newsletter__label">Nombre</span>
           <input
@@ -53,7 +68,7 @@
           </span>
         </label>
 
-        <p v-if="errorMsg" class="kb-newsletter__error">{{ errorMsg }}</p>
+        <p v-if="errorMsg" class="kb-newsletter__error" role="alert">{{ errorMsg }}</p>
 
         <button type="submit" class="kb-newsletter__submit text-cta" v-ripple :disabled="submitting">
           {{ submitting ? 'Enviando...' : buttonText }}
@@ -66,6 +81,7 @@
 <script setup lang="ts">
 import { reactive, ref, computed } from 'vue'
 import { subscribeToNewsletter } from '../services/dataService'
+import { getRecaptchaToken } from '../utils/recaptcha'
 
 withDefaults(
   defineProps<{
@@ -89,13 +105,20 @@ const form = reactive({
   privacidad: false,
 })
 
+const honeypot = ref('')
 const submitting = ref(false)
 const submitted = ref(false)
 const errorMsg = ref('')
 const attempted = ref(false)
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 const nombreInvalid = computed(() => attempted.value && !form.nombre.trim())
-const emailInvalid = computed(() => attempted.value && !form.email.trim())
+const emailEmpty = computed(() => attempted.value && !form.email.trim())
+const emailMalformed = computed(
+  () => attempted.value && !!form.email.trim() && !EMAIL_PATTERN.test(form.email.trim()),
+)
+const emailInvalid = computed(() => emailEmpty.value || emailMalformed.value)
 const privacidadInvalid = computed(() => attempted.value && !form.privacidad)
 
 const hasErrors = computed(() => nombreInvalid.value || emailInvalid.value || privacidadInvalid.value)
@@ -105,13 +128,23 @@ async function handleSubmit() {
   errorMsg.value = ''
 
   if (hasErrors.value) {
-    errorMsg.value = 'Falta completar algún campo obligatorio.'
+    errorMsg.value = emailMalformed.value
+      ? 'Introduce un email válido.'
+      : 'Falta completar algún campo obligatorio.'
+    return
+  }
+
+  if (honeypot.value) {
+    // Un bot ha rellenado el campo trampa: simulamos un envío correcto sin
+    // procesar nada, para no delatar que fue detectado.
+    submitted.value = true
     return
   }
 
   submitting.value = true
   try {
-    await subscribeToNewsletter(form.nombre, form.email)
+    const recaptchaToken = await getRecaptchaToken('newsletter')
+    await subscribeToNewsletter(form.nombre, form.email, recaptchaToken)
     submitted.value = true
   } catch {
     errorMsg.value = 'No se ha podido enviar la solicitud. Inténtalo de nuevo en unos minutos.'
@@ -130,6 +163,14 @@ async function handleSubmit() {
 
 .kb-newsletter__intro h2 {
   margin-bottom: 14px;
+}
+
+.kb-honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
 }
 
 .kb-newsletter__lead {
