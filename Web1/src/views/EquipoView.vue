@@ -1,10 +1,12 @@
 <template>
   <section class="kb-team">
     <div class="kb-team__header">
-      <h1 class="kb-team__title text-h1">Nuestro equipo</h1>
+      <h1 class="kb-team__title text-h1">Equipo de psicólogas en Dénia</h1>
       <p class="kb-team__lead text-body">
-        Un equipo de psicólogas cercano y diverso, con un objetivo común:
-        acompañarte con calidez y profesionalidad en cada etapa.
+        Psicólogas colegiadas especializadas en psicología infantil,
+        adolescentes, adultos y terapia de pareja, con atención presencial en
+        Dénia y también online. Un mismo objetivo: acompañarte con calidez y
+        profesionalidad en cada etapa.
       </p>
     </div>
 
@@ -61,9 +63,9 @@ defineOptions({
 })
 
 useSeoMeta(() => ({
-  title: 'Nuestro equipo de psicólogas en Dénia',
+  title: 'Equipo de psicólogas en Dénia',
   description:
-    'Conoce al equipo de Kanbouri Psicología en Dénia: psicólogas especializadas en infantil, adolescentes, adultos y pareja.',
+    'Equipo de psicólogas colegiadas en Dénia: infantil, adolescentes, adultos y terapia de pareja. Atención presencial en Dénia y también online.',
 }))
 
 const loading = ref(true)

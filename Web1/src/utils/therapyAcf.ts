@@ -7,9 +7,16 @@ export interface TherapyBlock {
   text: string
 }
 
+export interface TherapyFaqItem {
+  question: string
+  answer: string
+}
+
 export interface ParsedTherapyContent {
   intro: string
   blocks: TherapyBlock[]
+  faqLabel: string
+  faqs: TherapyFaqItem[]
 }
 
 function collapseWhitespace(text: string): string {
@@ -31,6 +38,21 @@ function splitIntoListItems(text: string): string[] {
  * separador entre elementos de lista.
  */
 export function parseTherapieAcf(acf: TherapieAcf): ParsedTherapyContent {
+  // Hasta 3 pares pregunta/respuesta (campos `question_N`/`answer_N`); se
+  // descarta cualquier par sin pregunta o sin respuesta en vez de mostrar
+  // una entrada vacía en el acordeón.
+  const faqPairs = [
+    { question: acf.question_1, answer: acf.answer_1 },
+    { question: acf.question_2, answer: acf.answer_2 },
+    { question: acf.question_3, answer: acf.answer_3 },
+  ]
+  const faqs = faqPairs
+    .map(({ question, answer }) => ({
+      question: (question ?? '').trim(),
+      answer: (answer ?? '').trim(),
+    }))
+    .filter((item) => item.question && item.answer)
+
   return {
     intro: collapseWhitespace(acf.therapy_description ?? ''),
     blocks: [
@@ -53,5 +75,7 @@ export function parseTherapieAcf(acf: TherapieAcf): ParsedTherapyContent {
         text: '',
       },
     ],
+    faqLabel: (acf.faq_label ?? '').trim() || 'Preguntas frecuentes',
+    faqs,
   }
 }

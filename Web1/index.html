@@ -6,6 +6,22 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Colorea la barra de UI del navegador (Android Chrome, algunos
+         iOS) para que combine con el fondo de la web en vez de quedar en
+         blanco/negro por defecto. Mismo tono que --color-paper. -->
+    <meta name="theme-color" content="#fcfaf6">
+
+    <!-- Cabeceras de seguridad reales (frame-ancestors, X-Frame-Options,
+         Strict-Transport-Security, cacheo de assets...) van en public/.htaccess
+         (Plesk/Apache) -- un <meta> no puede fijarlas. Esta CSP por <meta> es
+         una segunda barrera por si el hosting final no llega a aplicar esas
+         cabeceras: sin script-src 'unsafe-inline', un <script> inyectado vía
+         XSS (p. ej. contenido de WordPress mal saneado) no podría ejecutarse
+         igualmente. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://kanbouripsicologia.com https://secure.gravatar.com https://lh3.googleusercontent.com; connect-src 'self' https://kanbouripsicologia.com https://www.google.com https://www.gstatic.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com; frame-src https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self'"
+    >
 
     <!-- Título/descripción por defecto: los ve cualquier rastreador que no
          ejecute JavaScript, y son los que se muestran un instante antes de

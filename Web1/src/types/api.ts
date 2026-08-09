@@ -143,6 +143,16 @@ export interface TherapieAcf {
   // se deja vacío en WordPress, la tarjeta usa `therapy_description` (el
   // mismo texto que la página propia de la terapia) como respaldo.
   card_description?: string
+  // Preguntas frecuentes (grupo de campos ACF "Preguntas frecuentes"), hasta
+  // 3 pares pregunta/respuesta. Todo opcional: entradas antiguas o sin este
+  // grupo relleno no deben romper la página.
+  faq_label?: string
+  question_1?: string
+  answer_1?: string
+  question_2?: string
+  answer_2?: string
+  question_3?: string
+  answer_3?: string
 }
 
 export interface TherapiePost extends WordPressPost {

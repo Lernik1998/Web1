@@ -19,6 +19,7 @@
             v-model="form.nombre"
             type="text"
             name="nombre"
+            autocomplete="given-name"
             placeholder="Ana"
             required
             :class="{ 'is-invalid': nombreInvalid }"
@@ -31,6 +32,7 @@
             v-model="form.email"
             type="email"
             name="email"
+            autocomplete="email"
             placeholder="ana@ejemplo.com"
             required
             :class="{ 'is-invalid': emailInvalid }"
@@ -170,7 +172,10 @@ async function handleSubmit() {
 
 .kb-newsletter__field input {
   font-family: var(--font-body);
-  font-size: 15px;
+  /* Por debajo de 16px, Safari en iOS hace zoom automático sobre toda la
+     página al tocar el campo -- un salto brusco que rompe la experiencia
+     en móvil. 16px es el mínimo que evita ese comportamiento. */
+  font-size: 16px;
   color: var(--color-on-rose);
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.6);

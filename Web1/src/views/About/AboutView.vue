@@ -91,7 +91,7 @@ useSeoMeta(
   computed(() =>
     member.value
       ? {
-          title: `${member.value.name} — Sobre mí`,
+          title: `${member.value.name} — Psicóloga en Dénia`,
           description: member.value.bio[0]
             ? truncateForMeta(member.value.bio[0])
             : `Conoce a ${member.value.name}, psicóloga en Dénia.`,

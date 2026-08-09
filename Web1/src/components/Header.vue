@@ -18,7 +18,19 @@
 
       <div class="kb-nav-scrim" :class="{ 'is-visible': mobileOpen }" @click="closeAll"></div>
 
-      <nav class="kb-nav" :class="{ 'kb-nav--open': mobileOpen }" aria-label="Navegación principal">
+      <!-- En móvil el panel cerrado solo se mueve fuera de la pantalla con
+           `transform: translateX(100%)` (ver estilos más abajo): sigue en
+           el DOM y, sin `inert`, un usuario tabulando con el teclado podía
+           llegar a sus enlaces aunque fueran invisibles. `inert` los saca
+           del todo del orden de tabulación mientras el menú está cerrado.
+           En escritorio el menú nunca está fuera de pantalla, así que ahí
+           siempre debe quedar interactivo. -->
+      <nav
+        class="kb-nav"
+        :class="{ 'kb-nav--open': mobileOpen }"
+        aria-label="Navegación principal"
+        :inert="!isDesktopNav && !mobileOpen"
+      >
         <ul class="kb-nav__list">
           <li class="kb-nav__item">
             <router-link to="/" class="kb-nav__link" @click="closeAll">Inicio</router-link>

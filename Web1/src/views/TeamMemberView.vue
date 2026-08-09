@@ -109,7 +109,13 @@ useSeoMeta(
   computed(() =>
     member.value
       ? {
-          title: `${member.value.name}${member.value.role ? ` — ${member.value.role}` : ''}`,
+          // El "role" real (p. ej. "Psicóloga para adolescentes, adultos y
+          // parejas en Denia.") es una frase larga pensada para leerse en la
+          // ficha, no para un <title>: metida entera aquí, el título pasaba
+          // de 90 caracteres y Google lo cortaba a la mitad. Se mantiene la
+          // versión completa en la meta description y en el schema.org
+          // Person (más abajo), donde sí tiene sentido.
+          title: `${member.value.name} — Psicóloga en Dénia`,
           description: member.value.bio[0]
             ? truncateForMeta(member.value.bio[0])
             : `${member.value.name}, psicóloga en Kanbouri Psicología, Dénia.`,

@@ -102,7 +102,7 @@ const loading = ref(true)
 const error = ref<string | null>(null)
 
 useSeoMeta(() => ({
-  title: 'Supervisión para psicólogos',
+  title: 'Supervisión clínica para psicólogos',
   description:
     'Espacio de supervisión clínica para psicólogos y profesionales de la salud mental, con Kanbouri Psicología en Dénia.',
 }))

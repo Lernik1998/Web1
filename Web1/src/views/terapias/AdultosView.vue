@@ -45,6 +45,10 @@
           <FaqAccordion :items="faqs" />
         </div>
       </div>
+
+      <div class="kb-therapy__block">
+        <RelatedTherapies :links="relatedLinks" />
+      </div>
     </div>
 
     <div class="kb-therapy__final">
@@ -60,6 +64,7 @@
 
 <script setup lang="ts">
 import FaqAccordion from '../../components/FaqAccordion.vue'
+import RelatedTherapies from '../../components/RelatedTherapies.vue'
 import { useSeoMeta } from '../../composables/useSeoMeta'
 import { useFaqSchema } from '../../composables/useFaqSchema'
 
@@ -78,6 +83,12 @@ const areas = [
   { label: 'Depresión y estado de ánimo', href: '/terapias/adultos/depresion' },
   { label: 'Autoestima y desarrollo personal', href: '/terapias/adultos/autoestima' },
   { label: 'Duelo y pérdidas', href: '/terapias/adultos/duelo' },
+]
+
+const relatedLinks = [
+  { label: 'Psicología infantil', href: '/terapias/infantil' },
+  { label: 'Psicología para adolescentes', href: '/terapias/adolescentes' },
+  { label: 'Psicología para padres y familia', href: '/terapias/padres-familia' },
 ]
 
 const beneficios = [

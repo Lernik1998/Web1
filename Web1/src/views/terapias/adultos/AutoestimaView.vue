@@ -2,6 +2,16 @@
   <section class="kb-therapy">
     <LoadingSpinner v-if="loading" message="Cargando..." />
 
+    <div v-else-if="error" class="kb-therapy__error">
+      <p class="text-body">
+        No se ha podido cargar el contenido de esta página. Por favor,
+        inténtalo de nuevo en unos minutos.
+      </p>
+      <router-link to="/pedir-cita" class="kb-therapy__cta kb-glare text-cta">
+        Pedir cita
+      </router-link>
+    </div>
+
     <template v-else>
       <div class="kb-therapy__header">
         <h1 class="kb-therapy__title text-h1">{{ title }}</h1>
@@ -22,11 +32,15 @@
           <p v-else class="text-body">{{ block.text }}</p>
         </div>
 
-        <div class="kb-therapy__block" v-animate-on-scroll>
-          <h2 class="text-h2">Preguntas frecuentes</h2>
+        <div v-if="content?.faqs.length" class="kb-therapy__block" v-animate-on-scroll>
+          <h2 class="text-h2">{{ content.faqLabel }}</h2>
           <div class="kb-therapy__faq">
-            <FaqAccordion :items="faqs" />
+            <FaqAccordion :items="content.faqs" />
           </div>
+        </div>
+
+        <div class="kb-therapy__block">
+          <RelatedTherapies :links="relatedLinks" />
         </div>
       </div>
 
@@ -51,12 +65,14 @@ import { useSeoMeta, truncateForMeta } from '../../../composables/useSeoMeta'
 import { useFaqSchema } from '../../../composables/useFaqSchema'
 import FaqAccordion from '../../../components/FaqAccordion.vue'
 import LoadingSpinner from '../../../components/LoadingSpinner.vue'
+import RelatedTherapies from '../../../components/RelatedTherapies.vue'
 
 defineOptions({
   name: 'AutoestimaView',
 })
 
 const loading = ref(true)
+const error = ref<string | null>(null)
 const content = ref<ParsedTherapyContent | null>(null)
 const title = ref('Autoestima y desarrollo personal')
 
@@ -68,6 +84,7 @@ onMounted(async () => {
       content.value = parseTherapieAcf(therapy.acf)
     }
   } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Error desconocido'
     console.error('Error fetching adult self-esteem therapy:', err)
   } finally {
     loading.value = false
@@ -77,29 +94,21 @@ onMounted(async () => {
 useSeoMeta(
   computed(() =>
     content.value
-      ? { title: `${title.value} en Dénia`, description: truncateForMeta(content.value.intro) }
+      ? {
+          title: 'Terapia para la autoestima y el desarrollo personal en Dénia',
+          description: truncateForMeta(content.value.intro),
+        }
       : null,
   ),
 )
 
-const faqs = [
-  {
-    question: '¿La autoestima se puede trabajar en terapia?',
-    answer:
-      'Sí, es uno de los procesos más habituales. Trabajamos el origen de esa autocrítica y construimos, paso a paso, una mirada más amable hacia ti mismo/a.',
-  },
-  {
-    question: '¿Cuánto tiempo lleva ver cambios?',
-    answer: 'Los primeros cambios suelen notarse en pocas semanas, aunque consolidarlos lleva su tiempo.',
-  },
-  {
-    question: '¿Sirve si el problema es de siempre, no algo puntual?',
-    answer:
-      'Sí, de hecho es habitual trabajar patrones de larga duración; el proceso puede requerir algo más de tiempo, pero funciona igual.',
-  },
+const relatedLinks = [
+  { label: 'Ansiedad', href: '/terapias/adultos/ansiedad' },
+  { label: 'Depresión y estado de ánimo', href: '/terapias/adultos/depresion' },
+  { label: 'Duelo y pérdidas', href: '/terapias/adultos/duelo' },
 ]
 
-useFaqSchema(() => faqs)
+useFaqSchema(() => content.value?.faqs)
 </script>
 
 <style scoped>
@@ -112,6 +121,16 @@ useFaqSchema(() => faqs)
   max-width: 640px;
   margin: 0 auto 48px;
   text-align: center;
+}
+
+.kb-therapy__error {
+  max-width: 480px;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
 }
 
 .kb-therapy__title {

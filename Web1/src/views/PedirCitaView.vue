@@ -55,6 +55,7 @@
                 v-model="form.nombre"
                 type="text"
                 name="nombre"
+                autocomplete="given-name"
                 placeholder="Ana"
                 required
                 :class="{ 'is-invalid': nombreInvalid }"
@@ -68,6 +69,7 @@
                 v-model="form.apellidos"
                 type="text"
                 name="apellidos"
+                autocomplete="family-name"
                 placeholder="García López"
                 required
                 :class="{ 'is-invalid': apellidosInvalid }"
@@ -83,6 +85,7 @@
                 v-model="form.email"
                 type="email"
                 name="email"
+                autocomplete="email"
                 placeholder="ana@ejemplo.com"
                 required
                 :class="{ 'is-invalid': emailInvalid }"
@@ -96,6 +99,7 @@
                 v-model="form.telefono"
                 type="tel"
                 name="telefono"
+                autocomplete="tel"
                 placeholder="600 000 000"
                 required
                 :class="{ 'is-invalid': telefonoInvalid }"
@@ -353,7 +357,7 @@ defineOptions({
 })
 
 useSeoMeta(() => ({
-  title: 'Pedir cita',
+  title: 'Pedir cita — Psicología en Dénia',
   description:
     'Reserva tu primera sesión de psicología en Dénia, presencial u online. Cuéntanos tu disponibilidad y te contactamos para confirmar la cita.',
 }))
@@ -713,7 +717,11 @@ async function handleSubmit() {
 .kb-field select,
 .kb-field textarea {
   font-family: var(--font-body);
-  font-size: 15px;
+  /* Por debajo de 16px, Safari en iOS hace zoom automático sobre toda la
+     página al tocar el campo -- un salto brusco que rompe la experiencia
+     justo en el formulario de reserva, la página con más intención de
+     conversión del sitio. 16px es el mínimo que evita ese comportamiento. */
+  font-size: 16px;
   color: var(--color-ink);
   background: var(--color-paper);
   border: 1px solid var(--color-line);

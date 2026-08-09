@@ -18,7 +18,11 @@
   --color-rose-soft-wash: rgba(216, 190, 190, 0.35); /* fondo suave sobre --color-paper (hover de listas, filas) */
 
   /* ---------- Gris azulado ---------- */
-  --color-secondary: #8b9399;   /* texto secundario: fechas, etiquetas, apoyo */
+  /* Antes #8b9399: solo 2.99:1 de contraste sobre --color-paper, por debajo
+     del mínimo de accesibilidad AA (4.5:1) para texto normal -- afectaba a
+     fechas, etiquetas y texto de apoyo en toda la web. Este tono mantiene
+     el mismo matiz, pero ya pasa el mínimo con margen (5.3:1). */
+  --color-secondary: #5f6a70;   /* texto secundario: fechas, etiquetas, apoyo */
   --color-ink: #3e4c55;         /* texto principal / párrafos */
   --color-heading: #323d44;     /* encabezados con más peso visual */
 

@@ -60,4 +60,39 @@ describe('parseTherapieAcf', () => {
     const acf = { ...makeAcf(), therapy_description: undefined as unknown as string }
     expect(() => parseTherapieAcf(acf)).not.toThrow()
   })
+
+  it('builds the FAQ list from the question_N/answer_N fields', () => {
+    const acf = makeAcf({
+      faq_label: 'Dudas frecuentes',
+      question_1: '¿Pregunta uno?',
+      answer_1: 'Respuesta uno.',
+      question_2: '¿Pregunta dos?',
+      answer_2: 'Respuesta dos.',
+    })
+    const result = parseTherapieAcf(acf)
+
+    expect(result.faqLabel).toBe('Dudas frecuentes')
+    expect(result.faqs).toEqual([
+      { question: '¿Pregunta uno?', answer: 'Respuesta uno.' },
+      { question: '¿Pregunta dos?', answer: 'Respuesta dos.' },
+    ])
+  })
+
+  it('defaults the FAQ label to "Preguntas frecuentes" when not set', () => {
+    const result = parseTherapieAcf(makeAcf())
+    expect(result.faqLabel).toBe('Preguntas frecuentes')
+  })
+
+  it('drops incomplete FAQ pairs (missing question or answer)', () => {
+    const acf = makeAcf({
+      question_1: '¿Pregunta uno?',
+      answer_1: 'Respuesta uno.',
+      question_2: '¿Pregunta sin respuesta?',
+      answer_2: '',
+      question_3: '',
+      answer_3: 'Respuesta sin pregunta.',
+    })
+    const result = parseTherapieAcf(acf)
+    expect(result.faqs).toEqual([{ question: '¿Pregunta uno?', answer: 'Respuesta uno.' }])
+  })
 })

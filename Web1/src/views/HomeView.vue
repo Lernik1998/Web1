@@ -79,9 +79,13 @@ const adultSubTherapyCards = ref<TherapyCardData[]>([])
 // "Dénia" + las poblaciones cercanas donde también hay pacientes buscando
 // psicólogo, como ya hacía la web anterior con buenos resultados.
 useSeoMeta(() => ({
-  title: 'Kanbouri Psicología Dénia — Terapia para toda la familia',
+  // "Kanbouri Psicología" ya se añade automáticamente al final del <title>
+  // (ver useSeoMeta.ts): repetirlo aquí dejaba el título de la home -- la
+  // página más importante del sitio -- en 78 caracteres con la marca
+  // duplicada dos veces, y Google lo cortaba a la mitad.
+  title: 'Psicología en Dénia para toda la familia',
   description:
-    'Psicología en Dénia y la Marina Alta: terapia infantil, adolescentes, adultos y pareja. Sesiones presenciales en Dénia, Jávea y Ondara, y online allá donde estés.',
+    'Psicología en Dénia y la Marina Alta: terapia infantil, adolescentes, adultos y pareja. Presencial en Dénia, Jávea y Ondara, y online para toda España.',
 }))
 
 const heroProps = computed(() => {

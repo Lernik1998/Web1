@@ -44,6 +44,9 @@ function makeTherapy(overrides: Partial<TherapiePost> = {}): TherapiePost {
       how_description: 'Treatment description text.',
       benefits_title: 'Qué te llevas del proceso',
       benefits_items: 'Benefit one\r\nBenefit two',
+      faq_label: 'Dudas frecuentes',
+      question_1: 'Question one?',
+      answer_1: 'Answer one.',
     },
     ...overrides,
   }
@@ -92,6 +95,30 @@ describe('AnsiedadView', () => {
     const itemTexts = items.map((i) => i.text())
     expect(itemTexts).toContain('Symptom one')
     expect(itemTexts).toContain('Symptom two')
+
+    expect(wrapper.text()).toContain('Dudas frecuentes')
+    expect(wrapper.text()).toContain('Question one?')
+  })
+
+  it('hides the FAQ block when the therapy has no question/answer pairs set', async () => {
+    vi.mocked(fetchTherapieBySlug).mockResolvedValue(
+      makeTherapy({
+        acf: {
+          ...makeTherapy().acf,
+          faq_label: undefined,
+          question_1: undefined,
+          answer_1: undefined,
+        },
+      }),
+    )
+
+    const wrapper = mount(AnsiedadView, {
+      global: { plugins: [router], directives },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).not.toContain('Dudas frecuentes')
   })
 
   it('falls back to the default title and does not crash when the therapy is null', async () => {

@@ -102,14 +102,13 @@ p {
   color: #333;
 }
 
-/* Secondary text */
-.text-secondary {
-  font-family: var(--font-family-inter);
-  font-weight: var(--font-weight-regular);
-  font-size: var(--font-size-secondary);
-  line-height: var(--line-height-normal);
-  color: #8B9399;
-}
+/* La definición real de ".text-secondary" vive en typography.css, con el
+   token --color-secondary (así SÍ hereda el ajuste de contraste hecho en
+   tokens.css). Este archivo se carga después de typography.css, así que
+   tener aquí una segunda regla con el mismo selector y un color heredado
+   sin corregir ganaba en la cascada -- toda la web mostraba fechas,
+   etiquetas y texto de apoyo con el contraste antiguo (2.99:1) sin que el
+   arreglo del token tuviera ningún efecto real. */
 
 .text-secondary-small {
   font-family: var(--font-family-inter);

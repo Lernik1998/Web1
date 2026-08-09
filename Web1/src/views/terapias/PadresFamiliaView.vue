@@ -2,6 +2,16 @@
   <section class="kb-therapy">
     <LoadingSpinner v-if="loading" message="Cargando..." />
 
+    <div v-else-if="error" class="kb-therapy__error">
+      <p class="text-body">
+        No se ha podido cargar el contenido de esta página. Por favor,
+        inténtalo de nuevo en unos minutos.
+      </p>
+      <router-link to="/pedir-cita" class="kb-therapy__cta kb-glare text-cta">
+        Pedir cita
+      </router-link>
+    </div>
+
     <template v-else>
       <div class="kb-therapy__header">
         <h1 class="kb-therapy__title text-h1">{{ title }}</h1>
@@ -22,11 +32,15 @@
           <p v-else class="text-body">{{ block.text }}</p>
         </div>
 
-        <div class="kb-therapy__block" v-animate-on-scroll>
-          <h2 class="text-h2">Preguntas frecuentes</h2>
+        <div v-if="content?.faqs.length" class="kb-therapy__block" v-animate-on-scroll>
+          <h2 class="text-h2">{{ content.faqLabel }}</h2>
           <div class="kb-therapy__faq">
-            <FaqAccordion :items="faqs" />
+            <FaqAccordion :items="content.faqs" />
           </div>
+        </div>
+
+        <div class="kb-therapy__block">
+          <RelatedTherapies :links="relatedLinks" />
         </div>
       </div>
 
@@ -51,12 +65,14 @@ import { useSeoMeta, truncateForMeta } from '../../composables/useSeoMeta'
 import { useFaqSchema } from '../../composables/useFaqSchema'
 import FaqAccordion from '../../components/FaqAccordion.vue'
 import LoadingSpinner from '../../components/LoadingSpinner.vue'
+import RelatedTherapies from '../../components/RelatedTherapies.vue'
 
 defineOptions({
   name: 'PadresFamiliaView',
 })
 
 const loading = ref(true)
+const error = ref<string | null>(null)
 const content = ref<ParsedTherapyContent | null>(null)
 const title = ref('Psicología para padres y familia')
 
@@ -68,6 +84,7 @@ onMounted(async () => {
       content.value = parseTherapieAcf(therapy.acf)
     }
   } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Error desconocido'
     console.error('Error fetching psychology parents therapy:', err)
   } finally {
     loading.value = false
@@ -82,25 +99,13 @@ useSeoMeta(
   ),
 )
 
-const faqs = [
-  {
-    question: '¿Vienen todos los miembros de la familia a la vez?',
-    answer:
-      'Depende del caso: a veces trabajamos solo con los padres, otras con toda la familia junta, según lo que sea más útil.',
-  },
-  {
-    question: '¿Esto es terapia de pareja?',
-    answer:
-      'No necesariamente; nos centramos en la dinámica familiar y la crianza, aunque puede complementarse con terapia de pareja si hace falta.',
-  },
-  {
-    question: '¿Cuánto dura el acompañamiento?',
-    answer:
-      'Muchas familias notan mejoras con un número limitado de sesiones centradas en pautas concretas; otras prefieren un acompañamiento más largo.',
-  },
+const relatedLinks = [
+  { label: 'Psicología infantil', href: '/terapias/infantil' },
+  { label: 'Psicología para adolescentes', href: '/terapias/adolescentes' },
+  { label: 'Psicología para adultos', href: '/terapias/adultos' },
 ]
 
-useFaqSchema(() => faqs)
+useFaqSchema(() => content.value?.faqs)
 </script>
 
 <style scoped>
@@ -113,6 +118,16 @@ useFaqSchema(() => faqs)
   max-width: 640px;
   margin: 0 auto 48px;
   text-align: center;
+}
+
+.kb-therapy__error {
+  max-width: 480px;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
 }
 
 .kb-therapy__title {
