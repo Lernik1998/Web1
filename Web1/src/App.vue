@@ -1,5 +1,5 @@
 <template>
-  <MaintenanceView v-if="maintenanceMode" />
+  <MaintenanceView v-if="!maintenanceMode" />
 
   <template v-else>
     <!-- Antes del propio contenido, sin depender del ratón: invisible salvo
@@ -27,16 +27,16 @@
 </template>
 
 <script setup lang="ts">
-import Header from "./components/Header.vue";
-import Footer from './components/Footer.vue';
-import CookieConsent from './components/CookieConsent.vue';
-import WhatsAppButton from './components/WhatsAppButton.vue';
-import MaintenanceView from './views/MaintenanceView.vue';
+import Header from './components/Header.vue'
+import Footer from './components/Footer.vue'
+import CookieConsent from './components/CookieConsent.vue'
+import WhatsAppButton from './components/WhatsAppButton.vue'
+import MaintenanceView from './views/MaintenanceView.vue'
 
 // Interruptor general de mantenimiento (ver .env, VITE_MAINTENANCE_MODE):
 // activado, sustituye toda la web -- cualquier URL -- por el aviso, sin
 // cabecera, pie ni el resto de la navegación normal.
-const maintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE === 'true'
+const maintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE
 </script>
 
 <style scoped>
@@ -60,7 +60,9 @@ const maintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE === 'true'
 
 .page-fade-enter-active,
 .page-fade-leave-active {
-  transition: opacity 240ms var(--ease-base), transform 240ms var(--ease-base);
+  transition:
+    opacity 240ms var(--ease-base),
+    transform 240ms var(--ease-base);
 }
 
 .page-fade-enter-from {

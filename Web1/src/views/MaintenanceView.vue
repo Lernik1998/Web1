@@ -10,8 +10,8 @@
       <p class="kb-maintenance__eyebrow text-secondary">Mantenimiento en curso</p>
       <h1 class="kb-maintenance__title text-h1">Estamos mejorando la web</h1>
       <p class="kb-maintenance__lead text-body">
-        Estamos haciendo ajustes para ofrecerte una mejor experiencia. Volveremos
-        a estar disponibles en breve, gracias por tu paciencia.
+        Estamos haciendo ajustes para ofrecerte una mejor experiencia. Volveremos a estar
+        disponibles en breve, gracias por tu paciencia.
       </p>
 
       <div class="kb-maintenance__contact">
@@ -125,8 +125,10 @@ const EMAIL = 'gabinete@kanbouripsicologia.com'
   color: var(--color-on-rose);
   text-decoration: none;
   box-shadow: var(--shadow-cta);
-  transition: background-color var(--dur-base) var(--ease-base),
-    transform var(--dur-base) var(--ease-base), box-shadow var(--dur-base) var(--ease-base);
+  transition:
+    background-color var(--dur-base) var(--ease-base),
+    transform var(--dur-base) var(--ease-base),
+    box-shadow var(--dur-base) var(--ease-base);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -142,7 +144,9 @@ const EMAIL = 'gabinete@kanbouripsicologia.com'
   text-decoration: none;
   border-bottom: 1px solid var(--color-line);
   padding-bottom: 2px;
-  transition: color var(--dur-base) var(--ease-base), border-color var(--dur-base) var(--ease-base);
+  transition:
+    color var(--dur-base) var(--ease-base),
+    border-color var(--dur-base) var(--ease-base);
 }
 
 @media (hover: hover) and (pointer: fine) {
