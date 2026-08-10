@@ -10,9 +10,9 @@
         <time :datetime="post.date">{{ formattedDate }}</time>
       </div>
 
-      <h3 class="kb-blog-card__title text-h3">
+      <h2 class="kb-blog-card__title text-h3">
         <router-link :to="`/blog/${post.slug}`">{{ post.title.rendered }}</router-link>
-      </h3>
+      </h2>
 
       <p class="kb-blog-card__excerpt text-secondary">{{ excerpt }}</p>
 

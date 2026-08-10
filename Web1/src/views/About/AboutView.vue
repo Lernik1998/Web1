@@ -9,68 +9,70 @@
       </div>
 
       <template v-else-if="member">
-        <div class="kb-about__masthead" v-animate-on-scroll>
-          <div v-if="member.photo && !photoLoadFailed" class="kb-about__frame">
-            <div class="kb-about__media-decor" aria-hidden="true"></div>
-            <div class="kb-about__media" v-spotlight>
-              <img
-                :src="member.photo"
-                :alt="member.name"
-                class="kb-about__image"
-                @error="photoLoadFailed = true"
-              />
+        <article>
+          <div class="kb-about__masthead" v-animate-on-scroll>
+            <div v-if="member.photo && !photoLoadFailed" class="kb-about__frame">
+              <div class="kb-about__media-decor" aria-hidden="true"></div>
+              <div class="kb-about__media" v-spotlight>
+                <img
+                  :src="member.photo"
+                  :alt="member.name"
+                  class="kb-about__image"
+                  @error="photoLoadFailed = true"
+                />
+              </div>
+            </div>
+
+            <div class="kb-about__intro">
+              <p v-if="member.role" class="kb-about__role">{{ member.role }}</p>
+              <h1 class="kb-about__name text-h1">{{ member.name }}</h1>
+
+              <p v-if="member.bio[0]" class="kb-about__lead">{{ member.bio[0] }}</p>
+
+              <router-link to="/pedir-cita" class="kb-about__cta kb-glare text-cta" v-ripple>
+                Pedir cita
+              </router-link>
             </div>
           </div>
 
-          <div class="kb-about__intro">
-            <p v-if="member.role" class="kb-about__role">{{ member.role }}</p>
-            <h1 class="kb-about__name text-h1">{{ member.name }}</h1>
-
-            <p v-if="member.bio[0]" class="kb-about__lead">{{ member.bio[0] }}</p>
-
-            <router-link to="/pedir-cita" class="kb-about__cta kb-glare text-cta" v-ripple>
-              Pedir cita
-            </router-link>
-          </div>
-        </div>
-
-        <div v-if="member.bio.length > 1" class="kb-about__bio" v-animate-on-scroll>
-          <span class="kb-about__ornament" aria-hidden="true"></span>
-          <p v-for="(paragraph, index) in member.bio.slice(1)" :key="index">
-            {{ paragraph }}
-          </p>
-        </div>
-
-        <div
-          v-for="(section, sIndex) in member.sections"
-          :key="sIndex"
-          class="kb-about__bio kb-about__bio--section"
-          v-animate-on-scroll
-        >
-          <span class="kb-about__ornament" aria-hidden="true"></span>
-          <h2 class="text-h2">{{ section.heading }}</h2>
-          <p v-for="(paragraph, index) in section.paragraphs" :key="index">
-            {{ paragraph }}
-          </p>
-        </div>
-
-        <div class="kb-about__formacion">
-          <div v-if="member.formacionAcademica.length" class="kb-about__block" v-animate-on-scroll>
+          <div v-if="member.bio.length > 1" class="kb-about__bio" v-animate-on-scroll>
             <span class="kb-about__ornament" aria-hidden="true"></span>
-            <h2 class="text-h3">Formación académica</h2>
-            <ul class="kb-about__list">
-              <li v-for="(item, index) in member.formacionAcademica" :key="index">{{ item }}</li>
-            </ul>
+            <p v-for="(paragraph, index) in member.bio.slice(1)" :key="index">
+              {{ paragraph }}
+            </p>
           </div>
 
-          <div v-if="member.formacionExtra.length" class="kb-about__block" v-animate-on-scroll>
+          <div
+            v-for="(section, sIndex) in member.sections"
+            :key="sIndex"
+            class="kb-about__bio kb-about__bio--section"
+            v-animate-on-scroll
+          >
             <span class="kb-about__ornament" aria-hidden="true"></span>
-            <h2 class="text-h3">Formación extracurricular</h2>
-            <ul class="kb-about__list">
-              <li v-for="(item, index) in member.formacionExtra" :key="index">{{ item }}</li>
-            </ul>
+            <h2 class="text-h2">{{ section.heading }}</h2>
+            <p v-for="(paragraph, index) in section.paragraphs" :key="index">
+              {{ paragraph }}
+            </p>
           </div>
-        </div>
+
+          <div class="kb-about__formacion">
+            <div v-if="member.formacionAcademica.length" class="kb-about__block" v-animate-on-scroll>
+              <span class="kb-about__ornament" aria-hidden="true"></span>
+              <h2 class="text-h3">Formación académica</h2>
+              <ul class="kb-about__list">
+                <li v-for="(item, index) in member.formacionAcademica" :key="index">{{ item }}</li>
+              </ul>
+            </div>
+
+            <div v-if="member.formacionExtra.length" class="kb-about__block" v-animate-on-scroll>
+              <span class="kb-about__ornament" aria-hidden="true"></span>
+              <h2 class="text-h3">Formación extracurricular</h2>
+              <ul class="kb-about__list">
+                <li v-for="(item, index) in member.formacionExtra" :key="index">{{ item }}</li>
+              </ul>
+            </div>
+          </div>
+        </article>
 
         <div class="kb-about__closing" v-animate-on-scroll>
           <h2 class="kb-about__closing-title">¿Empezamos a trabajar juntas?</h2>

@@ -67,6 +67,27 @@ describe('processWordPressContent', () => {
   it('returns an empty string for empty input', () => {
     expect(processWordPressContent('')).toBe('')
   })
+
+  it('strips an empty heading block (e.g. an unfilled WordPress "Heading" block) instead of leaving a stray duplicate <h1>', () => {
+    const html = `<h1 class="wp-block-heading"></h1><p>Contenido real.</p>`
+    const out = processWordPressContent(html)
+    expect(out).not.toContain('<h1')
+    expect(out).toContain('Contenido real.')
+  })
+
+  it('strips a heading that only contains whitespace or &nbsp;', () => {
+    const html = `<h2>   </h2><h3>&nbsp;</h3><p>Texto.</p>`
+    const out = processWordPressContent(html)
+    expect(out).not.toContain('<h2')
+    expect(out).not.toContain('<h3')
+    expect(out).toContain('Texto.')
+  })
+
+  it('keeps a heading that has real text', () => {
+    const html = `<h2>Un título real</h2><p>Texto.</p>`
+    const out = processWordPressContent(html)
+    expect(out).toContain('<h2>Un título real</h2>')
+  })
 })
 
 describe('extractTextFromHtml', () => {

@@ -1,5 +1,5 @@
 <template>
-  <MaintenanceView v-if="!maintenanceMode" />
+  <MaintenanceView v-if="maintenanceMode" />
 
   <template v-else>
     <!-- Antes del propio contenido, sin depender del ratón: invisible salvo
@@ -36,7 +36,7 @@ import MaintenanceView from './views/MaintenanceView.vue'
 // Interruptor general de mantenimiento (ver .env, VITE_MAINTENANCE_MODE):
 // activado, sustituye toda la web -- cualquier URL -- por el aviso, sin
 // cabecera, pie ni el resto de la navegación normal.
-const maintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE
+const maintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE === 'true'
 </script>
 
 <style scoped>

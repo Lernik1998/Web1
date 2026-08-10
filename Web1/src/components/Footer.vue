@@ -68,7 +68,7 @@
       </div>
 
       <div class="legal-links">
-        <h3 class="legal-title text-secondary">Legal</h3>
+        <h2 class="legal-title text-secondary">Legal</h2>
         <ul>
           <li><router-link to="/politica-privacidad">Política de privacidad</router-link></li>
           <li><router-link to="/aviso-legal">Aviso legal</router-link></li>

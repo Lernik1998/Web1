@@ -106,6 +106,17 @@ export const processWordPressContent = (html: string): string => {
     (match) => `<div class="kb-table-wrap">${match}</div>`,
   )
 
+  // Encabezados vacíos (p. ej. `<h1 class="wp-block-heading"></h1>`, típico
+  // de un bloque "Encabezado" del editor de WordPress añadido y nunca
+  // rellenado): se descartan en vez de dejarlos en el HTML final. Cada
+  // vista ya pone su propio <h1> real; uno vacío duplicado confunde tanto a
+  // los buscadores como a lectores de pantalla sobre cuál es el título real
+  // de la página, y no aporta nada.
+  processedHtml = processedHtml.replace(
+    /<h[1-6][^>]*>(?:\s|&nbsp;)*<\/h[1-6]>/gi,
+    '',
+  )
+
   // Última barrera antes de que esto se inyecte con v-html: el HTML viene de
   // WordPress, no de este código, así que se sanea igual que cualquier otro
   // contenido de origen externo.

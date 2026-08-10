@@ -188,6 +188,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { fetchGoogleReviews } from '../services/dataService'
+import { useAggregateRatingSchema } from '../composables/useAggregateRatingSchema'
 import type { GoogleReview } from '../types/api'
 
 defineOptions({
@@ -214,6 +215,21 @@ const expanded = ref<Set<string>>(new Set())
 const visibleReviews = computed(() =>
   props.limit ? reviews.value.slice(0, props.limit) : reviews.value,
 )
+
+// La valoración agregada de los datos estructurados representa el negocio
+// real en Google, no solo lo que este componente decida mostrar: se calcula
+// siempre sobre el total de reseñas recibidas (`reviews`), no sobre
+// `visibleReviews` (que puede venir recortada por la prop `limit`).
+const aggregateRating = computed(() => {
+  if (!reviews.value.length) return null
+  const sum = reviews.value.reduce((total, review) => total + parseFloat(review.rating), 0)
+  return {
+    ratingValue: Math.round((sum / reviews.value.length) * 10) / 10,
+    reviewCount: reviews.value.length,
+  }
+})
+
+useAggregateRatingSchema(aggregateRating)
 
 // Se muestran de 3 en 3, con botones para pasar a las siguientes/anteriores,
 // igual que el widget de reseñas de la propia web de Kanbouri. Si el total no

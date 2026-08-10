@@ -56,8 +56,14 @@
     <!-- Datos estructurados (Schema.org): identidad del negocio para
          resultados enriquecidos y para el panel de negocio local de Google
          (dirección, teléfono, horario). Solo datos reales, ya visibles en
-         el pie de página — nada inventado (valoraciones, precios...). -->
-    <script type="application/ld+json">
+         el pie de página — nada inventado (precios, valoraciones falsas...).
+         "aggregateRating" se añade aparte en tiempo de ejecución (ver
+         GoogleReviews.vue / useAggregateRatingSchema.ts) a partir de las
+         reseñas reales de Google que ya se muestran en la portada, para que
+         nunca pueda quedar desactualizado ni inventado en este HTML estático.
+         id="kb-business-schema" es el gancho que usa ese código para
+         localizar y completar este mismo bloque, no uno nuevo. -->
+    <script id="kb-business-schema" type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "MedicalBusiness",
@@ -72,6 +78,11 @@
         "addressLocality": "Dénia",
         "addressRegion": "Alicante",
         "addressCountry": "ES"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 38.8386523,
+        "longitude": 0.1060985
       },
       "areaServed": ["Dénia", "Jávea", "Ondara", "Marina Alta"],
       "openingHoursSpecification": {

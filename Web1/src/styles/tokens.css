@@ -13,8 +13,15 @@
 
   /* ---------- Rosa empolvado ---------- */
   --color-rose-soft: #d8bebe;   /* fondos suaves: citas, badges, testimonios */
-  --color-rose: #be9292;        /* botón / acento en reposo */
-  --color-rose-hover: #987575;  /* botón / acento en hover-activo */
+  /* Antes #be9292 (2.72:1) y #987575 (4.09:1) con texto blanco encima --
+     ambos por debajo del mínimo de accesibilidad AA (4.5:1), y este es el
+     fondo del botón principal "Pedir cita" en TODA la web (cabecera, hero,
+     cada página de terapia, footer...), además del banner de cookies.
+     Mismo matiz y saturación EXACTOS que el original (0°, 25%): solo el
+     mínimo oscurecido imprescindible para pasar el mínimo (4.67:1), casi
+     indistinguible a simple vista del tono de siempre. */
+  --color-rose: #a26363;        /* botón / acento en reposo */
+  --color-rose-hover: #845c5c;  /* botón / acento en hover-activo */
   --color-rose-soft-wash: rgba(216, 190, 190, 0.35); /* fondo suave sobre --color-paper (hover de listas, filas) */
 
   /* ---------- Gris azulado ---------- */

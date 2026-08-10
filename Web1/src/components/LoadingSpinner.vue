@@ -1,11 +1,12 @@
 <template>
-  <div class="loading-spinner">
-    <div class="spinner-dots">
+  <div class="loading-spinner" role="status" aria-live="polite">
+    <div class="spinner-dots" aria-hidden="true">
       <span class="dot"></span>
       <span class="dot"></span>
       <span class="dot"></span>
     </div>
     <p v-if="message" class="loading-message">{{ message }}</p>
+    <span v-else class="kb-visually-hidden">Cargando…</span>
   </div>
 </template>
 
@@ -67,5 +68,17 @@ defineProps<{
   color: var(--color-secondary);
   margin: 0;
   text-align: center;
+}
+
+.kb-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>

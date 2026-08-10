@@ -10,7 +10,7 @@
         <p class="text-secondary">Verifica que la API esté accesible.</p>
       </div>
 
-      <template v-else-if="member">
+      <article v-else-if="member">
         <div class="kb-profile__masthead" v-animate-on-scroll>
           <div class="kb-profile__media">
             <img
@@ -63,7 +63,7 @@
             </ul>
           </div>
         </div>
-      </template>
+      </article>
 
       <div v-else class="kb-profile__error">
         <p>No se encontró a esta profesional.</p>

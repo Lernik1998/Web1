@@ -40,7 +40,7 @@
           </div>
         </router-link>
         <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__name-link">
-          <h3 class="kb-team-card__name text-h3">{{ member.name }}</h3>
+          <h2 class="kb-team-card__name text-h3">{{ member.name }}</h2>
         </router-link>
 
         <router-link :to="`/equipo/${member.slug}`" class="kb-team-card__link text-cta" v-ripple>
