@@ -24,6 +24,7 @@ import {
   fetchTherapieBySlug,
   fetchCookieSetting,
   fetchMapsSetting,
+  fetchFooterInformation,
   fetchBlogPosts,
   fetchBlogPostBySlug,
   fetchGoogleReviews,
@@ -224,6 +225,22 @@ describe('dataService', () => {
     it('returns null when there is no setting configured', async () => {
       mockedGet.mockResolvedValueOnce({ data: [] })
       const result = await fetchMapsSetting()
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('fetchFooterInformation', () => {
+    it('requests the footer-information post and returns the first match', async () => {
+      const post = { id: 1062, slug: 'footer' }
+      mockedGet.mockResolvedValueOnce({ data: [post] })
+      const result = await fetchFooterInformation()
+      expect(mockedGet).toHaveBeenCalledWith('/wp-json/wp/v2/footer-information?slug=footer')
+      expect(result).toEqual(post)
+    })
+
+    it('returns null when there is no footer-information post configured', async () => {
+      mockedGet.mockResolvedValueOnce({ data: [] })
+      const result = await fetchFooterInformation()
       expect(result).toBeNull()
     })
   })

@@ -198,6 +198,25 @@ export interface MapsSettingPost extends WordPressPost {
   acf: MapsSettingAcf
 }
 
+// Campos ACF del custom post type "footer-information" (un único post con
+// slug "footer"): datos de contacto reales del centro (dirección, teléfono,
+// email, horario), editables desde WordPress en vez de fijos en el código.
+export interface FooterInformationAcf {
+  address: string
+  address_link: {
+    title: string
+    url: string
+    target: string
+  }
+  phone: string
+  email: string
+  schedule: string
+}
+
+export interface FooterInformationPost extends WordPressPost {
+  acf: FooterInformationAcf
+}
+
 // Reseñas de Google, expuestas por un endpoint propio del WordPress
 // (wp-json/kanbouri/v1/reviews), no por la API estándar de WP.
 export interface GoogleReview {

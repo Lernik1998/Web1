@@ -83,35 +83,32 @@
           <p class="contact-line__label text-secondary">Dirección</p>
           <a
             class="contact-line__value contact-line__link"
-            href="https://www.google.com/maps/search/?api=1&query=C%2F%20Sant%20Josep%2031%2C%20D%C3%A9nia%20(Alicante)"
+            :href="addressMapUrl"
             target="_blank"
             rel="noopener noreferrer"
           >
-            C/ Sant Josep 31, Planta Baja Izquierda · Dénia (Alicante)
+            {{ address }}
           </a>
         </div>
 
         <div class="contact-line__group">
           <p class="contact-line__label text-secondary">Teléfono</p>
-          <a class="contact-line__value contact-line__link" href="tel:+34629538062">
-            +34 629 538 062
+          <a class="contact-line__value contact-line__link" :href="phoneHref">
+            {{ phone }}
           </a>
         </div>
 
         <div class="contact-line__group">
           <p class="contact-line__label text-secondary">Email</p>
-          <a
-            class="contact-line__value contact-line__link"
-            href="mailto:gabinete@kanbouripsicologia.com"
-          >
-            gabinete@kanbouripsicologia.com
+          <a class="contact-line__value contact-line__link" :href="emailHref">
+            {{ email }}
           </a>
         </div>
 
         <div class="contact-line__group">
           <p class="contact-line__label text-secondary">Horario</p>
           <p class="contact-line__value">
-            Lunes a Viernes · 12:00 a 20:00 ·
+            {{ schedule }}
             <router-link to="/pedir-cita" class="contact-line__link">Con cita previa</router-link>
           </p>
         </div>
@@ -142,8 +139,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { fetchMapsSetting } from '../services/dataService'
+import { ref, computed, onMounted } from 'vue'
+import { fetchMapsSetting, fetchFooterInformation } from '../services/dataService'
 import { parseStreetViewUrl, buildStreetViewEmbedSrc } from '../utils/googleMapsUrl'
 
 defineOptions({
@@ -160,22 +157,53 @@ const FALLBACK_STREET_VIEW_SRC =
 const mapEnabled = ref(true)
 const mapSrc = ref(FALLBACK_STREET_VIEW_SRC)
 
+// Datos de contacto: valores por defecto (los reales, ya publicados) que se
+// muestran de inmediato y se sustituyen, si llegan, por los que gestiona la
+// clínica desde WordPress (custom post type "footer-information", slug
+// "footer") vía fetchFooterInformation() -- igual que el resto de settings
+// del footer (mapa, cookies), para que la web nunca dependa de que la API
+// responda a tiempo para mostrar algo correcto.
+const address = ref('C/ Sant Josep 31, Planta Baja Izquierda · Dénia (Alicante)')
+const addressMapUrl = ref(
+  'https://www.google.com/maps/search/?api=1&query=C%2F%20Sant%20Josep%2031%2C%20D%C3%A9nia%20(Alicante)',
+)
+const phone = ref('+34 629 538 062')
+const email = ref('gabinete@kanbouripsicologia.com')
+const schedule = ref('Lunes a Viernes · 12:00 a 20:00 ·')
+
+const phoneHref = computed(() => `tel:${phone.value.replace(/\s+/g, '')}`)
+const emailHref = computed(() => `mailto:${email.value}`)
+
 onMounted(async () => {
   try {
     const setting = await fetchMapsSetting()
     const acf = setting?.acf
-    if (!acf) return
+    if (acf) {
+      mapEnabled.value = acf.enabled !== false
 
-    mapEnabled.value = acf.enabled !== false
-
-    const parsed = parseStreetViewUrl(acf.embed_url ?? '')
-    if (parsed) {
-      mapSrc.value = buildStreetViewEmbedSrc(parsed)
+      const parsed = parseStreetViewUrl(acf.embed_url ?? '')
+      if (parsed) {
+        mapSrc.value = buildStreetViewEmbedSrc(parsed)
+      }
+      // Si no se pudo parsear (p. ej. es un enlace corto maps.app.goo.gl), se
+      // mantiene el encuadre de respaldo ya cargado en mapSrc.
     }
-    // Si no se pudo parsear (p. ej. es un enlace corto maps.app.goo.gl), se
-    // mantiene el encuadre de respaldo ya cargado en mapSrc.
   } catch (err) {
     console.error('Error fetching maps setting:', err)
+  }
+
+  try {
+    const footerInfo = await fetchFooterInformation()
+    const acf = footerInfo?.acf
+    if (!acf) return
+
+    if (acf.address) address.value = acf.address
+    if (acf.address_link?.url) addressMapUrl.value = acf.address_link.url
+    if (acf.phone) phone.value = acf.phone
+    if (acf.email) email.value = acf.email
+    if (acf.schedule) schedule.value = acf.schedule
+  } catch (err) {
+    console.error('Error fetching footer information:', err)
   }
 })
 </script>
