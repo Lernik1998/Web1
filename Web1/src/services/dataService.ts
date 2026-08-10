@@ -8,6 +8,7 @@ import type {
   TherapiePost,
   CookieSettingPost,
   MapsSettingPost,
+  FooterInformationPost,
   GoogleReview,
   PageSlug,
 } from '../types/api'
@@ -53,6 +54,15 @@ export const fetchCookieSetting = async (): Promise<CookieSettingPost | null> =>
 // mostrar (custom post type "setting", único post con slug "maps").
 export const fetchMapsSetting = async (): Promise<MapsSettingPost | null> => {
   const response = await apiClient.get<MapsSettingPost[]>('/wp-json/wp/v2/setting?slug=maps')
+  return response.data.length > 0 ? (response.data[0] ?? null) : null
+}
+
+// Datos de contacto del footer (dirección, teléfono, email, horario):
+// custom post type "footer-information", único post con slug "footer".
+export const fetchFooterInformation = async (): Promise<FooterInformationPost | null> => {
+  const response = await apiClient.get<FooterInformationPost[]>(
+    '/wp-json/wp/v2/footer-information?slug=footer',
+  )
   return response.data.length > 0 ? (response.data[0] ?? null) : null
 }
 

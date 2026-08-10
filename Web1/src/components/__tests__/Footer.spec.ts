@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises, RouterLinkStub } from '@vue/test-utils'
 import Footer from '../Footer.vue'
-import { fetchMapsSetting } from '../../services/dataService'
-import type { MapsSettingPost } from '../../types/api'
+import { fetchMapsSetting, fetchFooterInformation } from '../../services/dataService'
+import type { MapsSettingPost, FooterInformationPost } from '../../types/api'
 
 vi.mock('../../services/dataService', () => ({
   fetchMapsSetting: vi.fn<() => Promise<MapsSettingPost | null>>(),
+  fetchFooterInformation: vi.fn<() => Promise<FooterInformationPost | null>>(),
 }))
 
 const directives = { 'animate-on-scroll': {}, spotlight: {}, ripple: {} }
@@ -18,6 +19,21 @@ function makeMapsSetting(acf: Partial<MapsSettingPost['acf']> = {}): MapsSetting
       ...acf,
     },
   } as MapsSettingPost
+}
+
+function makeFooterInformation(
+  acf: Partial<FooterInformationPost['acf']> = {},
+): FooterInformationPost {
+  return {
+    acf: {
+      address: 'C/ Sant Josep 31, Planta Baja Izquierda · Dénia (Alicante)',
+      address_link: { title: '', url: 'https://maps.example.com/kanbouri', target: '_blank' },
+      phone: '+34 629 538 062',
+      email: 'gabinete@kanbouripsicologia.com',
+      schedule: 'Lunes a Viernes · 12:00 a 20:00 ·',
+      ...acf,
+    },
+  } as FooterInformationPost
 }
 
 async function mountFooter() {
@@ -35,6 +51,8 @@ describe('Footer', () => {
   beforeEach(() => {
     vi.mocked(fetchMapsSetting).mockReset()
     vi.mocked(fetchMapsSetting).mockResolvedValue(null)
+    vi.mocked(fetchFooterInformation).mockReset()
+    vi.mocked(fetchFooterInformation).mockResolvedValue(null)
   })
 
   it('renders brand, contact info and legal links', async () => {
@@ -101,5 +119,64 @@ describe('Footer', () => {
 
     const src = wrapper.find('.footer-map__frame').attributes('src')
     expect(src).toContain('cbll=38.8386523,0.1060985')
+  })
+
+  it('uses the hardcoded contact defaults when there is no WordPress footer-information setting yet', async () => {
+    const wrapper = await mountFooter()
+
+    expect(wrapper.text()).toContain('C/ Sant Josep 31, Planta Baja Izquierda · Dénia (Alicante)')
+    expect(wrapper.text()).toContain('+34 629 538 062')
+    expect(wrapper.text()).toContain('gabinete@kanbouripsicologia.com')
+    expect(wrapper.text()).toContain('Lunes a Viernes · 12:00 a 20:00 ·')
+    expect(wrapper.find('a[href="tel:+34629538062"]').exists()).toBe(true)
+    expect(wrapper.find('a[href="mailto:gabinete@kanbouripsicologia.com"]').exists()).toBe(true)
+  })
+
+  it('replaces the contact info with the values from the WordPress "footer-information" post', async () => {
+    vi.mocked(fetchFooterInformation).mockResolvedValue(
+      makeFooterInformation({
+        address: 'Calle Nueva 42, Dénia',
+        address_link: { title: '', url: 'https://maps.example.com/nueva', target: '_blank' },
+        phone: '+34 600 111 222',
+        email: 'nuevo@kanbouripsicologia.com',
+        schedule: 'Lunes a Sábado · 09:00 a 21:00 ·',
+      }),
+    )
+
+    const wrapper = await mountFooter()
+
+    expect(wrapper.text()).toContain('Calle Nueva 42, Dénia')
+    expect(wrapper.text()).not.toContain('C/ Sant Josep 31')
+    expect(wrapper.text()).toContain('+34 600 111 222')
+    expect(wrapper.text()).toContain('nuevo@kanbouripsicologia.com')
+    expect(wrapper.text()).toContain('Lunes a Sábado · 09:00 a 21:00 ·')
+
+    const addressLink = wrapper.find('a[href="https://maps.example.com/nueva"]')
+    expect(addressLink.exists()).toBe(true)
+    expect(addressLink.attributes('target')).toBe('_blank')
+    expect(addressLink.attributes('rel')).toBe('noopener noreferrer')
+
+    expect(wrapper.find('a[href="tel:+34600111222"]').exists()).toBe(true)
+    expect(wrapper.find('a[href="mailto:nuevo@kanbouripsicologia.com"]').exists()).toBe(true)
+  })
+
+  it('keeps the hardcoded defaults for any field left empty in WordPress instead of showing a blank value', async () => {
+    vi.mocked(fetchFooterInformation).mockResolvedValue(
+      makeFooterInformation({ phone: '', email: '' }),
+    )
+
+    const wrapper = await mountFooter()
+
+    expect(wrapper.text()).toContain('+34 629 538 062')
+    expect(wrapper.text()).toContain('gabinete@kanbouripsicologia.com')
+  })
+
+  it('does not break the rest of the footer when fetchFooterInformation rejects', async () => {
+    vi.mocked(fetchFooterInformation).mockRejectedValue(new Error('network error'))
+
+    const wrapper = await mountFooter()
+
+    expect(wrapper.text()).toContain('+34 629 538 062')
+    expect(wrapper.find('.footer-map').exists()).toBe(true)
   })
 })
