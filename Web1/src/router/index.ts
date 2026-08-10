@@ -100,17 +100,17 @@ const router = createRouter({
     {
       path: '/politica-privacidad',
       name: 'politica-privacidad',
-      component: () => import('../views/legal/PoliticaPrivacidadView.vue'),
+      component: () => import('../views/Legal/PoliticaPrivacidadView.vue'),
     },
     {
       path: '/aviso-legal',
       name: 'aviso-legal',
-      component: () => import('../views/legal/AvisoLegalView.vue'),
+      component: () => import('../views/Legal/AvisoLegalView.vue'),
     },
     {
       path: '/politica-cookies',
       name: 'politica-cookies',
-      component: () => import('../views/legal/PoliticaCookiesView.vue'),
+      component: () => import('../views/Legal/PoliticaCookiesView.vue'),
     },
     {
       path: '/:pathMatch(.*)*',

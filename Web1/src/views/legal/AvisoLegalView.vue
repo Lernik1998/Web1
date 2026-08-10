@@ -26,12 +26,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { processWordPressContent } from '../../utils/contentProcessor'
-import { useInternalLinks } from '../../composables/useInternalLinks'
-import { fetchAvisoLegalPage } from '../../services/dataService'
-import { useSeoMeta } from '../../composables/useSeoMeta'
+import { processWordPressContent } from '../../utils/contentProcessor.ts'
+import { useInternalLinks } from '../../composables/useInternalLinks.ts'
+import { fetchAvisoLegalPage } from '../../services/dataService.ts'
+import { useSeoMeta } from '../../composables/useSeoMeta.ts'
 import LoadingSpinner from '../../components/LoadingSpinner.vue'
-import type { WordPressPage } from '../../types/api'
+import type { WordPressPage } from '../../types/api.ts'
 
 defineOptions({
   name: 'AvisoLegalView',
