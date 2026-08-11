@@ -117,6 +117,17 @@ export const processWordPressContent = (html: string): string => {
     '',
   )
 
+  // Un `<h1>` con texto real dentro del contenido de WordPress (el editor
+  // puede escribir uno sin darse cuenta, usando el bloque "Encabezado" con
+  // el nivel por defecto): cada vista ya pone su propio `<h1>` real fuera de
+  // este HTML, así que dejarlo tal cual produciría DOS `<h1>` distintos en
+  // la misma página -- confunde a los buscadores sobre cuál es el título
+  // real. Se baja a `<h2>` en vez de eliminarlo (a diferencia del caso
+  // vacío de arriba) para no perder texto editorial real.
+  processedHtml = processedHtml
+    .replace(/<h1(\s[^>]*)?>/gi, '<h2$1>')
+    .replace(/<\/h1>/gi, '</h2>')
+
   // Última barrera antes de que esto se inyecte con v-html: el HTML viene de
   // WordPress, no de este código, así que se sanea igual que cualquier otro
   // contenido de origen externo.

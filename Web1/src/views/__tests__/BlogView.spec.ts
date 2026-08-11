@@ -106,7 +106,7 @@ describe('BlogView', () => {
     expect(wrapper.find('.kb-blog__pagination').exists()).toBe(false)
   })
 
-  it('requests the next page and disables the boundary buttons', async () => {
+  it('marks the first-page boundary as inert and links to the next page for real', async () => {
     vi.mocked(fetchBlogPosts).mockResolvedValue({
       posts: [makePost(1, 'primer-articulo', 'Primer artículo')],
       totalPages: 3,
@@ -119,14 +119,47 @@ describe('BlogView', () => {
     await flushPromises()
     await wrapper.vm.$nextTick()
 
-    const [prevButton, nextButton] = wrapper.findAll('.kb-blog__page-btn')
-    expect(prevButton?.attributes('disabled')).toBeDefined()
-    expect(nextButton?.attributes('disabled')).toBeUndefined()
+    // "Anteriores" en la página 1: texto suelto, no un enlace (no hay página anterior).
+    const prevMarker = wrapper.find('[aria-disabled="true"]')
+    expect(prevMarker.text()).toContain('Anteriores')
+    expect(prevMarker.element.tagName).toBe('SPAN')
 
-    await nextButton?.trigger('click')
+    // "Siguientes": un <a href> real, no un botón con @click -- así lo puede
+    // seguir un rastreador que no ejecute JavaScript.
+    const nextLink = wrapper.find('a.kb-blog__page-btn')
+    expect(nextLink.attributes('href')).toBe('/blog/pagina/2')
+  })
+
+  it('loads the matching page of posts when the page prop changes (route navigation)', async () => {
+    vi.mocked(fetchBlogPosts).mockResolvedValue({
+      posts: [makePost(1, 'primer-articulo', 'Primer artículo')],
+      totalPages: 3,
+    })
+
+    await router.push('/blog')
+    await router.isReady()
+    const wrapper = mount(BlogView, { global: globalStubs })
+    await flushPromises()
+
+    await wrapper.setProps({ page: '2' })
     await flushPromises()
 
     expect(fetchBlogPosts).toHaveBeenLastCalledWith(2)
     expect(wrapper.text()).toContain('Página 2 de 3')
+  })
+
+  it('treats an invalid page prop as page 1', async () => {
+    vi.mocked(fetchBlogPosts).mockResolvedValue({
+      posts: [makePost(1, 'primer-articulo', 'Primer artículo')],
+      totalPages: 1,
+    })
+
+    await router.push('/blog')
+    await router.isReady()
+    mount(BlogView, { global: globalStubs, props: { page: 'no-es-un-numero' } })
+
+    await flushPromises()
+
+    expect(fetchBlogPosts).toHaveBeenLastCalledWith(1)
   })
 })

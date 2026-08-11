@@ -29,26 +29,62 @@
   </FilesMatch>
 </IfModule>
 
-# index.html sí cambia de contenido con cada despliegue sin cambiar de
-# nombre (referencia los assets con hash nuevo cada vez): debe revalidarse
-# siempre para que un visitante recurrente reciba la versión publicada.
+# index.html (el de la portada y el de cada ruta pre-renderizada, en todas
+# las carpetas: FilesMatch compara por nombre de archivo, no por ruta
+# completa) y app-shell.html sí cambian de contenido con cada despliegue sin
+# cambiar de nombre (referencian los assets con hash nuevo cada vez): deben
+# revalidarse siempre para que un visitante recurrente reciba la versión
+# publicada, nunca la cacheada de un despliegue anterior.
 <IfModule mod_headers.c>
-  <FilesMatch "^index\.html$">
+  <FilesMatch "^(index|app-shell)\.html$">
     Header always set Cache-Control "public, max-age=0, must-revalidate"
   </FilesMatch>
 </IfModule>
 
+# Todo el sitio usa un único dominio canónico, sin "www" (es el que llevan
+# el <link rel="canonical">, el JSON-LD y el sitemap.xml). Sin esta
+# redirección, "www.kanbouripsicologia.com" serviría el mismo contenido en
+# una URL distinta -- contenido duplicado a ojos de los buscadores, y
+# repartiría enlaces/autoridad entre las dos versiones en vez de una sola.
+# 301 (permanente) para que ese reparto se consolide en la versión sin "www".
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTP_HOST} ^www\.kanbouripsicologia\.com$ [NC]
+  RewriteRule ^ https://kanbouripsicologia.com%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# El build (ver scripts/prerender.mjs) deja un index.html ya pre-renderizado
+# dentro de la carpeta de cada ruta real (p. ej. terapias/adultos/ansiedad/
+# index.html), para que un rastreador que no ejecute JavaScript reciba el
+# contenido real en vez de la app vacía. Sin esta regla, Apache trataría esa
+# URL como un directorio y respondería con un 301 añadiendo la barra final
+# (.../ansiedad -> .../ansiedad/) antes de servir el archivo -- un salto de
+# redirección extra, y con barra final, que no coincide con la URL canónica
+# sin barra que usan el <link rel="canonical">, el JSON-LD y el sitemap.
+# Esta regla sirve ese index.html directamente, en la misma URL, sin redirigir.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteCond %{REQUEST_FILENAME}/index.html -f
+  RewriteRule ^(.*[^/])$ $1/index.html [L]
+</IfModule>
+
 # SPA (vue-router en modo history): sin esto, entrar directamente a una URL
-# como /terapias/adultos/ansiedad o recargar la página ahí devuelve un 404
-# real de Apache, porque no existe ningún archivo con ese nombre -- solo
-# vue-router, ya cargado en el navegador, sabe resolverla. Esta regla deja
-# pasar archivos y carpetas que sí existen (JS, CSS, imágenes, sitemap.xml,
-# robots.txt...) tal cual, y todo lo demás lo redirige a index.html para que
-# sea vue-router quien decida qué mostrar.
+# como /pedir-cita o recargar la página ahí devuelve un 404 real de Apache,
+# porque no existe ningún archivo con ese nombre -- solo vue-router, ya
+# cargado en el navegador, sabe resolverla. Esta regla deja pasar archivos y
+# carpetas que sí existen (JS, CSS, imágenes, sitemap.xml, robots.txt, las
+# rutas ya pre-renderizadas arriba...) tal cual, y todo lo demás va a
+# app-shell.html (el HTML neutro de la app, sin el contenido de ninguna
+# página en concreto) para que sea vue-router quien decida qué mostrar. Se
+# usa app-shell.html en vez de index.html a propósito: index.html es ahora
+# el HTML ya pre-renderizado de la portada, y serviría su título/descripción
+# equivocados en cualquier URL que no reconozca este archivo.
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
+  RewriteRule . /app-shell.html [L]
 </IfModule>

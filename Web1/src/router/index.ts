@@ -86,6 +86,15 @@ const router = createRouter({
       name: 'blog',
       component: () => import('../views/BlogView.vue'),
     },
+    // Prefijo propio ("pagina", con dos segmentos), no "/blog/:page(\\d+)":
+    // así no hay ninguna ambigüedad posible con "/blog/:slug" de abajo (un
+    // artículo real nunca tendrá como slug justo "pagina").
+    {
+      path: '/blog/pagina/:page(\\d+)',
+      name: 'blog-pagina',
+      component: () => import('../views/BlogView.vue'),
+      props: true,
+    },
     {
       path: '/blog/:slug',
       name: 'blog-post',

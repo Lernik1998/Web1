@@ -88,6 +88,14 @@ describe('processWordPressContent', () => {
     const out = processWordPressContent(html)
     expect(out).toContain('<h2>Un título real</h2>')
   })
+
+  it('downgrades a non-empty h1 from WordPress content to h2, keeping its attributes and text', () => {
+    const html = `<h1 class="wp-block-heading">Título escrito por error como H1</h1><p>Texto.</p>`
+    const out = processWordPressContent(html)
+    expect(out).not.toContain('<h1')
+    expect(out).not.toContain('</h1>')
+    expect(out).toContain('<h2 class="wp-block-heading">Título escrito por error como H1</h2>')
+  })
 })
 
 describe('extractTextFromHtml', () => {

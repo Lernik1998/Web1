@@ -94,7 +94,14 @@ useSeoMeta(
     return {
       title: extractTextFromHtml(post.value.title.rendered, 70),
       description: truncateForMeta(extractTextFromHtml(rawExcerpt, 400)),
-      image: featuredMediaUrl.value ?? undefined,
+      // Mismos dos primeros niveles de respaldo que la imagen visible de la
+      // página (ver `imageUrl` más arriba): si no hay destacada pero sí una
+      // imagen real en el contenido, esa debe ser la miniatura al compartir
+      // el enlace, no el logo genérico. Se omite el tercer nivel (la foto
+      // fija de respaldo) porque es una ruta relativa, no una URL absoluta
+      // como exige Open Graph -- si no hay ninguna imagen real, se deja sin
+      // definir y useSeoMeta usa su propio valor por defecto (ya absoluto).
+      image: featuredMediaUrl.value ?? contentFallbackImageUrl.value ?? undefined,
       type: 'article',
     }
   }),

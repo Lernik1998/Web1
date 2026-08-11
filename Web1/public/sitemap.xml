@@ -152,26 +152,41 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://kanbouripsicologia.com/blog/pagina/2</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://kanbouripsicologia.com/blog/pagina/3</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://kanbouripsicologia.com/blog/pagina/4</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
     <loc>https://kanbouripsicologia.com/equipo/maria-antaryami-alcantara</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://kanbouripsicologia.com/equipo/ester-pinedo-gil</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://kanbouripsicologia.com/equipo/beatriz-donet</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://kanbouripsicologia.com/equipo/maria-b-kanbouri</loc>
-    <lastmod>2026-08-07</lastmod>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>

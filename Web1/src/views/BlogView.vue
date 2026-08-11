@@ -47,23 +47,29 @@
         </div>
 
         <nav v-if="totalPages > 1" class="kb-blog__pagination" aria-label="Paginación del blog">
-          <button
-            type="button"
+          <!-- Enlaces reales (<a href>), no botones con @click: así un
+               rastreador que no ejecute JavaScript (o que no simule clics)
+               puede seguir la ruta hasta las páginas siguientes y descubrir
+               el resto de artículos, no solo los de la primera página. -->
+          <router-link
+            v-if="pageNumber > 1"
+            :to="pagePath(pageNumber - 1)"
             class="kb-blog__page-btn"
-            :disabled="page <= 1"
-            @click="goToPage(page - 1)"
           >
             ← Anteriores
-          </button>
-          <span class="kb-blog__page-status text-secondary">Página {{ page }} de {{ totalPages }}</span>
-          <button
-            type="button"
+          </router-link>
+          <span v-else class="kb-blog__page-btn" aria-disabled="true">← Anteriores</span>
+
+          <span class="kb-blog__page-status text-secondary">Página {{ pageNumber }} de {{ totalPages }}</span>
+
+          <router-link
+            v-if="pageNumber < totalPages"
+            :to="pagePath(pageNumber + 1)"
             class="kb-blog__page-btn"
-            :disabled="page >= totalPages"
-            @click="goToPage(page + 1)"
           >
             Siguientes →
-          </button>
+          </router-link>
+          <span v-else class="kb-blog__page-btn" aria-disabled="true">Siguientes →</span>
         </nav>
       </template>
     </div>
@@ -71,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { fetchBlogPosts } from '../services/dataService'
 import { useSeoMeta } from '../composables/useSeoMeta'
 import BlogCard from '../components/BlogCard.vue'
@@ -81,8 +87,27 @@ defineOptions({
   name: 'BlogView',
 })
 
+// Llega como string desde la ruta "/blog/pagina/:page(\\d+)" (o undefined en
+// "/blog", que es la página 1). Ver src/router/index.ts.
+const props = defineProps<{ page?: string }>()
+
+const pageNumber = computed(() => {
+  const parsed = Number(props.page)
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1
+})
+
+// La página 1 sigue siendo "/blog" a secas (no "/blog/pagina/1"): es la URL
+// que ya está en el sitemap, en llms.txt y enlazada desde el resto del
+// sitio, así que no tiene sentido introducir una segunda URL equivalente.
+function pagePath(n: number): string {
+  return n <= 1 ? '/blog' : `/blog/pagina/${n}`
+}
+
 useSeoMeta(() => ({
-  title: 'Blog de psicología en Dénia',
+  title:
+    pageNumber.value > 1
+      ? `Blog de psicología en Dénia (página ${pageNumber.value})`
+      : 'Blog de psicología en Dénia',
   description:
     'Artículos sobre bienestar emocional, ansiedad, autoestima y terapia, escritos por el equipo de Kanbouri Psicología en Dénia.',
 }))
@@ -90,7 +115,6 @@ useSeoMeta(() => ({
 const posts = ref<WordPressPost[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
-const page = ref(1)
 const totalPages = ref(1)
 
 async function loadPage(targetPage: number) {
@@ -100,7 +124,6 @@ async function loadPage(targetPage: number) {
     const result = await fetchBlogPosts(targetPage)
     posts.value = result.posts
     totalPages.value = result.totalPages
-    page.value = targetPage
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Error desconocido'
     console.error('Error fetching blog posts:', err)
@@ -109,13 +132,13 @@ async function loadPage(targetPage: number) {
   }
 }
 
-function goToPage(targetPage: number) {
-  if (targetPage < 1 || targetPage > totalPages.value || targetPage === page.value) return
-  loadPage(targetPage)
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-onMounted(() => loadPage(1))
+// La paginación ahora navega a una ruta distinta ("/blog" <-> "/blog/pagina/N"),
+// no cambia un estado interno: hace falta un watcher (no basta onMounted) para
+// que ir de "/blog/pagina/2" a "/blog/pagina/3" recargue los datos, ya que
+// vue-router reutiliza la misma instancia del componente entre ellas. El
+// scroll al principio de la página ya lo gestiona el `scrollBehavior` del
+// router (ver src/router/index.ts), no hace falta repetirlo aquí.
+watch(pageNumber, (n) => loadPage(n), { immediate: true })
 </script>
 
 <style scoped>
@@ -171,20 +194,24 @@ onMounted(() => loadPage(1))
   background: var(--color-paper);
   color: var(--color-ink);
   font: inherit;
+  text-decoration: none;
   cursor: pointer;
   transition: border-color var(--dur-base) var(--ease-base),
     color var(--dur-base) var(--ease-base), transform var(--dur-base) var(--ease-base);
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .kb-blog__page-btn:hover:not(:disabled) {
+  .kb-blog__page-btn:hover:not([aria-disabled='true']) {
     border-color: var(--color-rose);
     color: var(--color-rose-hover);
     transform: translateY(-1px);
   }
 }
 
-.kb-blog__page-btn:disabled {
+/* Los extremos de la paginación (antes del disabled en <button>, ahora un
+   <span> en vez de un <router-link>: ver la plantilla) ya no son un enlace,
+   solo texto -- el estado visual "apagado" es el mismo de siempre. */
+.kb-blog__page-btn[aria-disabled='true'] {
   opacity: 0.4;
   cursor: not-allowed;
 }

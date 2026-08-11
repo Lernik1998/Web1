@@ -62,6 +62,27 @@ describe('BlogPostView', () => {
     expect(wrapper.text()).toContain('Cuerpo del artículo con contenido de interés.')
   })
 
+  it('uses the first image inside the content as og:image when there is no featured image', async () => {
+    const post = makePost()
+    post._embedded = {
+      'wp:term': [[{ id: 3, name: 'Bienestar', slug: 'bienestar', taxonomy: 'category' }]],
+    }
+    post.content.rendered =
+      '<p>Intro.</p><img src="http://example.com/wp-content/uploads/foto-real.jpg" alt="">'
+    vi.mocked(fetchBlogPostBySlug).mockResolvedValue(post)
+
+    await router.push('/blog/algun-articulo')
+    await router.isReady()
+    mount(BlogPostView, {
+      props: { slug: 'algun-articulo' },
+      global: globalStubs,
+    })
+
+    await flushPromises()
+    const ogImage = document.head.querySelector('meta[property="og:image"]')
+    expect(ogImage?.getAttribute('content')).toBe('http://example.com/wp-content/uploads/foto-real.jpg')
+  })
+
   it('shows a not-found message when the post does not exist', async () => {
     vi.mocked(fetchBlogPostBySlug).mockResolvedValue(null)
 

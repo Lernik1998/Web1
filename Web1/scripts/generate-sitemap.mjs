@@ -60,6 +60,10 @@ async function fetchAllPages(endpoint) {
   return items
 }
 
+// Debe coincidir con el `perPage` de fetchBlogPosts() en src/services/dataService.ts:
+// determina cuántas páginas "/blog/pagina/N" existen de verdad.
+const BLOG_POSTS_PER_PAGE = 3
+
 async function fetchDynamicRoutes() {
   const dynamicRoutes = []
 
@@ -71,6 +75,18 @@ async function fetchDynamicRoutes() {
         lastmod: post.modified,
         changefreq: 'monthly',
         priority: '0.6',
+      })
+    }
+
+    // La página 1 ("/blog") ya está en STATIC_ROUTES. El resto de páginas
+    // del listado también son URLs reales y navegables (ver BlogView.vue),
+    // así que deben estar en el sitemap igual que cualquier otra ruta.
+    const totalBlogPages = Math.ceil(posts.length / BLOG_POSTS_PER_PAGE)
+    for (let page = 2; page <= totalBlogPages; page++) {
+      dynamicRoutes.push({
+        path: `/blog/pagina/${page}`,
+        changefreq: 'weekly',
+        priority: '0.4',
       })
     }
   } catch (err) {
