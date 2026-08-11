@@ -10,6 +10,8 @@ export interface YoastHeadJson {
   og_description?: string
   og_image?: Array<{ url: string; width?: number; height?: number; type?: string }>
   canonical?: string
+  /** `index.index === 'noindex'` cuando esa página está marcada como no indexable en Yoast. */
+  robots?: { index?: string; follow?: string }
 }
 
 // WordPress REST API Page types

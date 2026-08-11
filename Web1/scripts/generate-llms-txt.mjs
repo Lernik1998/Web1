@@ -48,14 +48,14 @@ Centro de psicología dirigido por María B. Kanbouri, Psicóloga General Sanita
 
 ## Terapias
 
-- [Psicólogo infantil](${SITE_ORIGIN}/terapias/infantil)
-- [Psicólogo para adolescentes](${SITE_ORIGIN}/terapias/adolescentes)
-- [Psicólogo para adultos](${SITE_ORIGIN}/terapias/adultos)
+- [Psicóloga infantil](${SITE_ORIGIN}/terapias/infantil)
+- [Psicóloga para adolescentes](${SITE_ORIGIN}/terapias/adolescentes)
+- [Psicóloga para adultos](${SITE_ORIGIN}/terapias/adultos)
   - [Ansiedad](${SITE_ORIGIN}/terapias/adultos/ansiedad)
   - [Depresión y estado de ánimo](${SITE_ORIGIN}/terapias/adultos/depresion)
   - [Autoestima y desarrollo personal](${SITE_ORIGIN}/terapias/adultos/autoestima)
   - [Duelo y pérdidas](${SITE_ORIGIN}/terapias/adultos/duelo)
-- [Psicólogo para padres y familia](${SITE_ORIGIN}/terapias/padres-familia)
+- [Psicóloga para padres y familia](${SITE_ORIGIN}/terapias/padres-familia)
 - [Supervisión para psicólogos](${SITE_ORIGIN}/para-psicologos)
 
 ## Equipo

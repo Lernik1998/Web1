@@ -1,7 +1,7 @@
 <template>
   <section class="kb-therapy">
     <div class="kb-therapy__header">
-      <h1 class="kb-therapy__title text-h1">Psicólogo para adultos</h1>
+      <h1 class="kb-therapy__title text-h1">Psicóloga para adultos</h1>
       <p class="kb-therapy__lead text-body">
         Terapia para gestionar ansiedad, duelo, autoestima o momentos de
         transición vital, siempre a tu ritmo.
@@ -73,7 +73,7 @@ defineOptions({
 })
 
 useSeoMeta(() => ({
-  title: 'Psicólogo para adultos en Dénia',
+  title: 'Psicóloga para adultos en Dénia',
   description:
     'Terapia individual para adultos en Dénia y online: ansiedad, depresión, autoestima, duelo y momentos de transición vital, a tu ritmo.',
   siteName: 'María B. Kanbouri',
@@ -87,9 +87,9 @@ const areas = [
 ]
 
 const relatedLinks = [
-  { label: 'Psicólogo infantil', href: '/terapias/infantil' },
-  { label: 'Psicólogo para adolescentes', href: '/terapias/adolescentes' },
-  { label: 'Psicólogo para padres y familia', href: '/terapias/padres-familia' },
+  { label: 'Psicóloga infantil', href: '/terapias/infantil' },
+  { label: 'Psicóloga para adolescentes', href: '/terapias/adolescentes' },
+  { label: 'Psicóloga para padres y familia', href: '/terapias/padres-familia' },
 ]
 
 const beneficios = [

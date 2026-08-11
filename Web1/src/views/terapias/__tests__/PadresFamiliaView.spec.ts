@@ -130,7 +130,7 @@ describe('PadresFamiliaView', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Psicólogo para padres y familia')
+    expect(wrapper.text()).toContain('Psicóloga para padres y familia')
     expect(wrapper.findAll('.kb-therapy__block').length).toBeGreaterThan(0)
   })
 })

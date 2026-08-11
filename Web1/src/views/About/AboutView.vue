@@ -96,7 +96,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { fetchAboutMePage } from '../../services/dataService'
 import { parseTeamContent } from '../../utils/teamParser'
-import { useSeoMeta, seoMetaFromYoast } from '../../composables/useSeoMeta'
+import { useSeoMeta, seoMetaFromYoast, SITE_ORIGIN } from '../../composables/useSeoMeta'
+import { usePersonSchema } from '../../composables/usePersonSchema'
 import LoadingSpinner from '../../components/LoadingSpinner.vue'
 import type { YoastHeadJson } from '../../types/api'
 
@@ -120,6 +121,26 @@ useSeoMeta(
     const meta = seoMetaFromYoast(yoast.value)
     return meta ? { ...meta, image: member.value?.photo ?? undefined, type: 'profile' } : null
   }),
+)
+
+// Igual que en la ficha de cualquier otra profesional (TeamMemberView.vue):
+// esta página es, en la práctica, el perfil de María B. Kanbouri, así que
+// merece la misma señal de autoridad (nombre, cargo) para Google y los
+// asistentes de IA. Sin nº de colegiada aquí: a diferencia de la ficha de
+// equipo (que lo trae como campo ACF propio), esta página se parsea del
+// texto libre de la biografía, que no separa ese dato en un campo aparte.
+usePersonSchema(
+  computed(() =>
+    member.value
+      ? {
+          name: member.value.name,
+          jobTitle: member.value.role || undefined,
+          description: member.value.bio[0],
+          image: member.value.photo ?? undefined,
+          url: `${SITE_ORIGIN}/sobre-mi`,
+        }
+      : null,
+  ),
 )
 
 onMounted(async () => {

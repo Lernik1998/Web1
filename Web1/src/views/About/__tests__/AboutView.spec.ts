@@ -83,6 +83,15 @@ describe('AboutView', () => {
     const img = wrapper.find('.kb-about__image')
     expect(img.exists()).toBe(true)
     expect(img.attributes('src')).toBe('/photo.jpg')
+
+    // Igual que en la ficha de cualquier otra profesional: esta página
+    // también debe llevar datos estructurados Person.
+    const schema = document.getElementById('kb-person-schema')
+    expect(schema).not.toBeNull()
+    const parsed = JSON.parse(schema!.textContent ?? '{}')
+    expect(parsed['@type']).toBe('Person')
+    expect(parsed.name).toBe('Ana García')
+    expect(parsed.url).toBe('https://kanbouripsicologia.com/sobre-mi')
   })
 
   it('shows an error message when the fetch fails', async () => {

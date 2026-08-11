@@ -75,7 +75,7 @@ defineOptions({
 const loading = ref(true)
 const error = ref<string | null>(null)
 const content = ref<ParsedTherapyContent | null>(null)
-const title = ref('Psicólogo para adolescentes')
+const title = ref('Psicóloga para adolescentes')
 const yoast = ref<YoastHeadJson | null>(null)
 
 onMounted(async () => {
@@ -99,9 +99,9 @@ onMounted(async () => {
 useSeoMeta(computed(() => seoMetaFromYoast(yoast.value)))
 
 const relatedLinks = [
-  { label: 'Psicólogo infantil', href: '/terapias/infantil' },
-  { label: 'Psicólogo para padres y familia', href: '/terapias/padres-familia' },
-  { label: 'Psicólogo para adultos', href: '/terapias/adultos' },
+  { label: 'Psicóloga infantil', href: '/terapias/infantil' },
+  { label: 'Psicóloga para padres y familia', href: '/terapias/padres-familia' },
+  { label: 'Psicóloga para adultos', href: '/terapias/adultos' },
 ]
 
 useFaqSchema(() => content.value?.faqs)

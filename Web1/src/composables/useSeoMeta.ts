@@ -54,19 +54,27 @@ function upsertLink(rel: string, href: string) {
 
 /**
  * A partir de `yoast_head_json` (ya escrito a mano en WordPress con Yoast
- * SEO), da el `fullTitle`/`description` listos para `useSeoMeta`. Si en
- * Yoast no se ha rellenado a mano una meta-descripción específica para esa
- * página, el campo `description` viene vacío -- se usa `og_description`
- * (que Yoast sí genera siempre, aunque sea a partir del extracto) en su
- * lugar, en vez de no mostrar descripción ninguna. `null` si ni siquiera
- * hay título (datos aún no cargados, o página sin ficha de Yoast).
+ * SEO), da el `fullTitle`/`description`/`noindex` listos para `useSeoMeta`.
+ *
+ * - Si en Yoast no se ha rellenado a mano una meta-descripción específica
+ *   para esa página, el campo `description` viene vacío -- se usa
+ *   `og_description` (que Yoast sí genera siempre, aunque sea a partir del
+ *   extracto) en su lugar, en vez de no mostrar descripción ninguna.
+ * - `noindex` refleja el "No indexar" que se haya marcado en Yoast para esa
+ *   página en concreto (p. ej. los artículos del blog y las páginas legales
+ *   están marcados así ahora mismo): si no se respeta aquí, la SPA
+ *   anunciaría "index, follow" a los buscadores llevándoles la contraria a
+ *   lo que ya está decidido en WordPress.
+ *
+ * `null` si ni siquiera hay título (datos aún no cargados, o página sin
+ * ficha de Yoast).
  */
 export function seoMetaFromYoast(
   yoast: YoastHeadJson | null | undefined,
-): Pick<SeoMetaInput, 'fullTitle' | 'description'> | null {
+): Pick<SeoMetaInput, 'fullTitle' | 'description' | 'noindex'> | null {
   const description = yoast?.description || yoast?.og_description
   if (!yoast?.title || !description) return null
-  return { fullTitle: yoast.title, description }
+  return { fullTitle: yoast.title, description, noindex: yoast.robots?.index === 'noindex' }
 }
 
 /**

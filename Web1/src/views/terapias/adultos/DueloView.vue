@@ -110,7 +110,7 @@ const relatedLinks = [
 
 const breadcrumbItems = computed(() => [
   { name: 'Inicio', path: '/' },
-  { name: 'Psicólogo para adultos', path: '/terapias/adultos' },
+  { name: 'Psicóloga para adultos', path: '/terapias/adultos' },
   { name: title.value, path: '/terapias/adultos/duelo' },
 ])
 

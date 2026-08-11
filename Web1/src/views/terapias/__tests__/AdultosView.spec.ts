@@ -16,7 +16,7 @@ describe('AdultosView', () => {
       global: { plugins: [router], directives },
     })
 
-    expect(wrapper.text()).toContain('Psicólogo para adultos')
+    expect(wrapper.text()).toContain('Psicóloga para adultos')
     expect(wrapper.text()).toContain('Áreas que trabajamos')
     expect(wrapper.text()).toContain('Ansiedad')
     expect(wrapper.text()).toContain('Depresión y estado de ánimo')

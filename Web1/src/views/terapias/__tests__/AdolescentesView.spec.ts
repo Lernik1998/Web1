@@ -130,7 +130,7 @@ describe('AdolescentesView', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Psicólogo para adolescentes')
+    expect(wrapper.text()).toContain('Psicóloga para adolescentes')
     expect(wrapper.findAll('.kb-therapy__block').length).toBeGreaterThan(0)
   })
 })

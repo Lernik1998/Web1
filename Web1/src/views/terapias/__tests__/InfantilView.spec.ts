@@ -130,7 +130,7 @@ describe('InfantilView', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Psicólogo infantil')
+    expect(wrapper.text()).toContain('Psicóloga infantil')
     expect(wrapper.findAll('.kb-therapy__block').length).toBeGreaterThan(0)
   })
 })

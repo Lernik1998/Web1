@@ -52,7 +52,7 @@ type TherapyCardData = {
   imagePosition?: string
 }
 
-// Terapias específicas dentro de "Psicólogo para adultos" (custom post type
+// Terapias específicas dentro de "Psicóloga para adultos" (custom post type
 // "therapie" en WordPress, no las páginas ACF de home): se muestran además
 // de las 4 tarjetas principales, no en su lugar, para que el carrusel
 // enlace directamente a cada página concreta.

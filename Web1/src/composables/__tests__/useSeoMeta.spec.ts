@@ -141,10 +141,12 @@ describe('seoMetaFromYoast', () => {
         title: 'Psicóloga en Dénia | Maria B. Kanbouri',
         description: 'Descripción escrita a mano en Yoast.',
         og_description: 'Una distinta, generada automáticamente.',
+        robots: { index: 'index', follow: 'follow' },
       }),
     ).toEqual({
       fullTitle: 'Psicóloga en Dénia | Maria B. Kanbouri',
       description: 'Descripción escrita a mano en Yoast.',
+      noindex: false,
     })
   })
 
@@ -160,10 +162,28 @@ describe('seoMetaFromYoast', () => {
     ).toEqual({
       fullTitle: 'Aviso Legal | Kanbouri Psicología',
       description: 'Generada automáticamente a partir del contenido.',
+      noindex: false,
     })
   })
 
   it('returns null when there is a title but no description of any kind', () => {
     expect(seoMetaFromYoast({ title: 'Solo título' })).toBeNull()
+  })
+
+  it('marks the page as noindex when Yoast has "No indexar" set (e.g. legal pages, blog posts)', () => {
+    // Caso real: el aviso legal y los artículos del blog están marcados como
+    // "No indexar" en Yoast -- si no se respeta aquí, la SPA anunciaría
+    // "index, follow" contradiciendo lo ya decidido en WordPress.
+    expect(
+      seoMetaFromYoast({
+        title: 'Aviso Legal | Kanbouri Psicología',
+        description: 'Aviso legal completo.',
+        robots: { index: 'noindex', follow: 'nofollow' },
+      }),
+    ).toEqual({
+      fullTitle: 'Aviso Legal | Kanbouri Psicología',
+      description: 'Aviso legal completo.',
+      noindex: true,
+    })
   })
 })

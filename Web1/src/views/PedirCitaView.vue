@@ -384,10 +384,10 @@ onMounted(async () => {
 })
 
 const services = [
-  { value: 'infantil', label: 'Psicólogo infantil' },
-  { value: 'adolescentes', label: 'Psicólogo para adolescentes' },
-  { value: 'adultos', label: 'Psicólogo para adultos' },
-  { value: 'padres-familia', label: 'Psicólogo para padres y familia' },
+  { value: 'infantil', label: 'Psicóloga infantil' },
+  { value: 'adolescentes', label: 'Psicóloga para adolescentes' },
+  { value: 'adultos', label: 'Psicóloga para adultos' },
+  { value: 'padres-familia', label: 'Psicóloga para padres y familia' },
   { value: 'profesionales', label: 'Supervisión para profesionales' },
 ]
 
