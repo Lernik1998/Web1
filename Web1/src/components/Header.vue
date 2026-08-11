@@ -171,10 +171,10 @@ const ChevronIcon = defineComponent({
 })
 
 const terapiaItems = [
-  { label: 'Psicología infantil', href: '/terapias/infantil' },
-  { label: 'Psicología para adolescentes', href: '/terapias/adolescentes' },
+  { label: 'Psicología Infantil', href: '/terapias/infantil' },
+  { label: 'Psicología para Adolescentes', href: '/terapias/adolescentes' },
   {
-    label: 'Psicología para adultos',
+    label: 'Psicología para Adultos',
     href: '/terapias/adultos',
     children: [
       { label: 'Ansiedad', href: '/terapias/adultos/ansiedad' },
@@ -183,7 +183,7 @@ const terapiaItems = [
       { label: 'Duelo y pérdidas', href: '/terapias/adultos/duelo' },
     ],
   },
-  { label: 'Psicología para padres y familia', href: '/terapias/padres-familia' },
+  { label: 'Psicología para Padres y Familia', href: '/terapias/padres-familia' },
 ]
 
 const isScrolled = ref(false)
@@ -503,7 +503,7 @@ onBeforeUnmount(() => {
   transition: background-color 220ms var(--ease-base), border-color 220ms var(--ease-base), padding-left 220ms var(--ease-base);
 }
 
-/* Fila de "Psicología para adultos": el texto navega a su página, la
+/* Fila de "Psicología para Adultos": el texto navega a su página, la
    flecha (botón aparte) solo despliega el submenú. Se resaltan juntos al
    pasar el ratón por cualquiera de los dos para que se lean como una
    única fila, no como dos controles independientes. */
@@ -544,7 +544,7 @@ onBeforeUnmount(() => {
   background: var(--color-rose-soft-wash);
 }
 
-/* Submenú (nivel 2) — "Psicología para adultos" */
+/* Submenú (nivel 2) — "Psicología para Adultos" */
 .kb-submenu-wrap {
   position: absolute;
   top: -10px;
@@ -593,7 +593,7 @@ onBeforeUnmount(() => {
    táctiles no existe un puntero que "deje" el elemento al levantar el
    dedo, así que el navegador simula el hover al tocar y se queda
    pegado — el enlace de "Terapias" se quedaba con la línea rosa
-   encendida y "Psicología para adultos" con el fondo rosa fijo hasta
+   encendida y "Psicología para Adultos" con el fondo rosa fijo hasta
    tocar otra cosa. Se agrupan aquí, sólo para dispositivos con puntero
    fino (ratón/trackpad) real. */
 @media (hover: hover) and (pointer: fine) {

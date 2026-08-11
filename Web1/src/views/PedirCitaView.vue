@@ -348,7 +348,7 @@ import { fetchPedirCitaPage, submitAppointmentRequest } from '../services/dataSe
 import { processWordPressContent } from '../utils/contentProcessor'
 import { useInternalLinks } from '../composables/useInternalLinks'
 import { getRecaptchaToken } from '../utils/recaptcha'
-import { useSeoMeta } from '../composables/useSeoMeta'
+import { useSeoMeta, seoMetaFromYoast } from '../composables/useSeoMeta'
 import type { WordPressPage } from '../types/api'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 
@@ -358,14 +358,12 @@ defineOptions({
   name: 'PedirCitaView',
 })
 
-useSeoMeta(() => ({
-  title: 'Pedir cita — Psicología en Dénia',
-  description:
-    'Reserva tu primera sesión de psicología en Dénia, presencial u online. Cuéntanos tu disponibilidad y te contactamos para confirmar la cita.',
-}))
-
 const pageLoading = ref(true)
 const pageData = ref<WordPressPage | null>(null)
+
+// Título/descripción de Yoast SEO, ya escritos a mano en WordPress para
+// esta página: se usan tal cual, no se construyen aquí.
+useSeoMeta(() => seoMetaFromYoast(pageData.value?.yoast_head_json))
 const leadEl = ref<HTMLElement | null>(null)
 
 useInternalLinks(leadEl)
@@ -386,10 +384,10 @@ onMounted(async () => {
 })
 
 const services = [
-  { value: 'infantil', label: 'Psicología infantil' },
-  { value: 'adolescentes', label: 'Psicología para adolescentes' },
-  { value: 'adultos', label: 'Psicología para adultos' },
-  { value: 'padres-familia', label: 'Psicología para padres y familia' },
+  { value: 'infantil', label: 'Psicólogo infantil' },
+  { value: 'adolescentes', label: 'Psicólogo para adolescentes' },
+  { value: 'adultos', label: 'Psicólogo para adultos' },
+  { value: 'padres-familia', label: 'Psicólogo para padres y familia' },
   { value: 'profesionales', label: 'Supervisión para profesionales' },
 ]
 

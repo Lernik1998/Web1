@@ -1,7 +1,10 @@
 <template>
   <section class="kb-profile">
     <div class="kb-profile__inner">
-      <router-link to="/equipo" class="kb-profile__back text-secondary">← Volver al equipo</router-link>
+      <Breadcrumbs v-if="breadcrumbItems" :items="breadcrumbItems" />
+      <router-link v-else to="/equipo" class="kb-profile__back text-secondary">
+        ← Volver al equipo
+      </router-link>
 
       <LoadingSpinner v-if="loading" message="Cargando..." />
 
@@ -77,9 +80,12 @@ import { ref, onMounted, computed } from 'vue'
 import { fetchProfesionalBySlug, fetchMediaById } from '../services/dataService'
 import { parseProfesionalAcf } from '../utils/profesionalAcf'
 import { getMediaUrl } from '../utils/media'
-import { useSeoMeta, truncateForMeta, SITE_ORIGIN } from '../composables/useSeoMeta'
+import { useSeoMeta, seoMetaFromYoast, SITE_ORIGIN } from '../composables/useSeoMeta'
 import { usePersonSchema } from '../composables/usePersonSchema'
+import { useBreadcrumbSchema } from '../composables/useBreadcrumbSchema'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
+import Breadcrumbs from '../components/Breadcrumbs.vue'
+import type { YoastHeadJson } from '../types/api'
 
 defineOptions({
   name: 'TeamMemberView',
@@ -98,6 +104,7 @@ const apiPhoto = ref<string | null>(null)
 // trata igual que si no hubiera foto: cae al placeholder de iniciales en vez
 // de mostrar el icono de imagen rota del navegador.
 const photoLoadFailed = ref(false)
+const yoast = ref<YoastHeadJson | null>(null)
 
 const member = computed(() => (parsed.value ? { name: name.value, ...parsed.value } : null))
 // La foto viene de la propia API (`hero_image`, un ID de la biblioteca de
@@ -115,25 +122,13 @@ const initials = computed(() =>
     : '',
 )
 
+// Título/descripción de Yoast SEO, ya escritos a mano en WordPress para
+// esta ficha: se usan tal cual, no se construyen aquí.
 useSeoMeta(
-  computed(() =>
-    member.value
-      ? {
-          // El "role" real (p. ej. "Psicóloga para adolescentes, adultos y
-          // parejas en Denia.") es una frase larga pensada para leerse en la
-          // ficha, no para un <title>: metida entera aquí, el título pasaba
-          // de 90 caracteres y Google lo cortaba a la mitad. Se mantiene la
-          // versión completa en la meta description y en el schema.org
-          // Person (más abajo), donde sí tiene sentido.
-          title: `${member.value.name} — Psicóloga en Dénia`,
-          description: member.value.bio[0]
-            ? truncateForMeta(member.value.bio[0])
-            : `${member.value.name}, psicóloga en Kanbouri Psicología, Dénia.`,
-          image: apiPhoto.value ?? undefined,
-          type: 'profile',
-        }
-      : null,
-  ),
+  computed(() => {
+    const meta = seoMetaFromYoast(yoast.value)
+    return meta ? { ...meta, image: apiPhoto.value ?? undefined, type: 'profile' } : null
+  }),
 )
 
 usePersonSchema(
@@ -151,12 +146,25 @@ usePersonSchema(
   ),
 )
 
+const breadcrumbItems = computed(() =>
+  member.value
+    ? [
+        { name: 'Inicio', path: '/' },
+        { name: 'Equipo', path: '/equipo' },
+        { name: member.value.name, path: `/equipo/${props.slug}` },
+      ]
+    : null,
+)
+
+useBreadcrumbSchema(breadcrumbItems)
+
 onMounted(async () => {
   try {
     const post = await fetchProfesionalBySlug(props.slug)
     if (post) {
       name.value = post.title.rendered
       parsed.value = parseProfesionalAcf(post.acf)
+      yoast.value = post.yoast_head_json ?? null
       if (post.acf.hero_image) {
         const media = await fetchMediaById(post.acf.hero_image)
         apiPhoto.value = getMediaUrl(media) ?? null

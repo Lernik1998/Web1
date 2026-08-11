@@ -207,7 +207,7 @@ describe('HomeView', () => {
     expect(wrapper.text()).toContain('Infantil')
     expect(wrapper.text()).toContain('Adultos')
 
-    // ...y también las 4 terapias específicas de "Psicología para adultos".
+    // ...y también las 4 terapias específicas de "Psicólogo para adultos".
     expect(wrapper.text()).toContain('Ansiedad')
     expect(wrapper.text()).toContain('Depresión y estado de ánimo')
     expect(wrapper.text()).toContain('Autoestima y desarrollo personal')

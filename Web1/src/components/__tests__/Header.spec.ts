@@ -66,10 +66,10 @@ describe('Header', () => {
     })
 
     const text = wrapper.text()
-    expect(text).toContain('infantil')
-    expect(text).toContain('adolescentes')
-    expect(text).toContain('adultos')
-    expect(text).toContain('padres y familia')
+    expect(text).toContain('Psicología Infantil')
+    expect(text).toContain('Adolescentes')
+    expect(text).toContain('Psicología para Adultos')
+    expect(text).toContain('Padres y Familia')
     expect(text).toContain('Ansiedad')
     expect(text.toLowerCase()).toContain('depresi')
   })
@@ -98,14 +98,14 @@ describe('Header', () => {
     expect(submenuTrigger.attributes('aria-expanded')).toBe('false')
   })
 
-  it('navigates to /terapias/adultos when clicking the "Psicología para adultos" label itself', () => {
+  it('navigates to /terapias/adultos when clicking the "Psicología para Adultos" label itself', () => {
     const wrapper = mount(Header, {
       global: { directives, stubs: { RouterLink: RouterLinkStub } },
     })
 
     const adultosLink = wrapper
       .findAllComponents(RouterLinkStub)
-      .find((link) => link.text().includes('Psicología para adultos'))
+      .find((link) => link.text().includes('Psicología para Adultos'))
 
     expect(adultosLink?.props('to')).toBe('/terapias/adultos')
   })

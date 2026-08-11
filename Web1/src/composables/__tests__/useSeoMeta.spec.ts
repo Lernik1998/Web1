@@ -6,7 +6,7 @@ vi.mock('vue-router', () => ({
   useRoute: () => ({ path: '/terapias/adultos/ansiedad' }),
 }))
 
-import { useSeoMeta, truncateForMeta, type SeoMetaInput } from '../useSeoMeta'
+import { useSeoMeta, seoMetaFromYoast, type SeoMetaInput } from '../useSeoMeta'
 
 function makeHost(source: ReturnType<typeof ref<SeoMetaInput | null>>) {
   return defineComponent({
@@ -65,6 +65,41 @@ describe('useSeoMeta', () => {
     ).toContain('index, follow')
   })
 
+  it('uses a custom siteName as the title suffix, but leaves og:site_name as the business name', async () => {
+    const source = ref<SeoMetaInput | null>({
+      title: 'Psicólogo en Dénia',
+      description: 'Psicología en Dénia y la Marina Alta.',
+      siteName: 'María B. Kanbouri',
+    })
+    mount(makeHost(source))
+    await nextTick()
+
+    expect(document.title).toBe('Psicólogo en Dénia | María B. Kanbouri')
+    expect(document.head.querySelector('meta[property="og:title"]')?.getAttribute('content')).toBe(
+      'Psicólogo en Dénia | María B. Kanbouri',
+    )
+    expect(document.head.querySelector('meta[property="og:site_name"]')?.getAttribute('content')).toBe(
+      'Kanbouri Psicología',
+    )
+  })
+
+  it('uses fullTitle verbatim (e.g. from Yoast SEO), without appending any suffix', async () => {
+    const source = ref<SeoMetaInput | null>({
+      fullTitle: 'Psicóloga en Dénia | Maria B. Kanbouri',
+      description: 'Ya escrito en WordPress.',
+      // Si llegaran los dos a la vez, fullTitle debe ganar sin más.
+      title: 'Este título no debería usarse',
+      siteName: 'Tampoco este sufijo',
+    })
+    mount(makeHost(source))
+    await nextTick()
+
+    expect(document.title).toBe('Psicóloga en Dénia | Maria B. Kanbouri')
+    expect(document.head.querySelector('meta[property="og:title"]')?.getAttribute('content')).toBe(
+      'Psicóloga en Dénia | Maria B. Kanbouri',
+    )
+  })
+
   it('marks the page as noindex when requested (e.g. 404)', async () => {
     const source = ref<SeoMetaInput | null>({
       title: 'No encontrada',
@@ -93,17 +128,42 @@ describe('useSeoMeta', () => {
   })
 })
 
-describe('truncateForMeta', () => {
-  it('returns the text unchanged when it already fits', () => {
-    expect(truncateForMeta('Texto corto.', 155)).toBe('Texto corto.')
+describe('seoMetaFromYoast', () => {
+  it('returns null while there is no title yet (data not loaded)', () => {
+    expect(seoMetaFromYoast(null)).toBeNull()
+    expect(seoMetaFromYoast(undefined)).toBeNull()
+    expect(seoMetaFromYoast({})).toBeNull()
   })
 
-  it('cuts at the last whole word before the limit and adds an ellipsis', () => {
-    const long = 'Palabra '.repeat(30).trim()
-    const result = truncateForMeta(long, 50)
+  it('uses the explicit meta description when Yoast has one', () => {
+    expect(
+      seoMetaFromYoast({
+        title: 'Psicóloga en Dénia | Maria B. Kanbouri',
+        description: 'Descripción escrita a mano en Yoast.',
+        og_description: 'Una distinta, generada automáticamente.',
+      }),
+    ).toEqual({
+      fullTitle: 'Psicóloga en Dénia | Maria B. Kanbouri',
+      description: 'Descripción escrita a mano en Yoast.',
+    })
+  })
 
-    expect(result.length).toBeLessThanOrEqual(51)
-    expect(result.endsWith('…')).toBe(true)
-    expect(result).not.toContain('Palabr…')
+  it('falls back to og_description when no explicit meta description was set in Yoast', () => {
+    // Caso real: varias fichas en WordPress tienen título en Yoast pero
+    // nunca se rellenó a mano la meta-descripción -- solo existe la que
+    // Yoast genera siempre a partir del extracto (og_description).
+    expect(
+      seoMetaFromYoast({
+        title: 'Aviso Legal | Kanbouri Psicología',
+        og_description: 'Generada automáticamente a partir del contenido.',
+      }),
+    ).toEqual({
+      fullTitle: 'Aviso Legal | Kanbouri Psicología',
+      description: 'Generada automáticamente a partir del contenido.',
+    })
+  })
+
+  it('returns null when there is a title but no description of any kind', () => {
+    expect(seoMetaFromYoast({ title: 'Solo título' })).toBeNull()
   })
 })

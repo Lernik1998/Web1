@@ -13,6 +13,8 @@
     </div>
 
     <template v-else>
+      <Breadcrumbs :items="breadcrumbItems" />
+
       <div class="kb-therapy__header">
         <h1 class="kb-therapy__title text-h1">{{ title }}</h1>
         <p v-if="content?.intro" class="kb-therapy__lead text-body">{{ content.intro }}</p>
@@ -61,11 +63,14 @@ import { ref, computed, onMounted } from 'vue'
 import { fetchTherapieBySlug } from '../../../services/dataService'
 import { parseTherapieAcf } from '../../../utils/therapyAcf'
 import type { ParsedTherapyContent } from '../../../utils/therapyAcf'
-import { useSeoMeta, truncateForMeta } from '../../../composables/useSeoMeta'
+import { useSeoMeta, seoMetaFromYoast } from '../../../composables/useSeoMeta'
 import { useFaqSchema } from '../../../composables/useFaqSchema'
+import { useBreadcrumbSchema } from '../../../composables/useBreadcrumbSchema'
 import FaqAccordion from '../../../components/FaqAccordion.vue'
 import LoadingSpinner from '../../../components/LoadingSpinner.vue'
 import RelatedTherapies from '../../../components/RelatedTherapies.vue'
+import Breadcrumbs from '../../../components/Breadcrumbs.vue'
+import type { YoastHeadJson } from '../../../types/api'
 
 defineOptions({
   name: 'AnsiedadView',
@@ -75,6 +80,7 @@ const loading = ref(true)
 const error = ref<string | null>(null)
 const content = ref<ParsedTherapyContent | null>(null)
 const title = ref('Ansiedad')
+const yoast = ref<YoastHeadJson | null>(null)
 
 onMounted(async () => {
   try {
@@ -82,6 +88,7 @@ onMounted(async () => {
     if (therapy) {
       title.value = therapy.title.rendered
       content.value = parseTherapieAcf(therapy.acf)
+      yoast.value = therapy.yoast_head_json ?? null
     }
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Error desconocido'
@@ -91,13 +98,9 @@ onMounted(async () => {
   }
 })
 
-useSeoMeta(
-  computed(() =>
-    content.value
-      ? { title: 'Terapia para la ansiedad en Dénia', description: truncateForMeta(content.value.intro) }
-      : null,
-  ),
-)
+// Título/descripción de Yoast SEO, ya escritos a mano en WordPress para
+// esta ficha: se usan tal cual, no se construyen aquí.
+useSeoMeta(computed(() => seoMetaFromYoast(yoast.value)))
 
 const relatedLinks = [
   { label: 'Depresión y estado de ánimo', href: '/terapias/adultos/depresion' },
@@ -105,7 +108,17 @@ const relatedLinks = [
   { label: 'Duelo y pérdidas', href: '/terapias/adultos/duelo' },
 ]
 
+// `computed`, no un array suelto: `title` empieza con un valor de repuesto
+// ('Ansiedad') y se actualiza de forma asíncrona en onMounted con el título
+// real de WordPress -- un array fijo se habría quedado con el de repuesto.
+const breadcrumbItems = computed(() => [
+  { name: 'Inicio', path: '/' },
+  { name: 'Psicólogo para adultos', path: '/terapias/adultos' },
+  { name: title.value, path: '/terapias/adultos/ansiedad' },
+])
+
 useFaqSchema(() => content.value?.faqs)
+useBreadcrumbSchema(breadcrumbItems)
 </script>
 
 <style scoped>

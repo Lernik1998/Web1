@@ -39,6 +39,11 @@ function makePost(): WordPressPost {
       'wp:featuredmedia': [{ source_url: 'http://example.com/img.jpg', alt_text: 'Foto' }],
       'wp:term': [[{ id: 3, name: 'Bienestar', slug: 'bienestar', taxonomy: 'category' }]],
     },
+    // Título/descripción ya escritos en Yoast SEO en WordPress: ver BlogPostView.vue.
+    yoast_head_json: {
+      title: 'Algún artículo sobre bienestar | Kanbouri Psicología',
+      description: 'Descripción ya escrita en Yoast SEO.',
+    },
   }
 }
 

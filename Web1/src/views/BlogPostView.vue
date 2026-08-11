@@ -1,7 +1,8 @@
 <template>
   <section class="kb-post">
     <div class="kb-post__inner">
-      <router-link to="/blog" class="kb-post__back text-secondary">← Volver al blog</router-link>
+      <Breadcrumbs v-if="breadcrumbItems" :items="breadcrumbItems" />
+      <router-link v-else to="/blog" class="kb-post__back text-secondary">← Volver al blog</router-link>
 
       <LoadingSpinner v-if="loading" message="Cargando artículo..." />
 
@@ -42,8 +43,10 @@ import {
   reflowSoftLineBreaks,
 } from '../utils/contentProcessor'
 import { useInternalLinks } from '../composables/useInternalLinks'
-import { useSeoMeta, truncateForMeta } from '../composables/useSeoMeta'
+import { useSeoMeta, seoMetaFromYoast } from '../composables/useSeoMeta'
+import { useBreadcrumbSchema } from '../composables/useBreadcrumbSchema'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
+import Breadcrumbs from '../components/Breadcrumbs.vue'
 import type { WordPressPost } from '../types/api'
 
 defineOptions({
@@ -87,13 +90,26 @@ const imageAlt = computed(
 
 const categoryName = computed(() => post.value?._embedded?.['wp:term']?.[0]?.[0]?.name ?? null)
 
+const breadcrumbItems = computed(() =>
+  post.value
+    ? [
+        { name: 'Inicio', path: '/' },
+        { name: 'Blog', path: '/blog' },
+        { name: extractTextFromHtml(post.value.title.rendered, 70), path: `/blog/${props.slug}` },
+      ]
+    : null,
+)
+
+useBreadcrumbSchema(breadcrumbItems)
+
+// Título/descripción de Yoast SEO, ya escritos a mano en WordPress para
+// este artículo: se usan tal cual, no se construyen aquí.
 useSeoMeta(
   computed(() => {
-    if (!post.value) return null
-    const rawExcerpt = post.value.excerpt.rendered || post.value.content.rendered
+    const meta = seoMetaFromYoast(post.value?.yoast_head_json)
+    if (!meta) return null
     return {
-      title: extractTextFromHtml(post.value.title.rendered, 70),
-      description: truncateForMeta(extractTextFromHtml(rawExcerpt, 400)),
+      ...meta,
       // Mismos dos primeros niveles de respaldo que la imagen visible de la
       // página (ver `imageUrl` más arriba): si no hay destacada pero sí una
       // imagen real en el contenido, esa debe ser la miniatura al compartir

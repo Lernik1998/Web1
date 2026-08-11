@@ -1,18 +1,35 @@
 import { watchEffect, toValue, type MaybeRefOrGetter } from 'vue'
 import { useRoute } from 'vue-router'
+import type { YoastHeadJson } from '../types/api'
 
 export const SITE_NAME = 'Kanbouri Psicología'
 export const SITE_ORIGIN = 'https://kanbouripsicologia.com'
 const DEFAULT_OG_IMAGE = `${SITE_ORIGIN}/images/logo_kanbouri_2023.png`
 
 export interface SeoMetaInput {
-  /** Sin el sufijo del sitio: se añade automáticamente (" | Kanbouri Psicología"). */
-  title: string
+  /**
+   * Título ya completo, tal cual, sin añadirle nada más -- el título real
+   * que el equipo del centro ha escrito en Yoast SEO en WordPress
+   * (`yoast_head_json.title`) para esa página en concreto, que ya incluye
+   * su propio sufijo de marca. Tiene prioridad sobre `title`/`siteName` si
+   * se indican ambos.
+   */
+  fullTitle?: string
+  /** Sin el sufijo del sitio: se añade automáticamente (" | Kanbouri Psicología"). Se ignora si se usa `fullTitle`. */
+  title?: string
   description: string
   image?: string
   type?: 'website' | 'article' | 'profile'
   /** Páginas que no deben indexarse (404, formularios internos...). */
   noindex?: boolean
+  /**
+   * Sustituye "Kanbouri Psicología" como sufijo del <title> (y de
+   * og:title/twitter:title) en esta página en concreto. Solo aplica cuando
+   * se usa `title` (no `fullTitle`, que ya viene completo). `og:site_name`
+   * no cambia: representa el sitio en su conjunto, no el título de cada
+   * página.
+   */
+  siteName?: string
 }
 
 function upsertMeta(attr: 'name' | 'property', key: string, content: string) {
@@ -36,16 +53,20 @@ function upsertLink(rel: string, href: string) {
 }
 
 /**
- * Trunca en el último espacio antes del límite (no corta palabras a la
- * mitad), para que las meta-descripciones no se vean cortadas de forma fea
- * en los resultados de búsqueda.
+ * A partir de `yoast_head_json` (ya escrito a mano en WordPress con Yoast
+ * SEO), da el `fullTitle`/`description` listos para `useSeoMeta`. Si en
+ * Yoast no se ha rellenado a mano una meta-descripción específica para esa
+ * página, el campo `description` viene vacío -- se usa `og_description`
+ * (que Yoast sí genera siempre, aunque sea a partir del extracto) en su
+ * lugar, en vez de no mostrar descripción ninguna. `null` si ni siquiera
+ * hay título (datos aún no cargados, o página sin ficha de Yoast).
  */
-export function truncateForMeta(text: string, maxLength = 155): string {
-  const clean = text.replace(/\s+/g, ' ').trim()
-  if (clean.length <= maxLength) return clean
-  const cut = clean.slice(0, maxLength)
-  const lastSpace = cut.lastIndexOf(' ')
-  return `${cut.slice(0, lastSpace > 0 ? lastSpace : maxLength)}…`
+export function seoMetaFromYoast(
+  yoast: YoastHeadJson | null | undefined,
+): Pick<SeoMetaInput, 'fullTitle' | 'description'> | null {
+  const description = yoast?.description || yoast?.og_description
+  if (!yoast?.title || !description) return null
+  return { fullTitle: yoast.title, description }
 }
 
 /**
@@ -64,9 +85,9 @@ export function useSeoMeta(source: MaybeRefOrGetter<SeoMetaInput | null | undefi
 
   watchEffect(() => {
     const meta = toValue(source)
-    if (!meta || !meta.title || !meta.description) return
+    if (!meta || !(meta.fullTitle || meta.title) || !meta.description) return
 
-    const fullTitle = `${meta.title} | ${SITE_NAME}`
+    const fullTitle = meta.fullTitle ?? `${meta.title} | ${meta.siteName ?? SITE_NAME}`
     document.title = fullTitle
 
     upsertMeta('name', 'description', meta.description)

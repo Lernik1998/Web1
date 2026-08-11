@@ -24,7 +24,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { fetchHomePage, fetchMediaById, fetchTherapieBySlug } from '../services/dataService'
 import { getMediaUrl } from '../utils/media'
-import { useSeoMeta } from '../composables/useSeoMeta'
+import { useSeoMeta, seoMetaFromYoast } from '../composables/useSeoMeta'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import Hero from '../components/Hero.vue'
 import TherapyCards from '../components/TherapyCards.vue'
@@ -52,7 +52,7 @@ type TherapyCardData = {
   imagePosition?: string
 }
 
-// Terapias específicas dentro de "Psicología para adultos" (custom post type
+// Terapias específicas dentro de "Psicólogo para adultos" (custom post type
 // "therapie" en WordPress, no las páginas ACF de home): se muestran además
 // de las 4 tarjetas principales, no en su lugar, para que el carrusel
 // enlace directamente a cada página concreta.
@@ -74,19 +74,12 @@ const error = ref<string | null>(null)
 const mediaUrls = ref<Record<number, string>>({})
 const adultSubTherapyCards = ref<TherapyCardData[]>([])
 
-// Título/descripción pensados para el resultado de búsqueda (distintos del
-// titular del Hero, que es para la persona que ya está en la página): busca
-// "Dénia" + las poblaciones cercanas donde también hay pacientes buscando
-// psicólogo, como ya hacía la web anterior con buenos resultados.
-useSeoMeta(() => ({
-  // "Kanbouri Psicología" ya se añade automáticamente al final del <title>
-  // (ver useSeoMeta.ts): repetirlo aquí dejaba el título de la home -- la
-  // página más importante del sitio -- en 78 caracteres con la marca
-  // duplicada dos veces, y Google lo cortaba a la mitad.
-  title: 'Psicología en Dénia para toda la familia',
-  description:
-    'Psicología en Dénia y la Marina Alta: terapia infantil, adolescentes, adultos y pareja. Presencial en Dénia, Jávea y Ondara, y online para toda España.',
-}))
+// Título/descripción de Yoast SEO (ya escritos a mano en WordPress, campo
+// "yoast_head_json" de la página "home"): se usan tal cual, en vez de
+// construir un título propio en el código, para que el equipo del centro
+// pueda cambiarlos desde WordPress sin tocar nada aquí. Distinto del
+// titular del Hero, que es para la persona que ya está en la página.
+useSeoMeta(() => seoMetaFromYoast(pageData.value?.yoast_head_json))
 
 const heroProps = computed(() => {
   const acf = pageData.value?.acf

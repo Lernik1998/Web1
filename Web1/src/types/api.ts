@@ -1,3 +1,17 @@
+// Bloque SEO que expone el plugin Yoast SEO en la respuesta de la API REST
+// (`yoast_head_json`), ya editado a mano por el equipo del centro desde
+// WordPress: título, descripción, Open Graph y datos estructurados
+// completos para esa página/entrada en concreto. Se usa tal cual en vez de
+// construir un título propio en el código -- ver useSeoMeta.ts.
+export interface YoastHeadJson {
+  title?: string
+  description?: string
+  og_title?: string
+  og_description?: string
+  og_image?: Array<{ url: string; width?: number; height?: number; type?: string }>
+  canonical?: string
+}
+
 // WordPress REST API Page types
 export interface WordPressPage {
   id: number
@@ -37,6 +51,7 @@ export interface WordPressPage {
   meta?: Record<string, unknown>
   categories?: number[]
   tags?: number[]
+  yoast_head_json?: YoastHeadJson
   _links?: {
     self?: Array<{ href: string }>
     collection?: Array<{ href: string }>

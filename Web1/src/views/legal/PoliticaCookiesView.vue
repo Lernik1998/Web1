@@ -29,7 +29,7 @@ import { ref, onMounted, computed } from 'vue'
 import { processWordPressContent } from '../../utils/contentProcessor.ts'
 import { useInternalLinks } from '../../composables/useInternalLinks.ts'
 import { fetchPoliticaCookiesPage } from '../../services/dataService.ts'
-import { useSeoMeta } from '../../composables/useSeoMeta.ts'
+import { useSeoMeta, seoMetaFromYoast } from '../../composables/useSeoMeta.ts'
 import LoadingSpinner from '../../components/LoadingSpinner.vue'
 import type { WordPressPage } from '../../types/api.ts'
 
@@ -37,12 +37,11 @@ defineOptions({
   name: 'PoliticaCookiesView',
 })
 
-useSeoMeta(() => ({
-  title: 'Política de cookies',
-  description: 'Política de cookies de Kanbouri Psicología, centro de psicología en Dénia.',
-}))
-
 const pageData = ref<WordPressPage | null>(null)
+
+// Título/descripción de Yoast SEO, ya escritos a mano en WordPress para
+// esta página: se usan tal cual, no se construyen aquí.
+useSeoMeta(() => seoMetaFromYoast(pageData.value?.yoast_head_json))
 const loading = ref(true)
 const error = ref<string | null>(null)
 const contentEl = ref<HTMLElement | null>(null)

@@ -61,11 +61,12 @@ import { ref, computed, onMounted } from 'vue'
 import { fetchTherapieBySlug } from '../../services/dataService'
 import { parseTherapieAcf } from '../../utils/therapyAcf'
 import type { ParsedTherapyContent } from '../../utils/therapyAcf'
-import { useSeoMeta, truncateForMeta } from '../../composables/useSeoMeta'
+import { useSeoMeta, seoMetaFromYoast } from '../../composables/useSeoMeta'
 import { useFaqSchema } from '../../composables/useFaqSchema'
 import FaqAccordion from '../../components/FaqAccordion.vue'
 import LoadingSpinner from '../../components/LoadingSpinner.vue'
 import RelatedTherapies from '../../components/RelatedTherapies.vue'
+import type { YoastHeadJson } from '../../types/api'
 
 defineOptions({
   name: 'AdolescentesView',
@@ -74,7 +75,8 @@ defineOptions({
 const loading = ref(true)
 const error = ref<string | null>(null)
 const content = ref<ParsedTherapyContent | null>(null)
-const title = ref('Psicología para adolescentes')
+const title = ref('Psicólogo para adolescentes')
+const yoast = ref<YoastHeadJson | null>(null)
 
 onMounted(async () => {
   try {
@@ -82,6 +84,7 @@ onMounted(async () => {
     if (therapy) {
       title.value = therapy.title.rendered
       content.value = parseTherapieAcf(therapy.acf)
+      yoast.value = therapy.yoast_head_json ?? null
     }
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Error desconocido'
@@ -91,18 +94,14 @@ onMounted(async () => {
   }
 })
 
-useSeoMeta(
-  computed(() =>
-    content.value
-      ? { title: `${title.value} en Dénia`, description: truncateForMeta(content.value.intro) }
-      : null,
-  ),
-)
+// Título/descripción de Yoast SEO, ya escritos a mano en WordPress para
+// esta ficha: se usan tal cual, no se construyen aquí.
+useSeoMeta(computed(() => seoMetaFromYoast(yoast.value)))
 
 const relatedLinks = [
-  { label: 'Psicología infantil', href: '/terapias/infantil' },
-  { label: 'Psicología para padres y familia', href: '/terapias/padres-familia' },
-  { label: 'Psicología para adultos', href: '/terapias/adultos' },
+  { label: 'Psicólogo infantil', href: '/terapias/infantil' },
+  { label: 'Psicólogo para padres y familia', href: '/terapias/padres-familia' },
+  { label: 'Psicólogo para adultos', href: '/terapias/adultos' },
 ]
 
 useFaqSchema(() => content.value?.faqs)

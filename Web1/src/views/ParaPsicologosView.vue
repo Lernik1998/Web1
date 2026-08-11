@@ -88,7 +88,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { fetchForPsicologosPage } from '../services/dataService'
 import { processWordPressContent } from '../utils/contentProcessor'
-import { useSeoMeta } from '../composables/useSeoMeta'
+import { useSeoMeta, seoMetaFromYoast } from '../composables/useSeoMeta'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import NewsletterSignup from '../components/NewsletterSignup.vue'
 import type { WordPressPage } from '../types/api'
@@ -101,11 +101,9 @@ const pageData = ref<WordPressPage | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
 
-useSeoMeta(() => ({
-  title: 'Supervisión clínica para psicólogos',
-  description:
-    'Espacio de supervisión clínica para psicólogos y profesionales de la salud mental, con Kanbouri Psicología en Dénia.',
-}))
+// Título/descripción de Yoast SEO, ya escritos a mano en WordPress para
+// esta página: se usan tal cual, no se construyen aquí.
+useSeoMeta(() => seoMetaFromYoast(pageData.value?.yoast_head_json))
 
 /**
  * Ruta interna de cada área listada en "Áreas que trabajamos". El texto de

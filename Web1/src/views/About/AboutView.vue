@@ -75,7 +75,7 @@
         </article>
 
         <div class="kb-about__closing" v-animate-on-scroll>
-          <h2 class="kb-about__closing-title">¿Empezamos a trabajar juntas?</h2>
+          <h2 class="kb-about__closing-title">¿Empezamos a trabajar juntos?</h2>
           <p class="kb-about__closing-text">
             Escríbeme y reservemos tu primera sesión, presencial en Dénia u online.
           </p>
@@ -96,8 +96,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { fetchAboutMePage } from '../../services/dataService'
 import { parseTeamContent } from '../../utils/teamParser'
-import { useSeoMeta, truncateForMeta } from '../../composables/useSeoMeta'
+import { useSeoMeta, seoMetaFromYoast } from '../../composables/useSeoMeta'
 import LoadingSpinner from '../../components/LoadingSpinner.vue'
+import type { YoastHeadJson } from '../../types/api'
 
 defineOptions({
   name: 'AboutView',
@@ -106,24 +107,19 @@ defineOptions({
 const loading = ref(true)
 const error = ref<string | null>(null)
 const member = ref<ReturnType<typeof parseTeamContent>[number] | null>(null)
+const yoast = ref<YoastHeadJson | null>(null)
 // Si la URL de la foto llega rota (404, medio borrado en WordPress...), se
 // oculta el marco de la foto igual que cuando no hay ninguna asignada, en
 // vez de mostrar el icono de imagen rota del navegador.
 const photoLoadFailed = ref(false)
 
+// Título/descripción de Yoast SEO, ya escritos a mano en WordPress para
+// esta página: se usan tal cual, no se construyen aquí.
 useSeoMeta(
-  computed(() =>
-    member.value
-      ? {
-          title: `${member.value.name} — Psicóloga en Dénia`,
-          description: member.value.bio[0]
-            ? truncateForMeta(member.value.bio[0])
-            : `Conoce a ${member.value.name}, psicóloga en Dénia.`,
-          image: member.value.photo ?? undefined,
-          type: 'profile',
-        }
-      : null,
-  ),
+  computed(() => {
+    const meta = seoMetaFromYoast(yoast.value)
+    return meta ? { ...meta, image: member.value?.photo ?? undefined, type: 'profile' } : null
+  }),
 )
 
 onMounted(async () => {
@@ -131,6 +127,7 @@ onMounted(async () => {
     const page = await fetchAboutMePage()
     const parsed = page ? parseTeamContent(page.content.rendered) : []
     member.value = parsed[0] ?? null
+    yoast.value = page?.yoast_head_json ?? null
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Error desconocido'
     console.error('Error fetching about me page:', err)

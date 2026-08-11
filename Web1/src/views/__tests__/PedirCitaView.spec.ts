@@ -101,7 +101,7 @@ describe('PedirCitaView', () => {
         surname: 'García López',
         email: 'ana@ejemplo.com',
         phone: '600000000',
-        therapy: 'Psicología para adultos',
+        therapy: 'Psicólogo para adultos',
         appointment_type: 'Online',
         weekdays: ['Lunes'],
         schedule: ['Mañana'],
