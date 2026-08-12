@@ -16,7 +16,7 @@ describe('Collaborations', () => {
     expect(cards).toHaveLength(3)
 
     const labels = cards.map((c) => c.attributes('aria-label'))
-    expect(labels).toEqual(['UNIR', 'UNIE', 'Universidad Isabel I'])
+    expect(labels).toEqual(['UNIR', 'UNED', 'Universidad Isabel I'])
   })
 
   it('links each card to its external href', () => {

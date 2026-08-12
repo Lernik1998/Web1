@@ -9,6 +9,8 @@ export interface PersonSchemaInput {
   /** Nº de colegiada/o, si se conoce (credencial verificable real). */
   licenseNumber?: string
   url: string
+  /** Perfiles reales de esta persona (p. ej. LinkedIn), no del centro. */
+  sameAs?: string[]
 }
 
 const SCRIPT_ID = 'kb-person-schema'
@@ -41,6 +43,7 @@ export function usePersonSchema(source: MaybeRefOrGetter<PersonSchemaInput | nul
       image: person.image || undefined,
       url: person.url,
       ...(person.licenseNumber ? { identifier: `Colegiada nº ${person.licenseNumber}` } : {}),
+      ...(person.sameAs?.length ? { sameAs: person.sameAs } : {}),
       worksFor: {
         '@type': 'MedicalBusiness',
         name: 'Kanbouri Psicología',

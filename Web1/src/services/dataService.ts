@@ -151,23 +151,6 @@ export const fetchGoogleReviews = async (): Promise<GoogleReview[]> => {
   return response.data
 }
 
-// Alta en la newsletter de "Para Psicólogos" (endpoint propio del WordPress).
-// `recaptcha_token` sigue el mismo contrato que `submitAppointmentRequest`
-// más abajo: `null` si el sitio no tiene configurada
-// `VITE_RECAPTCHA_SITE_KEY`, y si no el backend debe verificarlo contra la
-// API "siteverify" de Google antes de dar de alta el email.
-export const subscribeToNewsletter = async (
-  name: string,
-  email: string,
-  recaptchaToken: string | null,
-): Promise<void> => {
-  await apiClient.post('/wp-json/kanbouri/v1/appointment', {
-    name,
-    email,
-    recaptcha_token: recaptchaToken,
-  })
-}
-
 // Forma exacta que espera `kanbouri_send_appointment_email()` en el plugin
 // de WordPress (`services/mail.php`): nombres de campo en inglés, y
 // `weekdays`/`schedule` como arrays (aunque el formulario solo deje elegir

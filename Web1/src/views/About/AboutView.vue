@@ -138,6 +138,7 @@ usePersonSchema(
           description: member.value.bio[0],
           image: member.value.photo ?? undefined,
           url: `${SITE_ORIGIN}/sobre-mi`,
+          sameAs: ['https://www.linkedin.com/in/maria-b-kanbouri-a88aa816a/'],
         }
       : null,
   ),

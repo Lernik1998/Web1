@@ -62,6 +62,29 @@ describe('usePersonSchema', () => {
     expect(getSchema().identifier).toBeUndefined()
   })
 
+  it('includes sameAs when given real profiles for this person', async () => {
+    const source = ref<PersonSchemaInput | null>({
+      name: 'Maria B. Kanbouri',
+      url: 'https://kanbouripsicologia.com/sobre-mi',
+      sameAs: ['https://www.linkedin.com/in/maria-b-kanbouri-a88aa816a/'],
+    })
+    mount(makeHost(source))
+    await nextTick()
+
+    expect(getSchema().sameAs).toEqual(['https://www.linkedin.com/in/maria-b-kanbouri-a88aa816a/'])
+  })
+
+  it('omits sameAs when not provided', async () => {
+    const source = ref<PersonSchemaInput | null>({
+      name: 'Ana García',
+      url: 'https://kanbouripsicologia.com/equipo/ana-garcia',
+    })
+    mount(makeHost(source))
+    await nextTick()
+
+    expect(getSchema().sameAs).toBeUndefined()
+  })
+
   it('removes the script on unmount', async () => {
     const source = ref<PersonSchemaInput | null>({
       name: 'Ana García',

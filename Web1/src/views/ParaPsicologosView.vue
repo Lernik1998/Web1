@@ -61,7 +61,21 @@
           </div>
 
           <div class="kb-supervision__block" v-animate-on-scroll>
-            <NewsletterSignup />
+            <h2 class="text-h2">Recursos para profesionales</h2>
+            <p class="text-body">
+              Descarga gratis nuestra guía "Duelo por ruptura": un documento
+              gratuito para psicólogos que quieren comprender mejor qué
+              tienen delante antes de intervenir.
+            </p>
+
+            <a
+              :href="GUIDE_URL"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="kb-supervision__cta text-cta"
+            >
+              Quiero descargarlo
+            </a>
           </div>
         </div>
 
@@ -90,8 +104,12 @@ import { fetchForPsicologosPage } from '../services/dataService'
 import { processWordPressContent } from '../utils/contentProcessor'
 import { useSeoMeta, seoMetaFromYoast } from '../composables/useSeoMeta'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
-import NewsletterSignup from '../components/NewsletterSignup.vue'
 import type { WordPressPage } from '../types/api'
+
+// La descarga de la guía "Duelo por ruptura" la gestiona por completo
+// systeme.io (formulario propio + envío del email); este botón solo abre
+// esa página en una pestaña nueva.
+const GUIDE_URL = 'https://kanbouripsicologia.systeme.io/duelo-reptura-guia'
 
 defineOptions({
   name: 'ParaPsicologosView',
@@ -437,4 +455,5 @@ const title = computed(() => pageData.value?.title.rendered ?? '')
   padding: 24px 28px;
   color: #b23c3c;
 }
+
 </style>

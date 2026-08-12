@@ -78,6 +78,12 @@ describe('Footer', () => {
 
     expect(wrapper.find('a[aria-label="Facebook"]').exists()).toBe(true)
     expect(wrapper.find('a[aria-label="Instagram"]').exists()).toBe(true)
+
+    const linkedin = wrapper.find('a[aria-label="LinkedIn"]')
+    expect(linkedin.exists()).toBe(true)
+    expect(linkedin.attributes('href')).toBe('https://www.linkedin.com/in/maria-b-kanbouri-a88aa816a/')
+    expect(linkedin.attributes('target')).toBe('_blank')
+    expect(linkedin.attributes('rel')).toBe('noopener noreferrer')
   })
 
   it('shows a fallback Street View embed when there is no WordPress setting yet', async () => {

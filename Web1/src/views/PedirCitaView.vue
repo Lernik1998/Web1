@@ -119,6 +119,7 @@
             <select
               v-model="form.servicio"
               name="servicio"
+              aria-label="Servicio"
               required
               :class="{ 'is-invalid': servicioInvalid }"
             >

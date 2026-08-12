@@ -28,7 +28,6 @@ import {
   fetchBlogPosts,
   fetchBlogPostBySlug,
   fetchGoogleReviews,
-  subscribeToNewsletter,
 } from '../dataService'
 
 const mockedGet = apiClient.get as unknown as ReturnType<typeof vi.fn>
@@ -252,18 +251,6 @@ describe('dataService', () => {
       const result = await fetchGoogleReviews()
       expect(mockedGet).toHaveBeenCalledWith('/wp-json/kanbouri/v1/reviews')
       expect(result).toEqual(reviews)
-    })
-  })
-
-  describe('subscribeToNewsletter', () => {
-    it('posts the name, email and recaptcha token to the appointment endpoint', async () => {
-      mockedPost.mockResolvedValueOnce({ data: {} })
-      await subscribeToNewsletter('David', 'david@example.com', 'a-token')
-      expect(mockedPost).toHaveBeenCalledWith('/wp-json/kanbouri/v1/appointment', {
-        name: 'David',
-        email: 'david@example.com',
-        recaptcha_token: 'a-token',
-      })
     })
   })
 })

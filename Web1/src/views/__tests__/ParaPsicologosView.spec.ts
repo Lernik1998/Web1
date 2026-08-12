@@ -73,6 +73,8 @@ describe('ParaPsicologosView', () => {
     expect(wrapper.text()).toContain('Título final')
     expect(wrapper.text()).toContain('Texto final')
     expect(wrapper.text()).toContain('Reservar sesión')
+    expect(wrapper.text()).toContain('Recursos para profesionales')
+    expect(wrapper.text()).toContain('Duelo por ruptura')
   })
 
   it('shows a not-found message when the page does not exist', async () => {
@@ -99,5 +101,24 @@ describe('ParaPsicologosView', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.text()).toContain('boom')
+  })
+
+  it('links the guide download button straight to the systeme.io page', async () => {
+    vi.mocked(fetchForPsicologosPage).mockResolvedValue(makePage())
+
+    await router.push('/para-psicologos')
+    await router.isReady()
+    const wrapper = mount(ParaPsicologosView, { global: globalStubs })
+
+    await flushPromises()
+    await wrapper.vm.$nextTick()
+
+    const link = wrapper.findAll('a').find((a) => a.text() === 'Quiero descargarlo')
+    expect(link).toBeTruthy()
+    expect(link!.attributes('href')).toBe(
+      'https://kanbouripsicologia.systeme.io/duelo-reptura-guia',
+    )
+    expect(link!.attributes('target')).toBe('_blank')
+    expect(link!.attributes('rel')).toBe('noopener noreferrer')
   })
 })
