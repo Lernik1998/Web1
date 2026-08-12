@@ -134,6 +134,7 @@
           :src="mapSrc"
           loading="lazy"
           referrerpolicy="no-referrer-when-downgrade"
+          allow="fullscreen"
         ></iframe>
       </div>
     </div>
