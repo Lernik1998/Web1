@@ -26,6 +26,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { extractTextFromHtml, extractFirstImageUrl } from '../utils/contentProcessor'
+import { getMediaUrl } from '../utils/media'
 import type { WordPressPost } from '../types/api'
 
 const props = defineProps<{
@@ -34,7 +35,7 @@ const props = defineProps<{
 
 const imageUrl = computed(
   () =>
-    props.post._embedded?.['wp:featuredmedia']?.[0]?.source_url ||
+    getMediaUrl(props.post._embedded?.['wp:featuredmedia']?.[0], 'medium_large') ||
     extractFirstImageUrl(props.post.content.rendered) ||
     '/images/psicologa-denia-hero.jpg',
 )

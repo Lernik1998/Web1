@@ -5,6 +5,8 @@
         src="/images/logo_kanbouri_2023.png"
         alt="Kanbouri Psicología"
         class="kb-maintenance__logo"
+        width="350"
+        height="159"
       />
 
       <p class="kb-maintenance__eyebrow text-secondary">Mantenimiento en curso</p>
@@ -81,6 +83,7 @@ const EMAIL = 'gabinete@kanbouripsicologia.com'
   display: block;
   height: 72px;
   width: auto;
+  aspect-ratio: 350 / 159;
   margin: 0 auto 28px;
 }
 

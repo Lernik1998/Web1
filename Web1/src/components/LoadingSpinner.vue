@@ -24,6 +24,17 @@ defineProps<{
   justify-content: center;
   padding: 2rem;
   gap: 1rem;
+  /* Se usa siempre como contenido único de una página entera mientras se
+     esperan los datos de la API. Sin esta altura mínima, el documento pasa
+     de "alto" (contenido pre-renderizado que Vue reemplaza al montar) a
+     "bajo" (este spinner) y vuelve a crecer al llegar los datos, saltando
+     el pie de página dos veces -- una causa real y medible de layout shift
+     para usuarios reales, aunque no afecta a los rastreadores que sí ven
+     el HTML pre-renderizado. Esto no lo elimina del todo (seguiría
+     habiendo un salto al pasar de este alto aproximado al alto real), pero
+     reduce bastante la magnitud del salto sin tocar cómo se cargan los
+     datos de cada página. */
+  min-height: 60vh;
 }
 
 .spinner-dots {

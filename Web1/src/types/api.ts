@@ -135,6 +135,7 @@ export interface WordPressPost extends WordPressPage {
     'wp:featuredmedia'?: Array<{
       source_url: string
       alt_text?: string
+      media_details?: WordPressMedia['media_details']
     }>
     'wp:term'?: Array<Array<{ id: number; name: string; slug: string; taxonomy: string }>>
   }

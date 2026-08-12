@@ -3,7 +3,13 @@
     <div class="footer-content">
       <div class="brand-section">
         <div class="footer-brand">
-          <img src="/images/logo_kanbouri_2023.png" alt="Kanbouri Psicología" class="footer-brand__logo" />
+          <img
+            src="/images/logo_kanbouri_2023.png"
+            alt="Kanbouri Psicología"
+            class="footer-brand__logo"
+            width="350"
+            height="159"
+          />
         </div>
 
         <p class="footer-person text-secondary">María B. Kanbouri</p>
@@ -250,6 +256,7 @@ onMounted(async () => {
   display: block;
   height: 88px;
   width: auto;
+  aspect-ratio: 350 / 159;
 }
 
 .footer-person {

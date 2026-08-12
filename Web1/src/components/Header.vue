@@ -2,7 +2,13 @@
   <header class="kb-header" :class="{ 'kb-header--scrolled': isScrolled }">
     <div class="kb-header__bar">
       <router-link to="/" class="kb-brand" @click="closeAll">
-        <img src="/images/logo_kanbouri_2023.png" alt="Kanbouri Psicología" class="kb-brand__logo" />
+        <img
+          src="/images/logo_kanbouri_2023.png"
+          alt="Kanbouri Psicología"
+          class="kb-brand__logo"
+          width="350"
+          height="159"
+        />
       </router-link>
 
       <button
@@ -346,6 +352,7 @@ onBeforeUnmount(() => {
   display: block;
   height: 72px;
   width: auto;
+  aspect-ratio: 350 / 159;
 }
 
 /* Navegación */

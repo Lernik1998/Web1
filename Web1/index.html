@@ -20,7 +20,7 @@
          igualmente. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://kanbouripsicologia.com https://secure.gravatar.com https://lh3.googleusercontent.com; connect-src 'self' https://kanbouripsicologia.com https://www.google.com https://www.gstatic.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com; frame-src https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://kanbouripsicologia.com https://secure.gravatar.com https://lh3.googleusercontent.com; connect-src 'self' https://kanbouripsicologia.com https://www.google.com https://www.gstatic.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com; frame-src https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self'"
     >
 
     <!-- Título/descripción por defecto: los ve cualquier rastreador que no
@@ -98,18 +98,12 @@
     }
     </script>
 
-    <!-- Una sola petición de fuentes para toda la web (antes había dos
-         @import duplicados y solapados dentro del CSS empaquetado, que el
-         navegador solo podía descubrir tras parsear ese CSS). El preconnect
-         adelanta la conexión TLS con Google Fonts antes de que se pida la
-         hoja de estilos, y con ella el navegador ya sabe qué fuentes
-         necesita mientras el resto de la página sigue cargando. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600&display=swap"
-    >
+    <!-- El contenido real (API) y la imagen del Hero (candidata a LCP en
+         casi todas las páginas) vienen siempre de este mismo dominio:
+         adelantar la conexión (DNS + TLS) antes de que el JS la pida de
+         verdad ahorra ese tiempo de ida y vuelta en la ruta crítica del
+         primer contenido visible. -->
+    <link rel="preconnect" href="https://kanbouripsicologia.com">
   </head>
   <body>
     <div id="app"></div>

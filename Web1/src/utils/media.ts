@@ -13,9 +13,30 @@ import type { WordPressMedia } from '../types/api'
  * o una imagen ya pequeña), se cae de vuelta al archivo original.
  */
 export function getMediaUrl(
-  media: WordPressMedia | null | undefined,
+  media: Pick<WordPressMedia, 'source_url' | 'media_details'> | null | undefined,
   size: 'medium' | 'medium_large' | 'large' = 'large',
 ): string | undefined {
   if (!media) return undefined
   return media.media_details?.sizes?.[size]?.source_url ?? media.source_url
+}
+
+/**
+ * `srcset` para imágenes que se muestran a un ancho muy distinto según el
+ * tamaño de pantalla (p. ej. el Hero: ~280px en móvil, ~460px en
+ * escritorio): con un único tamaño fijo, o sirve de más en móvil o de menos
+ * en escritorio. Con `srcset`, el propio navegador elige qué variante
+ * descargar según el ancho real y la densidad de píxeles de cada visita.
+ * Solo incluye los tamaños que WordPress haya generado de verdad para ese
+ * adjunto (algunos, si el original es pequeño, no llegan a existir).
+ */
+export function getMediaSrcSet(
+  media: Pick<WordPressMedia, 'source_url' | 'media_details'> | null | undefined,
+): string | undefined {
+  const sizes = media?.media_details?.sizes
+  if (!sizes) return undefined
+  const entries = (['medium_large', 'large'] as const)
+    .map((size) => sizes[size])
+    .filter((entry): entry is { source_url: string; width: number; height: number } => !!entry)
+  if (!entries.length) return undefined
+  return entries.map((entry) => `${entry.source_url} ${entry.width}w`).join(', ')
 }

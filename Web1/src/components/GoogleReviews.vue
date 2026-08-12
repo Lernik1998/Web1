@@ -43,7 +43,7 @@
             <span class="kb-review__avatar-wrap">
               <img
                 v-if="!brokenPhotos.has(review.id)"
-                :src="review.user_photo"
+                :src="avatarSrc(review.user_photo)"
                 :alt="review.user"
                 class="kb-review__avatar-img"
                 loading="lazy"
@@ -215,6 +215,16 @@ const expanded = ref<Set<string>>(new Set())
 const visibleReviews = computed(() =>
   props.limit ? reviews.value.slice(0, props.limit) : reviews.value,
 )
+
+// Las fotos de perfil de Google llegan pedidas a 120px (p. ej.
+// "...=s120-c-rp-mo-br100"), pero el avatar solo se muestra a 44px: se
+// pide directamente el tamaño que hace falta (88px, el doble para
+// pantallas retina) cambiando ese parámetro en la propia URL de Google, sin
+// tocar el backend. Si la URL no tiene ese formato exacto (foto por
+// defecto, formato distinto...), se deja tal cual.
+function avatarSrc(url: string): string {
+  return url.replace(/=s\d+-/, '=s88-')
+}
 
 // La valoración agregada de los datos estructurados representa el negocio
 // real en Google, no solo lo que este componente decida mostrar: se calcula

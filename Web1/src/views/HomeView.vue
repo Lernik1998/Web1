@@ -23,14 +23,14 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { fetchHomePage, fetchMediaById, fetchTherapieBySlug } from '../services/dataService'
-import { getMediaUrl } from '../utils/media'
+import { getMediaUrl, getMediaSrcSet } from '../utils/media'
 import { useSeoMeta, seoMetaFromYoast } from '../composables/useSeoMeta'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import Hero from '../components/Hero.vue'
 import TherapyCards from '../components/TherapyCards.vue'
 import GoogleReviews from '../components/GoogleReviews.vue'
 import Collaborations from '../components/Collaborations.vue'
-import type { WordPressHomePage } from '../types/api'
+import type { WordPressHomePage, WordPressMedia } from '../types/api'
 
 defineOptions({
   name: 'InicioView',
@@ -71,7 +71,12 @@ const ADULT_SUB_THERAPIES: Array<{ slug: string; href: string; imagePosition?: s
 const pageData = ref<WordPressHomePage | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
-const mediaUrls = ref<Record<number, string>>({})
+// Se guarda el objeto de media completo (no una URL ya resuelta) para poder
+// elegir un tamaño distinto según dónde se use cada imagen: el Hero ocupa
+// todo el ancho y necesita una imagen grande, pero las tarjetas de terapia
+// son mucho más pequeñas -- pedir siempre el tamaño "large" (1024px) para
+// una tarjeta de ~300-500px descarga varias veces más peso del necesario.
+const mediaById = ref<Record<number, WordPressMedia>>({})
 const adultSubTherapyCards = ref<TherapyCardData[]>([])
 
 // Título/descripción de Yoast SEO (ya escritos a mano en WordPress, campo
@@ -88,7 +93,8 @@ const heroProps = computed(() => {
     title: acf.hero_title,
     description: acf.hero_description,
     buttonText: acf.hero_button_text,
-    imageUrl: mediaUrls.value[acf.hero_image] ?? '',
+    imageUrl: getMediaUrl(mediaById.value[acf.hero_image], 'large') ?? '',
+    imageSrcset: getMediaSrcSet(mediaById.value[acf.hero_image]),
   }
 })
 
@@ -115,7 +121,7 @@ const therapyCards = computed(() => {
     title,
     description: descriptions[index] ?? '',
     buttonText: buttonTexts[index] ?? 'Me interesa',
-    imageUrl: mediaUrls.value[images[index] ?? 0] ?? '',
+    imageUrl: getMediaUrl(mediaById.value[images[index] ?? 0], 'medium_large') ?? '',
     href: therapyHrefs[index] ?? '/',
   }))
 
@@ -149,13 +155,12 @@ onMounted(async () => {
 
     const idList = [...mediaIds]
     const mediaResults = await Promise.all(idList.map((id) => fetchMediaById(id)))
-    const urlMap: Record<number, string> = {}
+    const mediaMap: Record<number, WordPressMedia> = {}
     mediaResults.forEach((media, index) => {
       const id = idList[index]
-      const url = getMediaUrl(media)
-      if (id && url) urlMap[id] = url
+      if (id && media) mediaMap[id] = media
     })
-    mediaUrls.value = urlMap
+    mediaById.value = mediaMap
 
     adultSubTherapyCards.value = subTherapies
       .map((therapy, index): TherapyCardData | null => {
@@ -167,7 +172,7 @@ onMounted(async () => {
           // la tarjeta usa el mismo texto que la página propia de la
           // terapia (`therapy_description`) como respaldo.
           description: subAcf.card_description?.trim() || subAcf.therapy_description || '',
-          imageUrl: urlMap[subAcf.therapy_image] ?? '',
+          imageUrl: getMediaUrl(mediaMap[subAcf.therapy_image], 'medium_large') ?? '',
           buttonText: 'Me interesa',
           href: ADULT_SUB_THERAPIES[index]!.href,
           imagePosition: ADULT_SUB_THERAPIES[index]!.imagePosition,
