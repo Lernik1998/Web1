@@ -68,8 +68,8 @@ html {
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 240ms;
-  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-duration: 420ms;
+  animation-timing-function: ease-in-out;
 }
 
 ::view-transition-old(root) {
@@ -80,17 +80,18 @@ html {
   animation-name: kb-page-fade-in;
 }
 
+/* Sin desplazamiento vertical (solo fundido): el translateY de antes se
+   notaba como un "salto" en vez de una transición tranquila, sobre todo
+   entre páginas de alturas muy distintas. */
 @keyframes kb-page-fade-out {
   to {
     opacity: 0;
-    transform: translateY(-10px);
   }
 }
 
 @keyframes kb-page-fade-in {
   from {
     opacity: 0;
-    transform: translateY(10px);
   }
 }
 

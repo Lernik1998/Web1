@@ -58,20 +58,19 @@ const maintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE === 'true'
   top: 12px;
 }
 
+/* Sin desplazamiento vertical (solo fundido) y algo más lento que antes:
+   el translateY se notaba como un "salto" en vez de una transición
+   tranquila, sobre todo entre páginas de alturas muy distintas. Misma
+   duración/curva que la transición nativa de las navegaciones con recarga
+   real (ver @view-transition en global.css), para que se sienta igual en
+   toda la web. */
 .page-fade-enter-active,
 .page-fade-leave-active {
-  transition:
-    opacity 240ms var(--ease-base),
-    transform 240ms var(--ease-base);
+  transition: opacity 420ms ease-in-out;
 }
 
-.page-fade-enter-from {
-  opacity: 0;
-  transform: translateY(10px);
-}
-
+.page-fade-enter-from,
 .page-fade-leave-to {
   opacity: 0;
-  transform: translateY(-10px);
 }
 </style>
