@@ -80,6 +80,7 @@
 import { ref, computed, watch } from 'vue'
 import { fetchBlogPosts } from '../services/dataService'
 import { useSeoMeta } from '../composables/useSeoMeta'
+import { getEmbeddedHydration, recordHydration } from '../utils/hydration'
 import BlogCard from '../components/BlogCard.vue'
 import type { WordPressPost } from '../types/api'
 
@@ -117,13 +118,35 @@ const loading = ref(true)
 const error = ref<string | null>(null)
 const totalPages = ref(1)
 
+// No usa useHydratedAsync (composables/useHydratedAsync.ts): esta vista
+// puede volver a pedir datos DESPUÉS del montaje inicial (al paginar de
+// "/blog" a "/blog/pagina/2" sin recargar la página, ver el `watch` de más
+// abajo), algo que ese composable no contempla (solo hidrata la primera
+// carga). Aun así sigue el mismo mecanismo a mano: si el HTML ya trae
+// incrustados los posts de esta página exacta (pre-renderizado de esta
+// misma ruta), se usan directamente y de forma síncrona -- sin ellos, se
+// piden a la API como siempre.
 async function loadPage(targetPage: number) {
+  const key = `blog:page:${targetPage}`
+  const embedded = getEmbeddedHydration()?.[key] as
+    | { posts: WordPressPost[]; totalPages: number }
+    | undefined
+
+  if (embedded !== undefined) {
+    posts.value = embedded.posts
+    totalPages.value = embedded.totalPages
+    loading.value = false
+    recordHydration(key, embedded)
+    return
+  }
+
   loading.value = true
   error.value = null
   try {
     const result = await fetchBlogPosts(targetPage)
     posts.value = result.posts
     totalPages.value = result.totalPages
+    recordHydration(key, { posts: result.posts, totalPages: result.totalPages })
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Error desconocido'
     console.error('Error fetching blog posts:', err)

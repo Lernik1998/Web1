@@ -10,7 +10,7 @@
 
       <template v-else-if="member">
         <article>
-          <div class="kb-about__masthead" v-animate-on-scroll>
+          <div class="kb-about__masthead">
             <div v-if="member.photo && !photoLoadFailed" class="kb-about__frame">
               <div class="kb-about__media-decor" aria-hidden="true"></div>
               <div class="kb-about__media" v-spotlight>
@@ -93,11 +93,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { fetchAboutMePage } from '../../services/dataService'
 import { parseTeamContent } from '../../utils/teamParser'
 import { useSeoMeta, seoMetaFromYoast, SITE_ORIGIN } from '../../composables/useSeoMeta'
 import { usePersonSchema } from '../../composables/usePersonSchema'
+import { useHydratedAsync } from '../../composables/useHydratedAsync'
 import LoadingSpinner from '../../components/LoadingSpinner.vue'
 import type { YoastHeadJson } from '../../types/api'
 
@@ -105,10 +106,19 @@ defineOptions({
   name: 'AboutView',
 })
 
-const loading = ref(true)
-const error = ref<string | null>(null)
-const member = ref<ReturnType<typeof parseTeamContent>[number] | null>(null)
-const yoast = ref<YoastHeadJson | null>(null)
+type AboutData = {
+  member: ReturnType<typeof parseTeamContent>[number] | null
+  yoast: YoastHeadJson | null
+}
+
+async function loadAboutData(): Promise<AboutData> {
+  const page = await fetchAboutMePage()
+  const parsed = page ? parseTeamContent(page.content.rendered) : []
+  return { member: parsed[0] ?? null, yoast: page?.yoast_head_json ?? null }
+}
+
+const { data, loading, error } = useHydratedAsync('about:page', loadAboutData)
+const member = computed(() => data.value?.member ?? null)
 // Si la URL de la foto llega rota (404, medio borrado en WordPress...), se
 // oculta el marco de la foto igual que cuando no hay ninguna asignada, en
 // vez de mostrar el icono de imagen rota del navegador.
@@ -118,7 +128,7 @@ const photoLoadFailed = ref(false)
 // esta página: se usan tal cual, no se construyen aquí.
 useSeoMeta(
   computed(() => {
-    const meta = seoMetaFromYoast(yoast.value)
+    const meta = seoMetaFromYoast(data.value?.yoast ?? null)
     return meta ? { ...meta, image: member.value?.photo ?? undefined, type: 'profile' } : null
   }),
 )
@@ -143,20 +153,6 @@ usePersonSchema(
       : null,
   ),
 )
-
-onMounted(async () => {
-  try {
-    const page = await fetchAboutMePage()
-    const parsed = page ? parseTeamContent(page.content.rendered) : []
-    member.value = parsed[0] ?? null
-    yoast.value = page?.yoast_head_json ?? null
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Error desconocido'
-    console.error('Error fetching about me page:', err)
-  } finally {
-    loading.value = false
-  }
-})
 </script>
 
 <style scoped>
@@ -204,7 +200,12 @@ onMounted(async () => {
 
 /* ---------- Cabecera: retrato de tamaño moderado (mismo lenguaje que el
    Hero de Inicio: sombra desplazada en degradado rosa detrás de la foto)
-   junto a la presentación. ---------- */
+   junto a la presentación. Sin v-animate-on-scroll (a diferencia del resto
+   de bloques de la página): al estar siempre visible desde el primer
+   pintado (no hace falta scroll para verlo), esa animación de entrada
+   podía dispararse tarde bajo condiciones de CPU limitada y contar como un
+   salto de layout real -- medido con Lighthouse, sin aportar nada visual
+   ya que el usuario nunca llega a verlo "aparecer". ---------- */
 .kb-about__masthead {
   display: grid;
   grid-template-columns: minmax(0, 340px) 1fr;
@@ -259,7 +260,7 @@ onMounted(async () => {
 
 .kb-about__role {
   font-family: var(--font-body);
-  font-weight: 500;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-size: 13px;
@@ -442,7 +443,6 @@ onMounted(async () => {
 }
 
 /* ---------- Animación al entrar en la pantalla ---------- */
-.kb-about__masthead.kb-animate-onscroll,
 .kb-about__bio.kb-animate-onscroll,
 .kb-about__block.kb-animate-onscroll,
 .kb-about__closing.kb-animate-onscroll {
@@ -451,7 +451,6 @@ onMounted(async () => {
   transition: opacity 550ms var(--ease-base), transform 550ms var(--ease-base);
 }
 
-.kb-about__masthead.kb-animate-onscroll.is-visible,
 .kb-about__bio.kb-animate-onscroll.is-visible,
 .kb-about__block.kb-animate-onscroll.is-visible,
 .kb-about__closing.kb-animate-onscroll.is-visible {

@@ -99,10 +99,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { computed } from 'vue'
 import { fetchForPsicologosPage } from '../services/dataService'
 import { processWordPressContent } from '../utils/contentProcessor'
 import { useSeoMeta, seoMetaFromYoast } from '../composables/useSeoMeta'
+import { useHydratedAsync } from '../composables/useHydratedAsync'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import type { WordPressPage } from '../types/api'
 
@@ -114,14 +115,6 @@ const GUIDE_URL = 'https://kanbouripsicologia.systeme.io/duelo-reptura-guia'
 defineOptions({
   name: 'ParaPsicologosView',
 })
-
-const pageData = ref<WordPressPage | null>(null)
-const loading = ref(true)
-const error = ref<string | null>(null)
-
-// Título/descripción de Yoast SEO, ya escritos a mano en WordPress para
-// esta página: se usan tal cual, no se construyen aquí.
-useSeoMeta(() => seoMetaFromYoast(pageData.value?.yoast_head_json))
 
 /**
  * Ruta interna de cada área listada en "Áreas que trabajamos". El texto de
@@ -148,14 +141,16 @@ interface Step {
   description: string
 }
 
-const lead = ref('')
-const quote = ref('')
-const buttonText = ref('Reservar supervisión')
-const textBlocks = ref<TextBlock[]>([])
-const areas = ref<{ label: string; href: string }[]>([])
-const steps = ref<Step[]>([])
-const finalHeading = ref('')
-const finalText = ref('')
+interface ParsedContent {
+  lead: string
+  quote: string
+  buttonText: string
+  textBlocks: TextBlock[]
+  areas: { label: string; href: string }[]
+  steps: Step[]
+  finalHeading: string
+  finalText: string
+}
 
 function splitByBr(html: string): string[] {
   return html
@@ -174,22 +169,33 @@ function toPlainText(html: string): string {
   return new DOMParser().parseFromString(html, 'text/html').body.textContent?.trim() ?? ''
 }
 
-function parseContent(html: string) {
+function parseContent(html: string): ParsedContent {
   const doc = new DOMParser().parseFromString(html, 'text/html')
   const children = Array.from(doc.body.children)
+
+  const result: ParsedContent = {
+    lead: '',
+    quote: '',
+    buttonText: 'Reservar supervisión',
+    textBlocks: [],
+    areas: [],
+    steps: [],
+    finalHeading: '',
+    finalText: '',
+  }
 
   const firstButtons = children.find((el) => el.classList.contains('wp-block-buttons'))
   const leadParagraph = children.find(
     (el) => el.tagName === 'P' && (!firstButtons || children.indexOf(el) < children.indexOf(firstButtons)),
   )
-  lead.value = leadParagraph?.textContent?.trim() ?? ''
+  result.lead = leadParagraph?.textContent?.trim() ?? ''
 
   const firstButtonLink = doc.querySelector('.wp-block-button__link')
   if (firstButtonLink?.textContent?.trim()) {
-    buttonText.value = firstButtonLink.textContent.trim()
+    result.buttonText = firstButtonLink.textContent.trim()
   }
 
-  quote.value = doc.querySelector('blockquote')?.textContent?.trim() ?? ''
+  result.quote = doc.querySelector('blockquote')?.textContent?.trim() ?? ''
 
   const h3s = Array.from(doc.querySelectorAll('h3'))
   const blocks: TextBlock[] = []
@@ -199,7 +205,7 @@ function parseContent(html: string) {
     if (!next) continue
 
     if (next.tagName === 'UL') {
-      areas.value = Array.from(next.querySelectorAll('li')).map((li) => {
+      result.areas = Array.from(next.querySelectorAll('li')).map((li) => {
         const label = li.textContent?.replace(/\s+/g, ' ').trim() ?? ''
         return { label, href: AREA_ROUTES[label.toLowerCase()] ?? '/terapias' }
       })
@@ -207,7 +213,7 @@ function parseContent(html: string) {
       blocks.push({ title, description: next.textContent?.trim() ?? '' })
     }
   }
-  textBlocks.value = blocks
+  result.textBlocks = blocks
 
   const h4 = doc.querySelector('h4')
   if (h4) {
@@ -228,28 +234,52 @@ function parseContent(html: string) {
         description: processWordPressContent(lines[i + 1] ?? ''),
       })
     }
-    steps.value = parsedSteps
+    result.steps = parsedSteps
 
     if (finalParagraph) {
       const finalLines = splitByBr(finalParagraph.innerHTML)
-      finalHeading.value = toPlainText(finalLines[0] ?? '')
-      finalText.value = toPlainText(finalLines[1] ?? '')
+      result.finalHeading = toPlainText(finalLines[0] ?? '')
+      result.finalText = toPlainText(finalLines[1] ?? '')
     }
   }
+
+  return result
 }
 
-onMounted(async () => {
-  try {
-    pageData.value = await fetchForPsicologosPage()
-    if (pageData.value) parseContent(pageData.value.content.rendered)
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Error desconocido'
-    console.error('Error fetching para psicólogos:', err)
-  } finally {
-    loading.value = false
-  }
-})
+type ParaPsicologosData = ParsedContent & { pageData: WordPressPage | null }
 
+async function loadParaPsicologosData(): Promise<ParaPsicologosData> {
+  const pageData = await fetchForPsicologosPage()
+  const parsed = pageData
+    ? parseContent(pageData.content.rendered)
+    : {
+        lead: '',
+        quote: '',
+        buttonText: 'Reservar supervisión',
+        textBlocks: [],
+        areas: [],
+        steps: [],
+        finalHeading: '',
+        finalText: '',
+      }
+  return { pageData, ...parsed }
+}
+
+const { data, loading, error } = useHydratedAsync('para-psicologos:page', loadParaPsicologosData)
+
+// Título/descripción de Yoast SEO, ya escritos a mano en WordPress para
+// esta página: se usan tal cual, no se construyen aquí.
+useSeoMeta(computed(() => seoMetaFromYoast(data.value?.pageData?.yoast_head_json)))
+
+const pageData = computed(() => data.value?.pageData ?? null)
+const lead = computed(() => data.value?.lead ?? '')
+const quote = computed(() => data.value?.quote ?? '')
+const buttonText = computed(() => data.value?.buttonText ?? 'Reservar supervisión')
+const textBlocks = computed(() => data.value?.textBlocks ?? [])
+const areas = computed(() => data.value?.areas ?? [])
+const steps = computed(() => data.value?.steps ?? [])
+const finalHeading = computed(() => data.value?.finalHeading ?? '')
+const finalText = computed(() => data.value?.finalText ?? '')
 const title = computed(() => pageData.value?.title.rendered ?? '')
 </script>
 

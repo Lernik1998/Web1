@@ -13,10 +13,10 @@ describe('Collaborations', () => {
     expect(wrapper.text()).toContain('Colaboramos Con')
 
     const cards = wrapper.findAll('.kb-collab__card')
-    expect(cards).toHaveLength(3)
+    expect(cards).toHaveLength(4)
 
     const labels = cards.map((c) => c.attributes('aria-label'))
-    expect(labels).toEqual(['UNIR', 'UNED', 'Universidad Isabel I'])
+    expect(labels).toEqual(['UNIR', 'UNED', 'Universidad Isabel I', 'UNIE'])
   })
 
   it('links each card to its external href', () => {

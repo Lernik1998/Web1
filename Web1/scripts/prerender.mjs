@@ -24,7 +24,7 @@
  * (`npx playwright install chromium`, solo hace falta una vez por máquina).
  */
 import { createServer } from 'node:http'
-import { readFile, stat, writeFile, mkdir, copyFile } from 'node:fs/promises'
+import { readFile, stat, writeFile, mkdir, copyFile, readdir } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
@@ -175,7 +175,20 @@ async function prerenderRoute(browser, route) {
     // (http://localhost:4173/assets/...) en vez de la ruta relativa
     // original. Sin este reemplazo, el HTML guardado apuntaría a
     // localhost:4173 también en producción, y esos chunks no cargarían.
-    const html = (await page.content()).replaceAll(`http://localhost:${PORT}`, '')
+    let html = (await page.content()).replaceAll(`http://localhost:${PORT}`, '')
+
+    // Vistas migradas a useHydratedAsync() (ver src/composables/useHydratedAsync.ts)
+    // registran aquí los datos que acaban de pedir a la API: se incrustan en
+    // el propio HTML para que el cliente real no tenga que volver a pedirlos
+    // y así evitar el salto de layout de "cargando → contenido".
+    const captured = await page.evaluate(() => window.__KB_HYDRATION_CAPTURE__ ?? null)
+    if (captured && Object.keys(captured).length > 0) {
+      const json = JSON.stringify(captured).replace(/</g, '\\u003c')
+      html = html.replace(
+        '</body>',
+        `<script id="kb-hydration-data" type="application/json">${json}</script></body>`,
+      )
+    }
 
     const outDir = route === '/' ? DIST_DIR : path.join(DIST_DIR, route)
     await mkdir(outDir, { recursive: true })
@@ -188,6 +201,46 @@ async function prerenderRoute(browser, route) {
   }
 }
 
+// Las tipografías (@fontsource, ver src/main.ts) solo se descubren cuando el
+// navegador procesa el CSS que las declara (@font-face), que a su vez solo
+// llega tras descargar y ejecutar el bundle -- por eso, con "font-display:
+// swap", el texto se pinta primero con la fuente de repuesto del sistema y
+// salta de tamaño al cambiar a la real varios cientos de ms después,
+// provocando un salto de layout medible (confirmado con CPU limitada, y con
+// el propio "cls-culprits-insight" de Lighthouse señalando explícitamente
+// "Web font" como causa). Precargar aquí los pesos que se usan por encima
+// del pliegue en (casi) cualquier página -- Inter 400 (cuerpo), Inter 500
+// (botones/enlaces "text-cta"), Fraunces 600 (títulos h1/h2) y Fraunces
+// 400 cursiva (citas y texto de presentación, p. ej. AboutView.vue) --
+// adelanta esa descarga al principio del todo, antes de que el texto
+// llegue a pintarse. Solo el subset "latin" (cubre también los caracteres
+// con tilde/ñ del español; "latin-ext" es para otros alfabetos que esta
+// web no usa).
+const FONT_PRELOAD_PATTERNS = [
+  /^inter-latin-400-normal-.*\.woff2$/,
+  /^inter-latin-500-normal-.*\.woff2$/,
+  /^fraunces-latin-600-normal-.*\.woff2$/,
+  /^fraunces-latin-400-italic-.*\.woff2$/,
+]
+
+async function injectFontPreloads(htmlPath) {
+  const assetsDir = path.join(DIST_DIR, 'assets')
+  const files = await readdir(assetsDir)
+  const toPreload = files.filter((file) => FONT_PRELOAD_PATTERNS.some((pattern) => pattern.test(file)))
+
+  if (toPreload.length === 0) {
+    console.warn('  ⚠ No se encontraron los archivos de fuente esperados para precargar.')
+    return
+  }
+
+  const links = toPreload
+    .map((file) => `    <link rel="preload" as="font" type="font/woff2" href="/assets/${file}" crossorigin>`)
+    .join('\n')
+
+  const html = await readFile(htmlPath, 'utf-8')
+  await writeFile(htmlPath, html.replace('</head>', `${links}\n  </head>`), 'utf-8')
+}
+
 async function main() {
   try {
     await stat(DIST_DIR)
@@ -195,6 +248,9 @@ async function main() {
     console.error('✘ No existe dist/. Ejecuta "npm run build-only" antes del pre-renderizado.')
     process.exit(1)
   }
+
+  await injectFontPreloads(path.join(DIST_DIR, 'index.html'))
+  console.log('✔ Precarga de tipografías incrustada en index.html')
 
   // El pre-renderizado de "/" sobrescribe dist/index.html con el HTML ya
   // completo de la portada. Pero ese mismo archivo es también el destino de

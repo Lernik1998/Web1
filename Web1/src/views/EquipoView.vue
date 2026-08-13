@@ -52,10 +52,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { fetchProfesionales, fetchMediaById } from '../services/dataService'
 import { getMediaUrl } from '../utils/media'
 import { useSeoMeta } from '../composables/useSeoMeta'
+import { useHydratedAsync } from '../composables/useHydratedAsync'
 import type { ProfesionalPost } from '../types/api'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 
@@ -69,24 +70,43 @@ useSeoMeta(() => ({
     'Equipo de psicólogas colegiadas en Dénia: infantil, adolescentes, adultos y terapia de pareja. Atención presencial en Dénia y también online.',
 }))
 
-const loading = ref(true)
-const error = ref<string | null>(null)
-const professionals = ref<ProfesionalPost[]>([])
-// `hero_image` es un ID de la biblioteca de medios, no la imagen destacada
-// del post (que estas fichas no usan), así que hay que resolverlo aparte.
-const photoUrls = ref<Record<number, string>>({})
-// Si la URL de una foto llega rota (404, medio borrado en WordPress...), se
-// trata igual que si no hubiera foto: cae al placeholder de iniciales en vez
-// de mostrar el icono de imagen rota del navegador.
-const brokenPhotos = ref<Set<string>>(new Set())
-
 // María B. Kanbouri (directora del centro) va siempre primera; el resto, por
 // orden alfabético. WordPress por defecto las devuelve por fecha de creación,
 // que no es un orden que tenga sentido de cara al usuario.
 const FIRST_SLUG = 'maria-b-kanbouri'
 
+type EquipoData = {
+  professionals: ProfesionalPost[]
+  photoUrls: Record<number, string>
+}
+
+async function loadEquipoData(): Promise<EquipoData> {
+  const professionals = await fetchProfesionales()
+
+  const mediaIds = [
+    ...new Set(professionals.flatMap((post) => [post.acf.hero_image, post.acf.list_image])),
+  ].filter((id): id is number => Boolean(id))
+  const mediaResults = await Promise.all(mediaIds.map((id) => fetchMediaById(id)))
+  const photoUrls: Record<number, string> = {}
+  mediaResults.forEach((media, index) => {
+    const id = mediaIds[index]
+    // Las fichas del listado son pequeñas (~300px): con "medium_large"
+    // (768px) sobra calidad de sobra incluso en pantallas retina.
+    const url = getMediaUrl(media, 'medium_large')
+    if (id && url) photoUrls[id] = url
+  })
+
+  return { professionals, photoUrls }
+}
+
+const { data, loading, error } = useHydratedAsync('equipo:page', loadEquipoData)
+// Si la URL de una foto llega rota (404, medio borrado en WordPress...), se
+// trata igual que si no hubiera foto: cae al placeholder de iniciales en vez
+// de mostrar el icono de imagen rota del navegador.
+const brokenPhotos = ref<Set<string>>(new Set())
+
 const sortedProfessionals = computed(() =>
-  [...professionals.value].sort((a, b) => {
+  [...(data.value?.professionals ?? [])].sort((a, b) => {
     if (a.slug === FIRST_SLUG) return -1
     if (b.slug === FIRST_SLUG) return 1
     return a.title.rendered.localeCompare(b.title.rendered, 'es')
@@ -99,7 +119,7 @@ const cards = computed(() =>
     // `list_image` es opcional: si no se ha configurado en WordPress, la
     // ficha del listado cae en `hero_image` (la misma foto del perfil).
     const listImageId = post.acf.list_image || post.acf.hero_image
-    const apiPhoto = photoUrls.value[listImageId] ?? null
+    const apiPhoto = data.value?.photoUrls[listImageId] ?? null
     return {
       slug: post.slug,
       name,
@@ -114,33 +134,6 @@ const cards = computed(() =>
     }
   }),
 )
-
-onMounted(async () => {
-  try {
-    professionals.value = await fetchProfesionales()
-
-    const mediaIds = [
-      ...new Set(
-        professionals.value.flatMap((post) => [post.acf.hero_image, post.acf.list_image]),
-      ),
-    ].filter((id): id is number => Boolean(id))
-    const mediaResults = await Promise.all(mediaIds.map((id) => fetchMediaById(id)))
-    const urlMap: Record<number, string> = {}
-    mediaResults.forEach((media, index) => {
-      const id = mediaIds[index]
-      // Las fichas del listado son pequeñas (~300px): con "medium_large"
-      // (768px) sobra calidad de sobra incluso en pantallas retina.
-      const url = getMediaUrl(media, 'medium_large')
-      if (id && url) urlMap[id] = url
-    })
-    photoUrls.value = urlMap
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Error desconocido'
-    console.error('Error fetching profesionales:', err)
-  } finally {
-    loading.value = false
-  }
-})
 </script>
 
 <style scoped>

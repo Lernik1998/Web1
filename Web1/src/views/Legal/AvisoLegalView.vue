@@ -25,11 +25,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { processWordPressContent } from '../../utils/contentProcessor.ts'
 import { useInternalLinks } from '../../composables/useInternalLinks.ts'
 import { fetchAvisoLegalPage } from '../../services/dataService.ts'
 import { useSeoMeta, seoMetaFromYoast } from '../../composables/useSeoMeta.ts'
+import { useHydratedAsync } from '../../composables/useHydratedAsync.ts'
 import LoadingSpinner from '../../components/LoadingSpinner.vue'
 import type { WordPressPage } from '../../types/api.ts'
 
@@ -37,13 +38,15 @@ defineOptions({
   name: 'AvisoLegalView',
 })
 
-const pageData = ref<WordPressPage | null>(null)
+async function loadAvisoLegalData(): Promise<WordPressPage | null> {
+  return fetchAvisoLegalPage()
+}
+
+const { data: pageData, loading, error } = useHydratedAsync('aviso-legal:page', loadAvisoLegalData)
 
 // Título/descripción de Yoast SEO, ya escritos a mano en WordPress para
 // esta página: se usan tal cual, no se construyen aquí.
 useSeoMeta(() => seoMetaFromYoast(pageData.value?.yoast_head_json))
-const loading = ref(true)
-const error = ref<string | null>(null)
 const contentEl = ref<HTMLElement | null>(null)
 
 useInternalLinks(contentEl)
@@ -51,18 +54,6 @@ useInternalLinks(contentEl)
 const processedContent = computed(() => {
   if (!pageData.value) return ''
   return processWordPressContent(pageData.value.content.rendered)
-})
-
-onMounted(async () => {
-  try {
-    const response = await fetchAvisoLegalPage()
-    pageData.value = response
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Error desconocido'
-    console.error('Error fetching aviso legal:', err)
-  } finally {
-    loading.value = false
-  }
 })
 </script>
 

@@ -14,7 +14,7 @@
       </div>
 
       <article v-else-if="member">
-        <div class="kb-profile__masthead" v-animate-on-scroll>
+        <div class="kb-profile__masthead">
           <div class="kb-profile__media">
             <img
               v-if="photo && !photoLoadFailed"
@@ -76,13 +76,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { computed, ref } from 'vue'
 import { fetchProfesionalBySlug, fetchMediaById } from '../services/dataService'
 import { parseProfesionalAcf } from '../utils/profesionalAcf'
 import { getMediaUrl } from '../utils/media'
 import { useSeoMeta, seoMetaFromYoast, SITE_ORIGIN } from '../composables/useSeoMeta'
 import { usePersonSchema } from '../composables/usePersonSchema'
 import { useBreadcrumbSchema } from '../composables/useBreadcrumbSchema'
+import { useHydratedAsync } from '../composables/useHydratedAsync'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import Breadcrumbs from '../components/Breadcrumbs.vue'
 import type { YoastHeadJson } from '../types/api'
@@ -95,21 +96,43 @@ const props = defineProps<{
   slug: string
 }>()
 
-const loading = ref(true)
-const error = ref<string | null>(null)
-const name = ref('')
-const parsed = ref<ReturnType<typeof parseProfesionalAcf> | null>(null)
-const apiPhoto = ref<string | null>(null)
+type TeamMemberData = {
+  name: string
+  parsed: ReturnType<typeof parseProfesionalAcf> | null
+  photo: string | null
+  yoast: YoastHeadJson | null
+}
+
+async function loadTeamMemberData(): Promise<TeamMemberData> {
+  const post = await fetchProfesionalBySlug(props.slug)
+  if (!post) return { name: '', parsed: null, photo: null, yoast: null }
+
+  let photo: string | null = null
+  if (post.acf.hero_image) {
+    const media = await fetchMediaById(post.acf.hero_image)
+    photo = getMediaUrl(media) ?? null
+  }
+
+  return {
+    name: post.title.rendered,
+    parsed: parseProfesionalAcf(post.acf),
+    photo,
+    yoast: post.yoast_head_json ?? null,
+  }
+}
+
+const { data, loading, error } = useHydratedAsync(`team:${props.slug}`, loadTeamMemberData)
 // Si la URL de la foto llega rota (404, medio borrado en WordPress...), se
 // trata igual que si no hubiera foto: cae al placeholder de iniciales en vez
 // de mostrar el icono de imagen rota del navegador.
 const photoLoadFailed = ref(false)
-const yoast = ref<YoastHeadJson | null>(null)
 
-const member = computed(() => (parsed.value ? { name: name.value, ...parsed.value } : null))
+const member = computed(() =>
+  data.value?.parsed ? { name: data.value.name, ...data.value.parsed } : null,
+)
 // La foto viene de la propia API (`hero_image`, un ID de la biblioteca de
 // medios); si no hay ninguna asignada, se muestra el placeholder de iniciales.
-const photo = computed(() => (apiPhoto.value ? { image: apiPhoto.value } : null))
+const photo = computed(() => (data.value?.photo ? { image: data.value.photo } : null))
 const initials = computed(() =>
   member.value
     ? member.value.name
@@ -126,8 +149,8 @@ const initials = computed(() =>
 // esta ficha: se usan tal cual, no se construyen aquí.
 useSeoMeta(
   computed(() => {
-    const meta = seoMetaFromYoast(yoast.value)
-    return meta ? { ...meta, image: apiPhoto.value ?? undefined, type: 'profile' } : null
+    const meta = seoMetaFromYoast(data.value?.yoast ?? null)
+    return meta ? { ...meta, image: data.value?.photo ?? undefined, type: 'profile' } : null
   }),
 )
 
@@ -138,7 +161,7 @@ usePersonSchema(
           name: member.value.name,
           jobTitle: member.value.role || undefined,
           description: member.value.bio[0],
-          image: apiPhoto.value ?? undefined,
+          image: data.value?.photo ?? undefined,
           licenseNumber: member.value.licenseNumber || undefined,
           url: `${SITE_ORIGIN}/equipo/${props.slug}`,
         }
@@ -157,26 +180,6 @@ const breadcrumbItems = computed(() =>
 )
 
 useBreadcrumbSchema(breadcrumbItems)
-
-onMounted(async () => {
-  try {
-    const post = await fetchProfesionalBySlug(props.slug)
-    if (post) {
-      name.value = post.title.rendered
-      parsed.value = parseProfesionalAcf(post.acf)
-      yoast.value = post.yoast_head_json ?? null
-      if (post.acf.hero_image) {
-        const media = await fetchMediaById(post.acf.hero_image)
-        apiPhoto.value = getMediaUrl(media) ?? null
-      }
-    }
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Error desconocido'
-    console.error('Error fetching profesional:', err)
-  } finally {
-    loading.value = false
-  }
-})
 </script>
 
 <style scoped>
@@ -219,6 +222,11 @@ onMounted(async () => {
 }
 
 /* ---------- Cabecera: retrato + presentación ---------- */
+/* Sin v-animate-on-scroll: al estar siempre visible desde el primer
+   pintado (no hace falta scroll para verlo), esa animación de entrada
+   podía dispararse tarde bajo CPU limitada y contar como un salto de
+   layout real -- medido con Lighthouse, sin aportar nada visual ya que el
+   usuario nunca llega a verlo "aparecer" (mismo caso que AboutView.vue). */
 .kb-profile__masthead {
   display: grid;
   grid-template-columns: minmax(0, 300px) 1fr;
@@ -262,6 +270,7 @@ onMounted(async () => {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 13px;
+  font-weight: 700;
   margin-bottom: 4px;
 }
 
@@ -349,14 +358,12 @@ onMounted(async () => {
 }
 
 /* ---------- Animación al entrar en la pantalla ---------- */
-.kb-profile__masthead.kb-animate-onscroll,
 .kb-profile__block.kb-animate-onscroll {
   opacity: 0;
   transform: translateY(24px);
   transition: opacity 550ms var(--ease-base), transform 550ms var(--ease-base);
 }
 
-.kb-profile__masthead.kb-animate-onscroll.is-visible,
 .kb-profile__block.kb-animate-onscroll.is-visible {
   opacity: 1;
   transform: translateY(0);

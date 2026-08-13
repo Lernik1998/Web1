@@ -21,10 +21,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { computed } from 'vue'
 import { fetchHomePage, fetchMediaById, fetchTherapieBySlug } from '../services/dataService'
 import { getMediaUrl, getMediaSrcSet } from '../utils/media'
 import { useSeoMeta, seoMetaFromYoast } from '../composables/useSeoMeta'
+import { useHydratedAsync } from '../composables/useHydratedAsync'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import Hero from '../components/Hero.vue'
 import TherapyCards from '../components/TherapyCards.vue'
@@ -68,38 +69,94 @@ const ADULT_SUB_THERAPIES: Array<{ slug: string; href: string; imagePosition?: s
   { slug: 'duelo-y-perdidas', href: '/terapias/adultos/duelo', imagePosition: 'center 85%' },
 ]
 
-const pageData = ref<WordPressHomePage | null>(null)
-const loading = ref(true)
-const error = ref<string | null>(null)
-// Se guarda el objeto de media completo (no una URL ya resuelta) para poder
-// elegir un tamaño distinto según dónde se use cada imagen: el Hero ocupa
-// todo el ancho y necesita una imagen grande, pero las tarjetas de terapia
-// son mucho más pequeñas -- pedir siempre el tamaño "large" (1024px) para
-// una tarjeta de ~300-500px descarga varias veces más peso del necesario.
-const mediaById = ref<Record<number, WordPressMedia>>({})
-const adultSubTherapyCards = ref<TherapyCardData[]>([])
+type HomeData = {
+  pageData: WordPressHomePage | null
+  // Se guarda el objeto de media completo (no una URL ya resuelta) para poder
+  // elegir un tamaño distinto según dónde se use cada imagen: el Hero ocupa
+  // todo el ancho y necesita una imagen grande, pero las tarjetas de terapia
+  // son mucho más pequeñas -- pedir siempre el tamaño "large" (1024px) para
+  // una tarjeta de ~300-500px descarga varias veces más peso del necesario.
+  mediaById: Record<number, WordPressMedia>
+  adultSubTherapyCards: TherapyCardData[]
+}
+
+async function loadHomeData(): Promise<HomeData> {
+  const [response, subTherapies] = await Promise.all([
+    fetchHomePage(),
+    Promise.all(ADULT_SUB_THERAPIES.map((entry) => fetchTherapieBySlug(entry.slug))),
+  ])
+
+  const acf = response?.acf
+  const mediaIds = new Set<number>()
+  if (acf) {
+    ;[
+      acf.hero_image,
+      acf.therapy_1_image,
+      acf.therapy_2_image,
+      acf.therapy_3_image,
+      acf.therapy_4_image,
+    ]
+      .filter(Boolean)
+      .forEach((id) => mediaIds.add(id))
+  }
+  subTherapies.forEach((therapy) => {
+    if (therapy?.acf.therapy_image) mediaIds.add(therapy.acf.therapy_image)
+  })
+
+  const idList = [...mediaIds]
+  const mediaResults = await Promise.all(idList.map((id) => fetchMediaById(id)))
+  const mediaMap: Record<number, WordPressMedia> = {}
+  mediaResults.forEach((media, index) => {
+    const id = idList[index]
+    if (id && media) mediaMap[id] = media
+  })
+
+  const adultSubTherapyCards = subTherapies
+    .map((therapy, index): TherapyCardData | null => {
+      const subAcf = therapy?.acf
+      if (!subAcf) return null
+      return {
+        title: subAcf.therapy_name || therapy.title.rendered,
+        // `card_description` es opcional: si en WordPress se deja vacío,
+        // la tarjeta usa el mismo texto que la página propia de la
+        // terapia (`therapy_description`) como respaldo.
+        description: subAcf.card_description?.trim() || subAcf.therapy_description || '',
+        imageUrl: getMediaUrl(mediaMap[subAcf.therapy_image], 'medium_large') ?? '',
+        buttonText: 'Me interesa',
+        href: ADULT_SUB_THERAPIES[index]!.href,
+        imagePosition: ADULT_SUB_THERAPIES[index]!.imagePosition,
+      }
+    })
+    .filter((card): card is TherapyCardData => card !== null)
+
+  return { pageData: response, mediaById: mediaMap, adultSubTherapyCards }
+}
+
+const { data, loading, error } = useHydratedAsync('home:page', loadHomeData)
 
 // Título/descripción de Yoast SEO (ya escritos a mano en WordPress, campo
 // "yoast_head_json" de la página "home"): se usan tal cual, en vez de
 // construir un título propio en el código, para que el equipo del centro
 // pueda cambiarlos desde WordPress sin tocar nada aquí. Distinto del
 // titular del Hero, que es para la persona que ya está en la página.
-useSeoMeta(() => seoMetaFromYoast(pageData.value?.yoast_head_json))
+useSeoMeta(() => seoMetaFromYoast(data.value?.pageData?.yoast_head_json))
 
 const heroProps = computed(() => {
-  const acf = pageData.value?.acf
+  const acf = data.value?.pageData?.acf
+  const mediaById = data.value?.mediaById ?? {}
   if (!acf) return null
   return {
     title: acf.hero_title,
     description: acf.hero_description,
     buttonText: acf.hero_button_text,
-    imageUrl: getMediaUrl(mediaById.value[acf.hero_image], 'large') ?? '',
-    imageSrcset: getMediaSrcSet(mediaById.value[acf.hero_image]),
+    imageUrl: getMediaUrl(mediaById[acf.hero_image], 'large') ?? '',
+    imageSrcset: getMediaSrcSet(mediaById[acf.hero_image]),
   }
 })
 
 const therapyCards = computed(() => {
-  const acf = pageData.value?.acf
+  const acf = data.value?.pageData?.acf
+  const mediaById = data.value?.mediaById ?? {}
   if (!acf) return []
 
   const titles = [acf.therapy_1_title, acf.therapy_2_title_, acf.therapy_3_title, acf.therapy_4_title]
@@ -121,70 +178,11 @@ const therapyCards = computed(() => {
     title,
     description: descriptions[index] ?? '',
     buttonText: buttonTexts[index] ?? 'Me interesa',
-    imageUrl: getMediaUrl(mediaById.value[images[index] ?? 0], 'medium_large') ?? '',
+    imageUrl: getMediaUrl(mediaById[images[index] ?? 0], 'medium_large') ?? '',
     href: therapyHrefs[index] ?? '/',
   }))
 
-  return [...mainCards, ...adultSubTherapyCards.value]
-})
-
-onMounted(async () => {
-  try {
-    const [response, subTherapies] = await Promise.all([
-      fetchHomePage(),
-      Promise.all(ADULT_SUB_THERAPIES.map((entry) => fetchTherapieBySlug(entry.slug))),
-    ])
-    pageData.value = response
-
-    const acf = response?.acf
-    const mediaIds = new Set<number>()
-    if (acf) {
-      ;[
-        acf.hero_image,
-        acf.therapy_1_image,
-        acf.therapy_2_image,
-        acf.therapy_3_image,
-        acf.therapy_4_image,
-      ]
-        .filter(Boolean)
-        .forEach((id) => mediaIds.add(id))
-    }
-    subTherapies.forEach((therapy) => {
-      if (therapy?.acf.therapy_image) mediaIds.add(therapy.acf.therapy_image)
-    })
-
-    const idList = [...mediaIds]
-    const mediaResults = await Promise.all(idList.map((id) => fetchMediaById(id)))
-    const mediaMap: Record<number, WordPressMedia> = {}
-    mediaResults.forEach((media, index) => {
-      const id = idList[index]
-      if (id && media) mediaMap[id] = media
-    })
-    mediaById.value = mediaMap
-
-    adultSubTherapyCards.value = subTherapies
-      .map((therapy, index): TherapyCardData | null => {
-        const subAcf = therapy?.acf
-        if (!subAcf) return null
-        return {
-          title: subAcf.therapy_name || therapy.title.rendered,
-          // `card_description` es opcional: si en WordPress se deja vacío,
-          // la tarjeta usa el mismo texto que la página propia de la
-          // terapia (`therapy_description`) como respaldo.
-          description: subAcf.card_description?.trim() || subAcf.therapy_description || '',
-          imageUrl: getMediaUrl(mediaMap[subAcf.therapy_image], 'medium_large') ?? '',
-          buttonText: 'Me interesa',
-          href: ADULT_SUB_THERAPIES[index]!.href,
-          imagePosition: ADULT_SUB_THERAPIES[index]!.imagePosition,
-        }
-      })
-      .filter((card): card is TherapyCardData => card !== null)
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Error desconocido'
-    console.error('Error fetching WordPress page:', err)
-  } finally {
-    loading.value = false
-  }
+  return [...mainCards, ...(data.value?.adultSubTherapyCards ?? [])]
 })
 </script>
 

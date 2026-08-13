@@ -343,13 +343,14 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed, watch, onMounted } from 'vue'
+import { reactive, ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchPedirCitaPage, submitAppointmentRequest } from '../services/dataService'
 import { processWordPressContent } from '../utils/contentProcessor'
 import { useInternalLinks } from '../composables/useInternalLinks'
 import { getRecaptchaToken } from '../utils/recaptcha'
 import { useSeoMeta, seoMetaFromYoast } from '../composables/useSeoMeta'
+import { useHydratedAsync } from '../composables/useHydratedAsync'
 import type { WordPressPage } from '../types/api'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 
@@ -359,8 +360,14 @@ defineOptions({
   name: 'PedirCitaView',
 })
 
-const pageLoading = ref(true)
-const pageData = ref<WordPressPage | null>(null)
+async function loadPedirCitaData(): Promise<WordPressPage | null> {
+  return fetchPedirCitaPage()
+}
+
+const { data: pageData, loading: pageLoading } = useHydratedAsync(
+  'pedir-cita:page',
+  loadPedirCitaData,
+)
 
 // Título/descripción de Yoast SEO, ya escritos a mano en WordPress para
 // esta página: se usan tal cual, no se construyen aquí.
@@ -372,16 +379,6 @@ useInternalLinks(leadEl)
 const processedLead = computed(() => {
   if (!pageData.value?.content.rendered) return ''
   return processWordPressContent(pageData.value.content.rendered)
-})
-
-onMounted(async () => {
-  try {
-    pageData.value = await fetchPedirCitaPage()
-  } catch (err) {
-    console.error('Error fetching pedir cita:', err)
-  } finally {
-    pageLoading.value = false
-  }
 })
 
 const services = [
@@ -402,6 +399,7 @@ const professionals = [
   { value: 'maria', label: 'María B. Kanbouri' },
   { value: 'beatriz', label: 'Beatriz Donet' },
   { value: 'ester', label: 'Ester Pinedo Gil' },
+  { value: 'maria-antaryami', label: 'Maria Antaryami Alcántara' },
 ]
 
 const weekdays = [

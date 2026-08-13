@@ -186,9 +186,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { fetchGoogleReviews } from '../services/dataService'
 import { useAggregateRatingSchema } from '../composables/useAggregateRatingSchema'
+import { useHydratedAsync } from '../composables/useHydratedAsync'
 import type { GoogleReview } from '../types/api'
 
 defineOptions({
@@ -207,8 +208,8 @@ const props = withDefaults(
   },
 )
 
-const loading = ref(true)
-const reviews = ref<GoogleReview[]>([])
+const { data, loading } = useHydratedAsync('home:reviews', fetchGoogleReviews)
+const reviews = computed(() => data.value ?? [])
 const brokenPhotos = ref<Set<string>>(new Set())
 const expanded = ref<Set<string>>(new Set())
 
@@ -324,15 +325,6 @@ function toggleExpanded(id: string) {
   expanded.value = expanded.value.has(id) ? new Set() : new Set([id])
 }
 
-onMounted(async () => {
-  try {
-    reviews.value = await fetchGoogleReviews()
-  } catch (err) {
-    console.error('Error fetching Google reviews:', err)
-  } finally {
-    loading.value = false
-  }
-})
 </script>
 
 <style scoped>

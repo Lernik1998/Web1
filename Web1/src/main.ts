@@ -28,4 +28,28 @@ app.directive('animate-on-scroll', animateOnScroll)
 app.directive('spotlight', spotlight)
 app.directive('ripple', ripple)
 
-app.mount('#app')
+// Si este HTML viene del pre-renderizado (scripts/prerender.mjs), ya trae
+// incrustados los datos que se pidieron a la API al generarlo: se leen aquí,
+// de forma síncrona y antes de montar, para que useHydratedAsync() pueda
+// arrancar cada vista ya con el contenido real en el primer render, sin
+// volver a pedirlo. Ver src/utils/hydration.ts.
+const hydrationEl = document.getElementById('kb-hydration-data')
+if (hydrationEl?.textContent) {
+  try {
+    window.__KB_HYDRATION__ = JSON.parse(hydrationEl.textContent)
+  } catch {
+    // HTML corrupto o manipulado: se ignora y la app hace fetch normal, como siempre.
+  }
+}
+
+// Todas las rutas son "lazy" (`() => import(...)`, ver router/index.ts): sin
+// esperar aquí, app.mount() sustituye de golpe el HTML ya pintado del
+// pre-renderizado por un <router-view> todavía vacío (el chunk de la vista
+// real aún no ha terminado de descargarse), y solo segundos después ese
+// chunk llega y el contenido aparece de golpe -- un salto de layout aparte,
+// mayor que cualquier otro, y evitable: router.isReady() no resuelve hasta
+// que la navegación inicial (con su chunk) esté lista, así que esperarlo
+// aquí hace que el primer pintado real del cliente ya salga completo.
+router.isReady().then(() => {
+  app.mount('#app')
+})

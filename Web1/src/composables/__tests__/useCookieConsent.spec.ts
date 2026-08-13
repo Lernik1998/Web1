@@ -105,7 +105,13 @@ describe('useCookieConsent', () => {
     expect(getConsentCookieValue()).toBeNull()
   })
 
-  it('starts with the banner hidden until something shows it', async () => {
+  it('starts with the banner already visible on a first visit (no consent decided yet)', async () => {
+    const { bannerVisible } = await loadComposable()
+    expect(bannerVisible.value).toBe(true)
+  })
+
+  it('starts with the banner hidden when consent was already decided in a previous visit', async () => {
+    setConsentCookie({ statistics: true, marketing: false, updatedAt: new Date().toISOString() })
     const { bannerVisible } = await loadComposable()
     expect(bannerVisible.value).toBe(false)
   })

@@ -45,6 +45,7 @@ import {
 import { useInternalLinks } from '../composables/useInternalLinks'
 import { useSeoMeta, seoMetaFromYoast } from '../composables/useSeoMeta'
 import { useBreadcrumbSchema } from '../composables/useBreadcrumbSchema'
+import { getEmbeddedHydration, recordHydration } from '../utils/hydration'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import Breadcrumbs from '../components/Breadcrumbs.vue'
 import type { WordPressPost } from '../types/api'
@@ -57,8 +58,17 @@ const props = defineProps<{
   slug: string
 }>()
 
-const post = ref<WordPressPost | null>(null)
-const loading = ref(true)
+// Se comprueba de forma síncrona, antes del primer render, si el HTML
+// pre-renderizado ya trae incrustado este artículo exacto (mismo mecanismo
+// que useHydratedAsync, ver el comentario de loadPost más abajo): si es
+// así, `post`/`loading` arrancan ya resueltos y no hay parpadeo de
+// "cargando" en la primera visita a esta ruta.
+const initialEmbeddedPost = getEmbeddedHydration()?.[`blog-post:${props.slug}`] as
+  | WordPressPost
+  | undefined
+
+const post = ref<WordPressPost | null>(initialEmbeddedPost ?? null)
+const loading = ref(initialEmbeddedPost === undefined)
 const error = ref<string | null>(null)
 const contentEl = ref<HTMLElement | null>(null)
 
@@ -144,11 +154,29 @@ const processedContent = computed(() => {
   return reflowSoftLineBreaks(processWordPressContent(html))
 })
 
+// No usa useHydratedAsync (composables/useHydratedAsync.ts): esta vista
+// puede volver a pedir datos DESPUÉS del montaje inicial (al navegar de un
+// artículo a otro sin recargar la página, ver el `watch` de más abajo), algo
+// que ese composable no contempla (solo hidrata la primera carga). Aun así
+// sigue el mismo mecanismo a mano: si el HTML ya trae incrustado el
+// artículo exacto de este slug (pre-renderizado de esta misma ruta), se usa
+// directamente y de forma síncrona -- sin él, se pide a la API como siempre.
 async function loadPost(slug: string) {
+  const key = `blog-post:${slug}`
+  const embedded = getEmbeddedHydration()?.[key] as WordPressPost | undefined
+
+  if (embedded !== undefined) {
+    post.value = embedded
+    loading.value = false
+    recordHydration(key, embedded)
+    return
+  }
+
   loading.value = true
   error.value = null
   try {
     post.value = await fetchBlogPostBySlug(slug)
+    if (post.value) recordHydration(key, post.value)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Error desconocido'
     console.error('Error fetching blog post:', err)

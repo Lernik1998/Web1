@@ -59,13 +59,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { fetchTherapieBySlug } from '../../../services/dataService'
 import { parseTherapieAcf } from '../../../utils/therapyAcf'
 import type { ParsedTherapyContent } from '../../../utils/therapyAcf'
 import { useSeoMeta, seoMetaFromYoast } from '../../../composables/useSeoMeta'
 import { useFaqSchema } from '../../../composables/useFaqSchema'
 import { useBreadcrumbSchema } from '../../../composables/useBreadcrumbSchema'
+import { useHydratedAsync } from '../../../composables/useHydratedAsync'
 import FaqAccordion from '../../../components/FaqAccordion.vue'
 import LoadingSpinner from '../../../components/LoadingSpinner.vue'
 import RelatedTherapies from '../../../components/RelatedTherapies.vue'
@@ -76,31 +77,31 @@ defineOptions({
   name: 'DueloView',
 })
 
-const loading = ref(true)
-const error = ref<string | null>(null)
-const content = ref<ParsedTherapyContent | null>(null)
-const title = ref('Duelo y pérdidas')
-const yoast = ref<YoastHeadJson | null>(null)
+const DEFAULT_TITLE = 'Duelo y pérdidas'
 
-onMounted(async () => {
-  try {
-    const therapy = await fetchTherapieBySlug('duelo-y-perdidas')
-    if (therapy) {
-      title.value = therapy.title.rendered
-      content.value = parseTherapieAcf(therapy.acf)
-      yoast.value = therapy.yoast_head_json ?? null
-    }
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Error desconocido'
-    console.error('Error fetching adult grief therapy:', err)
-  } finally {
-    loading.value = false
+type DueloData = {
+  title: string
+  content: ParsedTherapyContent | null
+  yoast: YoastHeadJson | null
+}
+
+async function loadDueloData(): Promise<DueloData> {
+  const therapy = await fetchTherapieBySlug('duelo-y-perdidas')
+  if (!therapy) return { title: DEFAULT_TITLE, content: null, yoast: null }
+  return {
+    title: therapy.title.rendered,
+    content: parseTherapieAcf(therapy.acf),
+    yoast: therapy.yoast_head_json ?? null,
   }
-})
+}
+
+const { data, loading, error } = useHydratedAsync('duelo:page', loadDueloData)
+const title = computed(() => data.value?.title ?? DEFAULT_TITLE)
+const content = computed(() => data.value?.content ?? null)
 
 // Título/descripción de Yoast SEO, ya escritos a mano en WordPress para
 // esta ficha: se usan tal cual, no se construyen aquí.
-useSeoMeta(computed(() => seoMetaFromYoast(yoast.value)))
+useSeoMeta(computed(() => seoMetaFromYoast(data.value?.yoast ?? null)))
 
 const relatedLinks = [
   { label: 'Ansiedad', href: '/terapias/adultos/ansiedad' },

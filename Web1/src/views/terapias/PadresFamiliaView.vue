@@ -57,12 +57,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { fetchTherapieBySlug } from '../../services/dataService'
 import { parseTherapieAcf } from '../../utils/therapyAcf'
 import type { ParsedTherapyContent } from '../../utils/therapyAcf'
 import { useSeoMeta, seoMetaFromYoast } from '../../composables/useSeoMeta'
 import { useFaqSchema } from '../../composables/useFaqSchema'
+import { useHydratedAsync } from '../../composables/useHydratedAsync'
 import FaqAccordion from '../../components/FaqAccordion.vue'
 import LoadingSpinner from '../../components/LoadingSpinner.vue'
 import RelatedTherapies from '../../components/RelatedTherapies.vue'
@@ -72,31 +73,31 @@ defineOptions({
   name: 'PadresFamiliaView',
 })
 
-const loading = ref(true)
-const error = ref<string | null>(null)
-const content = ref<ParsedTherapyContent | null>(null)
-const title = ref('Psicóloga para padres y familia')
-const yoast = ref<YoastHeadJson | null>(null)
+const DEFAULT_TITLE = 'Psicóloga para padres y familia'
 
-onMounted(async () => {
-  try {
-    const therapy = await fetchTherapieBySlug('psicologia-para-padres-y-familia')
-    if (therapy) {
-      title.value = therapy.title.rendered
-      content.value = parseTherapieAcf(therapy.acf)
-      yoast.value = therapy.yoast_head_json ?? null
-    }
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Error desconocido'
-    console.error('Error fetching psychology parents therapy:', err)
-  } finally {
-    loading.value = false
+type PadresFamiliaData = {
+  title: string
+  content: ParsedTherapyContent | null
+  yoast: YoastHeadJson | null
+}
+
+async function loadPadresFamiliaData(): Promise<PadresFamiliaData> {
+  const therapy = await fetchTherapieBySlug('psicologia-para-padres-y-familia')
+  if (!therapy) return { title: DEFAULT_TITLE, content: null, yoast: null }
+  return {
+    title: therapy.title.rendered,
+    content: parseTherapieAcf(therapy.acf),
+    yoast: therapy.yoast_head_json ?? null,
   }
-})
+}
+
+const { data, loading, error } = useHydratedAsync('padres-familia:page', loadPadresFamiliaData)
+const title = computed(() => data.value?.title ?? DEFAULT_TITLE)
+const content = computed(() => data.value?.content ?? null)
 
 // Título/descripción de Yoast SEO, ya escritos a mano en WordPress para
 // esta ficha: se usan tal cual, no se construyen aquí.
-useSeoMeta(computed(() => seoMetaFromYoast(yoast.value)))
+useSeoMeta(computed(() => seoMetaFromYoast(data.value?.yoast ?? null)))
 
 const relatedLinks = [
   { label: 'Psicóloga infantil', href: '/terapias/infantil' },

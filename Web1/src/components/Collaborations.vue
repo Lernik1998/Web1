@@ -33,6 +33,7 @@ const universities = [
   { name: 'UNIR', logo: '/images/logo-unir.svg', href: 'https://www.unir.net/' },
   { name: 'UNED', logo: '/images/logo-uned.png', href: 'https://www.uned.es/' },
   { name: 'Universidad Isabel I', logo: '/images/logo-isabel-i.svg', href: 'https://www.ui1.es/' },
+  { name: 'UNIE', logo: '/images/logo-unie.webp', href: 'https://www.unie.es/' },
 ]
 </script>
 

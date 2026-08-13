@@ -8,11 +8,23 @@ function clearAllCookies() {
   })
 }
 
-// useCookieConsent guarda su estado en una variable de módulo (singleton):
-// hay que resetear los módulos y montar el componente tras importar de
-// nuevo para que cada test empiece con `bannerVisible` en `false`.
+const COOKIE_NAME = 'kanbouri_cookie_consent'
+
+function setDecidedConsentCookie() {
+  document.cookie = `${COOKIE_NAME}=${encodeURIComponent(
+    JSON.stringify({ statistics: false, marketing: false, updatedAt: new Date().toISOString() }),
+  )}; path=/`
+}
+
+// useCookieConsent guarda su estado en una variable de módulo (singleton) y
+// ahora arranca con `bannerVisible` en `true` de forma síncrona mientras no
+// haya consentimiento decidido (ver useCookieConsent.ts): para probar este
+// botón con el banner ya cerrado, hay que simular una visita con el
+// consentimiento ya guardado antes de montar. Hay que resetear los módulos
+// para que cada test empiece desde el estado inicial real, como un reload.
 async function mountWhatsAppButton() {
   vi.resetModules()
+  setDecidedConsentCookie()
   const { default: WhatsAppButton } = await import('../WhatsAppButton.vue')
   return mount(WhatsAppButton)
 }

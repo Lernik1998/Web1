@@ -203,8 +203,9 @@ function trimmed(value: string | undefined): string {
 }
 
 onMounted(async () => {
+  // El banner ya arranca visible si toca (ver useCookieConsent.ts): aquí
+  // solo queda preparar el borrador de "Personalizar" para cuando se abra.
   if (!hasDecided.value) {
-    showBanner()
     syncDraftFromConsent()
   }
 
@@ -462,9 +463,10 @@ onMounted(async () => {
 .kb-cookie-reopen-slot {
   position: fixed;
   left: 32px;
-  /* Deja hueco debajo para el botón flotante de WhatsApp (WhatsAppButton.vue). */
-  bottom: 96px;
-  width: 56px;
+  /* Va por debajo del botón flotante de WhatsApp (WhatsAppButton.vue): ese
+     es la acción principal de contacto y debe verse primero. */
+  bottom: 20px;
+  width: 64px;
   display: flex;
   justify-content: center;
   z-index: 150;
@@ -521,7 +523,7 @@ onMounted(async () => {
 
   .kb-cookie-reopen-slot {
     left: 24px;
-    bottom: 88px;
+    bottom: 16px;
   }
 }
 </style>

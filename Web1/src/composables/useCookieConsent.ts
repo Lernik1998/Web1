@@ -50,9 +50,18 @@ function applySideEffects(consent: CookieConsentValue): void {
 // ocultarse mientras el banner está abierto: en móvil el banner ocupa casi
 // todo el ancho con z-index alto y, si no se ocultan, el botón de WhatsApp
 // queda tapado debajo de él en la primera visita.
+const initialConsent = readStoredConsent()
+
+// El banner se calcula visible aquí mismo, de forma síncrona (no dentro de
+// un onMounted), para que ya salga así en el primerísimo render: si se
+// decide dentro de onMounted, el primer pintado del cliente sale con el
+// banner oculto y el botón de WhatsApp (que se oculta mientras el banner
+// está abierto, ver WhatsAppButton.vue) visible, y un instante después se
+// invierten los dos -- un salto de layout, en cada visita nueva, en TODAS
+// las páginas (CookieConsent.vue vive en App.vue).
 const state = reactive<{ consent: CookieConsentValue | null; bannerVisible: boolean }>({
-  consent: readStoredConsent(),
-  bannerVisible: false,
+  consent: initialConsent,
+  bannerVisible: initialConsent === null,
 })
 
 // Al cargar la app, si ya existe la cookie de una visita anterior, hay que
