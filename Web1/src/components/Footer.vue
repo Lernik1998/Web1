@@ -79,12 +79,15 @@
         </div>
       </div>
 
+      <!-- <a href> normales a propósito, no <router-link>: ver el comentario
+           en Header.vue -- evita que el CLS del footer se acumule sin
+           límite al navegar de una página a otra de distinta altura. -->
       <div class="legal-links">
         <h2 class="legal-title text-secondary">Legal</h2>
         <ul>
-          <li><router-link to="/politica-privacidad">Política de privacidad</router-link></li>
-          <li><router-link to="/aviso-legal">Aviso legal</router-link></li>
-          <li><router-link to="/politica-cookies">Política de cookies</router-link></li>
+          <li><a href="/politica-privacidad">Política de privacidad</a></li>
+          <li><a href="/aviso-legal">Aviso legal</a></li>
+          <li><a href="/politica-cookies">Política de cookies</a></li>
         </ul>
       </div>
     </div>
@@ -121,7 +124,7 @@
           <p class="contact-line__label text-secondary">Horario</p>
           <p class="contact-line__value">
             {{ schedule }}
-            <router-link to="/pedir-cita" class="contact-line__link">Con cita previa</router-link>
+            <a href="/pedir-cita" class="contact-line__link">Con cita previa</a>
           </p>
         </div>
       </div>
@@ -152,9 +155,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { fetchMapsSetting, fetchFooterInformation } from '../services/dataService'
 import { parseStreetViewUrl, buildStreetViewEmbedSrc } from '../utils/googleMapsUrl'
+import { useHydratedAsync } from '../composables/useHydratedAsync'
 
 defineOptions({
   name: 'TheFooter',
@@ -167,36 +171,35 @@ defineOptions({
 const FALLBACK_STREET_VIEW_SRC =
   'https://www.google.com/maps?layer=c&cbll=38.8386523,0.1060985&cbp=12,95,,0,0&output=svembed'
 
-const mapEnabled = ref(true)
-const mapSrc = ref(FALLBACK_STREET_VIEW_SRC)
+// Valores por defecto (los reales, ya publicados): se usan tal cual si no
+// hay datos incrustados del pre-renderizado y la petición aún no ha vuelto,
+// para que la web nunca dependa de que la API responda a tiempo para
+// mostrar algo correcto.
+const DEFAULTS = {
+  mapEnabled: true,
+  mapSrc: FALLBACK_STREET_VIEW_SRC,
+  address: 'C/ Sant Josep 31, Planta Baja Izquierda · Dénia (Alicante)',
+  addressMapUrl:
+    'https://www.google.com/maps/search/?api=1&query=C%2F%20Sant%20Josep%2031%2C%20D%C3%A9nia%20(Alicante)',
+  phone: '+34 629 538 062',
+  email: 'gabinete@kanbouripsicologia.com',
+  schedule: 'Lunes a Viernes · 12:00 a 20:00 ·',
+}
 
-// Datos de contacto: valores por defecto (los reales, ya publicados) que se
-// muestran de inmediato y se sustituyen, si llegan, por los que gestiona la
-// clínica desde WordPress (custom post type "footer-information", slug
-// "footer") vía fetchFooterInformation() -- igual que el resto de settings
-// del footer (mapa, cookies), para que la web nunca dependa de que la API
-// responda a tiempo para mostrar algo correcto.
-const address = ref('C/ Sant Josep 31, Planta Baja Izquierda · Dénia (Alicante)')
-const addressMapUrl = ref(
-  'https://www.google.com/maps/search/?api=1&query=C%2F%20Sant%20Josep%2031%2C%20D%C3%A9nia%20(Alicante)',
-)
-const phone = ref('+34 629 538 062')
-const email = ref('gabinete@kanbouripsicologia.com')
-const schedule = ref('Lunes a Viernes · 12:00 a 20:00 ·')
+type FooterData = typeof DEFAULTS
 
-const phoneHref = computed(() => `tel:${phone.value.replace(/\s+/g, '')}`)
-const emailHref = computed(() => `mailto:${email.value}`)
+async function loadFooterData(): Promise<FooterData> {
+  const result: FooterData = { ...DEFAULTS }
 
-onMounted(async () => {
   try {
     const setting = await fetchMapsSetting()
     const acf = setting?.acf
     if (acf) {
-      mapEnabled.value = acf.enabled !== false
+      result.mapEnabled = acf.enabled !== false
 
       const parsed = parseStreetViewUrl(acf.embed_url ?? '')
       if (parsed) {
-        mapSrc.value = buildStreetViewEmbedSrc(parsed)
+        result.mapSrc = buildStreetViewEmbedSrc(parsed)
       }
       // Si no se pudo parsear (p. ej. es un enlace corto maps.app.goo.gl), se
       // mantiene el encuadre de respaldo ya cargado en mapSrc.
@@ -208,17 +211,32 @@ onMounted(async () => {
   try {
     const footerInfo = await fetchFooterInformation()
     const acf = footerInfo?.acf
-    if (!acf) return
-
-    if (acf.address) address.value = acf.address
-    if (acf.address_link?.url) addressMapUrl.value = acf.address_link.url
-    if (acf.phone) phone.value = acf.phone
-    if (acf.email) email.value = acf.email
-    if (acf.schedule) schedule.value = acf.schedule
+    if (acf) {
+      if (acf.address) result.address = acf.address
+      if (acf.address_link?.url) result.addressMapUrl = acf.address_link.url
+      if (acf.phone) result.phone = acf.phone
+      if (acf.email) result.email = acf.email
+      if (acf.schedule) result.schedule = acf.schedule
+    }
   } catch (err) {
     console.error('Error fetching footer information:', err)
   }
-})
+
+  return result
+}
+
+const { data } = useHydratedAsync('footer:info', loadFooterData)
+
+const mapEnabled = computed(() => data.value?.mapEnabled ?? DEFAULTS.mapEnabled)
+const mapSrc = computed(() => data.value?.mapSrc ?? DEFAULTS.mapSrc)
+const address = computed(() => data.value?.address ?? DEFAULTS.address)
+const addressMapUrl = computed(() => data.value?.addressMapUrl ?? DEFAULTS.addressMapUrl)
+const phone = computed(() => data.value?.phone ?? DEFAULTS.phone)
+const email = computed(() => data.value?.email ?? DEFAULTS.email)
+const schedule = computed(() => data.value?.schedule ?? DEFAULTS.schedule)
+
+const phoneHref = computed(() => `tel:${phone.value.replace(/\s+/g, '')}`)
+const emailHref = computed(() => `mailto:${email.value}`)
 </script>
 
 <style scoped>

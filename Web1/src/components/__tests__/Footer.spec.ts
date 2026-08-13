@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount, flushPromises, RouterLinkStub } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import Footer from '../Footer.vue'
 import { fetchMapsSetting, fetchFooterInformation } from '../../services/dataService'
 import type { MapsSettingPost, FooterInformationPost } from '../../types/api'
@@ -40,7 +40,6 @@ async function mountFooter() {
   const wrapper = mount(Footer, {
     global: {
       directives,
-      stubs: { RouterLink: RouterLinkStub },
     },
   })
   await flushPromises()

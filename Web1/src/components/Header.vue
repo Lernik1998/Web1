@@ -1,7 +1,7 @@
 <template>
   <header class="kb-header" :class="{ 'kb-header--scrolled': isScrolled }">
     <div class="kb-header__bar">
-      <router-link to="/" class="kb-brand" @click="closeAll">
+      <a href="/" class="kb-brand" @click="closeAll">
         <img
           src="/images/logo_kanbouri_2023.png"
           alt="Kanbouri Psicología"
@@ -9,7 +9,7 @@
           width="350"
           height="159"
         />
-      </router-link>
+      </a>
 
       <button
         class="kb-burger"
@@ -31,6 +31,14 @@
            del todo del orden de tabulación mientras el menú está cerrado.
            En escritorio el menú nunca está fuera de pantalla, así que ahí
            siempre debe quedar interactivo. -->
+      <!-- <a href> normales a propósito, no <router-link>: cada ruta ya está
+           pre-renderizada y carga casi al instante, así que una navegación
+           de verdad (recarga completa) apenas cuesta velocidad, y a cambio
+           el CLS del navegador se resetea en cada página. Con
+           <router-link> (cambio de vista sin recargar) el "layout shift"
+           del footer al pasar de una página a otra de distinta altura se
+           iba acumulando sin límite durante toda la sesión -- confirmado
+           con DevTools Performance y con pruebas propias, ver commit. -->
       <nav
         class="kb-nav"
         :class="{ 'kb-nav--open': mobileOpen }"
@@ -39,11 +47,11 @@
       >
         <ul class="kb-nav__list">
           <li class="kb-nav__item">
-            <router-link to="/" class="kb-nav__link" @click="closeAll">Inicio</router-link>
+            <a href="/" class="kb-nav__link" @click="closeAll">Inicio</a>
           </li>
 
           <li class="kb-nav__item">
-            <router-link to="/sobre-mi" class="kb-nav__link" @click="closeAll">Sobre Mí</router-link>
+            <a href="/sobre-mi" class="kb-nav__link" @click="closeAll">Sobre Mí</a>
           </li>
 
           <li
@@ -77,24 +85,24 @@
                   @mouseenter="item.children && openSubmenu(item.label)"
                   @mouseleave="item.children && scheduleCloseSubmenu()"
                 >
-                  <router-link
+                  <a
                     v-if="!item.children"
-                    :to="item.href"
+                    :href="item.href"
                     class="kb-dropdown__link"
                     @click="closeAll"
                   >
                     {{ item.label }}
-                  </router-link>
+                  </a>
 
                   <template v-else>
                     <div class="kb-dropdown__row">
-                      <router-link
-                        :to="item.href"
+                      <a
+                        :href="item.href"
                         class="kb-dropdown__link"
                         @click="closeAll"
                       >
                         {{ item.label }}
-                      </router-link>
+                      </a>
 
                       <button
                         type="button"
@@ -116,7 +124,7 @@
                     >
                       <ul class="kb-submenu">
                         <li v-for="sub in item.children" :key="sub.label" class="kb-submenu__item">
-                          <router-link :to="sub.href" class="kb-submenu__link" @click="closeAll">{{ sub.label }}</router-link>
+                          <a :href="sub.href" class="kb-submenu__link" @click="closeAll">{{ sub.label }}</a>
                         </li>
                       </ul>
                     </div>
@@ -127,21 +135,21 @@
           </li>
 
           <li class="kb-nav__item">
-            <router-link to="/equipo" class="kb-nav__link" @click="closeAll">Equipo</router-link>
+            <a href="/equipo" class="kb-nav__link" @click="closeAll">Equipo</a>
           </li>
 
           <li class="kb-nav__item">
-            <router-link to="/para-psicologos" class="kb-nav__link" @click="closeAll">Para psicólogos</router-link>
+            <a href="/para-psicologos" class="kb-nav__link" @click="closeAll">Para psicólogos</a>
           </li>
 
           <li class="kb-nav__item">
-            <router-link to="/blog" class="kb-nav__link" @click="closeAll">Blog</router-link>
+            <a href="/blog" class="kb-nav__link" @click="closeAll">Blog</a>
           </li>
         </ul>
 
-        <router-link to="/pedir-cita" class="kb-cta kb-glare" @click="closeAll">
+        <a href="/pedir-cita" class="kb-cta kb-glare" @click="closeAll">
           Pedir cita
-        </router-link>
+        </a>
       </nav>
     </div>
   </header>

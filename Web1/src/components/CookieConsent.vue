@@ -107,7 +107,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
 import { fetchCookieSetting } from '../services/dataService'
 import { useCookieConsent } from '../composables/useCookieConsent'
 import type { ConsentCategory } from '../composables/useCookieConsent'
@@ -202,6 +202,17 @@ function trimmed(value: string | undefined): string {
   return (value ?? '').replace(/\s+/g, ' ').trim()
 }
 
+// Si la persona navega a otra página (enlace del menú/footer, ver
+// Header.vue) antes de que responda fetchCookieSetting(), el navegador
+// cancela esa petición en marcha al descargar este componente -- algo
+// normal y sin ningún efecto real (el banner se queda con los valores por
+// defecto), pero sin este flag se registraba igualmente como
+// "AxiosError: Network Error" en la consola.
+let isMounted = true
+onBeforeUnmount(() => {
+  isMounted = false
+})
+
 onMounted(async () => {
   // El banner ya arranca visible si toca (ver useCookieConsent.ts): aquí
   // solo queda preparar el borrador de "Personalizar" para cuando se abra.
@@ -211,6 +222,7 @@ onMounted(async () => {
 
   try {
     const setting = await fetchCookieSetting()
+    if (!isMounted) return
     const acf = setting?.acf
     if (!acf) return
 
@@ -242,7 +254,9 @@ onMounted(async () => {
       hideBanner()
     }
   } catch (err) {
-    console.error('Error fetching cookie banner settings:', err)
+    if (isMounted) {
+      console.error('Error fetching cookie banner settings:', err)
+    }
   }
 })
 </script>

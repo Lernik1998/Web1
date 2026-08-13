@@ -16,6 +16,7 @@ import '@fontsource/inter/600.css'
 import '@fontsource/fraunces/400.css'
 import '@fontsource/fraunces/600.css'
 import '@fontsource/fraunces/400-italic.css'
+import './styles/fonts-override.css'
 
 import './styles/tokens.css'
 import './styles/typography.css'

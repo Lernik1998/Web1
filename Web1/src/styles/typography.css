@@ -11,8 +11,11 @@
  */
 
 :root {
-  --font-display: 'Fraunces', Georgia, serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* 'Inter/Fraunces Fallback': Arial/Georgia redimensionadas para ocupar la
+     misma caja que la fuente definitiva (ver fonts-override.css) -- evitan
+     el salto de layout mientras Inter/Fraunces terminan de cargar. */
+  --font-display: 'Fraunces', 'Fraunces Fallback', Georgia, serif;
+  --font-body: 'Inter', 'Inter Fallback', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* ---------- Encabezados (Fraunces) ---------- */

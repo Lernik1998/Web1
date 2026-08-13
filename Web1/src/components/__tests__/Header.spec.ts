@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { mount, RouterLinkStub } from '@vue/test-utils'
+import { mount } from '@vue/test-utils'
 import Header from '../Header.vue'
 
 const directives = { 'animate-on-scroll': {}, spotlight: {}, ripple: {} }
@@ -7,7 +7,7 @@ const directives = { 'animate-on-scroll': {}, spotlight: {}, ripple: {} }
 describe('Header', () => {
   it('renders the main navigation links', () => {
     const wrapper = mount(Header, {
-      global: { directives, stubs: { RouterLink: RouterLinkStub } },
+      global: { directives },
     })
 
     expect(wrapper.text()).toContain('Inicio')
@@ -21,7 +21,7 @@ describe('Header', () => {
 
   it('toggles the mobile menu open and closed with the burger button', async () => {
     const wrapper = mount(Header, {
-      global: { directives, stubs: { RouterLink: RouterLinkStub } },
+      global: { directives },
     })
 
     const burger = wrapper.find('.kb-burger')
@@ -45,7 +45,7 @@ describe('Header', () => {
 
   it('opens the "Terapias" dropdown when its trigger button is clicked', async () => {
     const wrapper = mount(Header, {
-      global: { directives, stubs: { RouterLink: RouterLinkStub } },
+      global: { directives },
     })
 
     const trigger = wrapper.find('.kb-nav__link--trigger')
@@ -62,7 +62,7 @@ describe('Header', () => {
 
   it('renders the therapy dropdown items including the nested "adultos" submenu', () => {
     const wrapper = mount(Header, {
-      global: { directives, stubs: { RouterLink: RouterLinkStub } },
+      global: { directives },
     })
 
     const text = wrapper.text()
@@ -81,7 +81,7 @@ describe('Header', () => {
 
   it('opens and closes the nested "adultos" submenu via its chevron button', async () => {
     const wrapper = mount(Header, {
-      global: { directives, stubs: { RouterLink: RouterLinkStub } },
+      global: { directives },
     })
 
     const submenuTrigger = wrapper.find('.kb-dropdown__chevron-btn')
@@ -100,20 +100,20 @@ describe('Header', () => {
 
   it('navigates to /terapias/adultos when clicking the "Psicología para Adultos" label itself', () => {
     const wrapper = mount(Header, {
-      global: { directives, stubs: { RouterLink: RouterLinkStub } },
+      global: { directives },
     })
 
     const adultosLink = wrapper
-      .findAllComponents(RouterLinkStub)
+      .findAll('a')
       .find((link) => link.text().includes('Psicología para Adultos'))
 
-    expect(adultosLink?.props('to')).toBe('/terapias/adultos')
+    expect(adultosLink?.attributes('href')).toBe('/terapias/adultos')
   })
 
   it('opens the dropdown on mouseenter (desktop hover) and schedules a close on mouseleave', async () => {
     vi.useFakeTimers()
     const wrapper = mount(Header, {
-      global: { directives, stubs: { RouterLink: RouterLinkStub } },
+      global: { directives },
     })
 
     const item = wrapper.find('.kb-nav__item--dropdown')
@@ -134,7 +134,7 @@ describe('Header', () => {
   it('does not open the dropdown on hover when the nav is in mobile (accordion) mode', async () => {
     vi.stubGlobal('innerWidth', 500)
     const wrapper = mount(Header, {
-      global: { directives, stubs: { RouterLink: RouterLinkStub } },
+      global: { directives },
     })
 
     const item = wrapper.find('.kb-nav__item--dropdown')
@@ -146,7 +146,7 @@ describe('Header', () => {
 
   it('closes everything when Escape is pressed', async () => {
     const wrapper = mount(Header, {
-      global: { directives, stubs: { RouterLink: RouterLinkStub } },
+      global: { directives },
     })
 
     await wrapper.find('.kb-nav__link--trigger').trigger('click')
@@ -160,7 +160,7 @@ describe('Header', () => {
 
   it('closes the mobile menu when the scrim is clicked', async () => {
     const wrapper = mount(Header, {
-      global: { directives, stubs: { RouterLink: RouterLinkStub } },
+      global: { directives },
     })
 
     await wrapper.find('.kb-burger').trigger('click')
@@ -172,7 +172,7 @@ describe('Header', () => {
 
   it('adds the scrolled class past the threshold and removes it with hysteresis', async () => {
     const wrapper = mount(Header, {
-      global: { directives, stubs: { RouterLink: RouterLinkStub } },
+      global: { directives },
     })
 
     expect(wrapper.find('header').classes()).not.toContain('kb-header--scrolled')
@@ -196,20 +196,20 @@ describe('Header', () => {
 
   it('closes the mobile menu when a nav link is clicked', async () => {
     const wrapper = mount(Header, {
-      global: { directives, stubs: { RouterLink: RouterLinkStub } },
+      global: { directives },
     })
 
     await wrapper.find('.kb-burger').trigger('click')
     expect(wrapper.find('.kb-nav').classes()).toContain('kb-nav--open')
 
-    await wrapper.findAllComponents(RouterLinkStub)[0]!.trigger('click')
+    await wrapper.find('.kb-nav__link').trigger('click')
     expect(wrapper.find('.kb-nav').classes()).not.toContain('kb-nav--open')
   })
 
   it('cleans up its window listeners on unmount', () => {
     const removeSpy = vi.spyOn(window, 'removeEventListener')
     const wrapper = mount(Header, {
-      global: { directives, stubs: { RouterLink: RouterLinkStub } },
+      global: { directives },
     })
 
     wrapper.unmount()

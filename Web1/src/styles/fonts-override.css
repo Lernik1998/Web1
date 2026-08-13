@@ -1,0 +1,127 @@
+/* Redeclara, con "font-display: optional" en vez del "swap" por defecto de
+   @fontsource, únicamente las 4 variantes (subset "latin", el único que usa
+   texto en español) que scripts/prerender.mjs ya precarga con
+   <link rel="preload">. Mismo font-family/weight/style/unicode-range que la
+   regla original de @fontsource: al coincidir esos cuatro valores, el
+   navegador usa la última declarada (esta), sin tocar el resto de subsets
+   (cirílico, griego...) que siguen con "swap" tal cual.
+
+   Por qué: aunque la fuente ya llegue precargada, "swap" siempre pinta
+   primero con la fuente de respaldo del sistema y luego cambia a la
+   definitiva -- ese cambio reflowa el texto (Inter/Fraunces miden distinto
+   que la fuente de respaldo) y es justo el salto de layout que medíamos con
+   Lighthouse en /sobre-mi (CLS ~0.3, atribuido a "Web font"). Con
+   "optional", el navegador solo usa la fuente si ya está lista en un plazo
+   muy breve (typically ~100ms) -- con el preload ya en marcha, para
+   entonces casi siempre lo está -- y si no, se queda con la de respaldo sin
+   volver a cambiar más tarde: nunca hay un segundo repintado que desplace
+   el texto. */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-display: optional;
+  font-weight: 400;
+  src:
+    url('../../node_modules/@fontsource/inter/files/inter-latin-400-normal.woff2')
+      format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,
+    U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-display: optional;
+  font-weight: 500;
+  src:
+    url('../../node_modules/@fontsource/inter/files/inter-latin-500-normal.woff2')
+      format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,
+    U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-display: optional;
+  font-weight: 600;
+  src:
+    url('../../node_modules/@fontsource/fraunces/files/fraunces-latin-600-normal.woff2')
+      format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,
+    U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+@font-face {
+  font-family: 'Fraunces';
+  font-style: italic;
+  font-display: optional;
+  font-weight: 400;
+  src:
+    url('../../node_modules/@fontsource/fraunces/files/fraunces-latin-400-italic.woff2')
+      format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,
+    U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+/* Fuentes de respaldo "a medida", ajustadas para ocupar exactamente el
+   mismo alto/ancho que Inter/Fraunces (Arial y Georgia, redimensionadas con
+   size-adjust/ascent-override/descent-override calculados a partir de las
+   métricas reales de cada fuente -- ver scripts/_font-metrics-*.mjs, que se
+   usaron para calcular estos porcentajes y no se conservan en el repo).
+   Con esto, aunque font-display:optional siga sin usar la fuente definitiva
+   a tiempo, el primer texto en Arial/Georgia ya ocupa la misma caja que
+   Inter/Fraunces: cero salto de layout, tanto si la fuente real llega a
+   tiempo como si no. */
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial');
+  font-weight: 400;
+  size-adjust: 146.24%;
+  ascent-override: 66.24%;
+  descent-override: 16.49%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial');
+  font-weight: 500;
+  size-adjust: 146.9%;
+  ascent-override: 65.95%;
+  descent-override: 16.42%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial');
+  font-weight: 600;
+  size-adjust: 148.89%;
+  ascent-override: 65.06%;
+  descent-override: 16.2%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Fraunces Fallback';
+  src: local('Georgia');
+  font-weight: 600;
+  font-style: normal;
+  size-adjust: 134.9%;
+  ascent-override: 72.5%;
+  descent-override: 18.9%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Fraunces Fallback';
+  src: local('Georgia');
+  font-weight: 400;
+  font-style: italic;
+  size-adjust: 124.56%;
+  ascent-override: 78.52%;
+  descent-override: 20.47%;
+  line-gap-override: 0%;
+}

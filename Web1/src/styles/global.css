@@ -5,9 +5,14 @@
 
 /* CSS Variables for typography */
 :root {
-  /* Font families */
-  --font-family-fraunces: 'Fraunces', serif;
-  --font-family-inter: 'Inter', sans-serif;
+  /* Font families. 'Inter/Fraunces Fallback': Arial/Georgia redimensionadas
+     para ocupar la misma caja que la fuente definitiva (ver
+     fonts-override.css) -- evitan el salto de layout mientras Inter/Fraunces
+     terminan de cargar. Deben coincidir con --font-body/--font-display en
+     typography.css: hay dos juegos de variables de tipografía en el
+     proyecto y ambos necesitan el mismo fallback. */
+  --font-family-fraunces: 'Fraunces', 'Fraunces Fallback', serif;
+  --font-family-inter: 'Inter', 'Inter Fallback', sans-serif;
   
   /* Font weights */
   --font-weight-regular: 400;
@@ -46,6 +51,47 @@
 html {
   font-size: 16px;
   scroll-behavior: smooth;
+}
+
+/* Transición suave entre páginas también en las navegaciones "de verdad"
+   (recarga completa): los enlaces del menú y del footer (Header.vue,
+   Footer.vue) dejaron de usar <router-link> -- ver esos ficheros -- para
+   que el CLS se reinicie en cada página, pero eso significaba perder el
+   fundido que sí seguía viéndose en el resto de enlaces internos (que
+   siguen siendo <router-link>, sin recarga). La View Transitions API nativa
+   del navegador anima la propia recarga sin JS y sin arriesgar el CLS: solo
+   la soportan Chrome/Edge por ahora, en el resto de navegadores la
+   navegación simplemente ocurre sin animación, como antes de este cambio. */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 240ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-old(root) {
+  animation-name: kb-page-fade-out;
+}
+
+::view-transition-new(root) {
+  animation-name: kb-page-fade-in;
+}
+
+@keyframes kb-page-fade-out {
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes kb-page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
 }
 
 body {
