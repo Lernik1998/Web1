@@ -8,6 +8,8 @@ export interface ParsedTeamMember {
   name: string
   role: string
   photo: string | null
+  photoAlt: string
+  photoTitle: string
   /** Párrafos de biografía antes del primer subtítulo (<h2>/<h3>), si lo hay. */
   bio: string[]
   /** Tramos de biografía agrupados bajo cada subtítulo, en el orden en que aparecen. */
@@ -155,6 +157,8 @@ export function parseTeamContent(html: string): ParsedTeamMember[] {
     // bajo ese subtítulo en `sections`, en vez de perderse.
     let currentSection: TeamBioSection | null = null
     let photo: string | null = null
+    let photoAlt = ''
+    let photoTitle = ''
     while (i < children.length) {
       const el = children[i]
       if (!el) break
@@ -163,7 +167,16 @@ export function parseTeamContent(html: string): ParsedTeamMember[] {
       // Algunas fichas (p. ej. "Sobre mí") incrustan la foto de la
       // profesional como una <figure> en medio del texto de biografía.
       if (el.tagName === 'FIGURE') {
-        photo = photo ?? el.querySelector('img')?.getAttribute('src') ?? null
+        if (photo === null) {
+          const img = el.querySelector('img')
+          photo = img?.getAttribute('src') ?? null
+          // WordPress incrusta aquí el "Texto alternativo" del adjunto tal
+          // cual (atributo alt del propio <img>); el "Título" del adjunto no
+          // se incluye en el HTML por defecto, así que solo se puede leer el
+          // alt desde este contenido.
+          photoAlt = img?.getAttribute('alt') ?? ''
+          photoTitle = img?.getAttribute('title') ?? ''
+        }
         i++
         continue
       }
@@ -227,6 +240,8 @@ export function parseTeamContent(html: string): ParsedTeamMember[] {
       name,
       role,
       photo,
+      photoAlt,
+      photoTitle,
       bio,
       sections: nonEmptySections,
       formacionAcademica,

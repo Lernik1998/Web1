@@ -2,7 +2,12 @@
   <section class="kb-hero" v-spotlight>
     <div class="kb-hero__inner">
       <div class="kb-hero__content kb-hero__reveal" style="animation-delay: 0ms">
-        <h1 class="kb-hero__title text-h1">{{ title }}</h1>
+        <h1 class="kb-hero__title text-h1">
+          <template v-if="titleParts">{{ titleParts[0] }}<span class="kb-hero__title-sep"> | </span><br />{{
+            titleParts[1]
+          }}</template>
+          <template v-else>{{ title }}</template>
+        </h1>
 
         <p
           v-for="(paragraph, index) in descriptionParagraphs"
@@ -31,7 +36,8 @@
           :src="imageUrl"
           :srcset="imageSrcset"
           sizes="(max-width: 860px) 280px, 460px"
-          :alt="title"
+          :alt="imageAlt || title"
+          :title="imageTitle || title"
           class="kb-hero__image"
           fetchpriority="high"
         />
@@ -52,6 +58,8 @@ const props = defineProps<{
   description: string
   imageUrl: string
   imageSrcset?: string
+  imageAlt?: string
+  imageTitle?: string
   buttonText: string
 }>()
 
@@ -60,6 +68,17 @@ const props = defineProps<{
 const descriptionParagraphs = computed(() =>
   props.description.split(/\r?\n\s*\r?\n/).filter(Boolean),
 )
+
+// El "|" se mantiene en el propio texto (el titular sigue siendo un único
+// bloque de texto real en el HTML, no dos elementos separados), pero se
+// oculta visualmente con CSS (.kb-hero__title-sep) y se sustituye por un
+// salto de línea limpio entre las dos partes -- sin él, el título se leía
+// como una etiqueta <title> de SEO ("Texto | Nombre del sitio"), un
+// formato pensado para la pestaña del navegador, no para un titular grande.
+const titleParts = computed(() => {
+  const parts = props.title.split('|').map((part) => part.trim())
+  return parts.length === 2 && parts[0] && parts[1] ? (parts as [string, string]) : null
+})
 
 /** Flecha para el badge circular del enlace secundario del hero. */
 const ArrowIcon = defineComponent({
@@ -129,6 +148,21 @@ const ArrowIcon = defineComponent({
 /* ---------- Columna de texto ---------- */
 .kb-hero__title {
   margin-bottom: 22px;
+  /* Sin esto, el navegador corta la línea donde le cabe sin más criterio,
+     dejando a veces una sola palabra suelta en la última línea (p. ej. un
+     apellido solo, separado del resto del nombre) -- con "balance" reparte
+     el texto entre líneas de forma más pareja. Se degrada sin problema
+     (vuelve al salto de línea normal) en navegadores que aún no lo
+     soportan. Solo entra en juego cuando el título NO trae "|" (ver
+     titleParts en el script): con "|" el salto de línea ya es explícito. */
+  text-wrap: balance;
+}
+
+/* Oculto solo visualmente (display:none, no sr-only): el "|" sigue
+   presente tal cual en el HTML -- a propósito -- pero no se pinta en
+   pantalla ni lo anuncia un lector de pantalla. */
+.kb-hero__title-sep {
+  display: none;
 }
 
 .kb-hero__lead {

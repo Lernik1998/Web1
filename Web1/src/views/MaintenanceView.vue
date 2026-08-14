@@ -3,7 +3,8 @@
     <div class="kb-maintenance__inner">
       <img
         src="/images/logo_kanbouri_2023.png"
-        alt="Kanbouri Psicología"
+        alt="Kanbouri Psicología — Psicóloga en Dénia"
+        title="Kanbouri Psicología — Psicóloga en Dénia"
         class="kb-maintenance__logo"
         width="350"
         height="159"

@@ -45,7 +45,8 @@
                 <div class="kb-card__media">
                   <img
                     :src="slide.card.imageUrl"
-                    :alt="slide.card.title"
+                    :alt="slide.card.imageAlt || slide.card.title"
+                    :title="slide.card.imageTitle || slide.card.title"
                     class="kb-card__image"
                     loading="lazy"
                     :style="slide.card.imagePosition ? { objectPosition: slide.card.imagePosition } : undefined"
@@ -126,6 +127,8 @@ type TherapyCard = {
   title: string
   description: string
   imageUrl: string
+  imageAlt?: string
+  imageTitle?: string
   buttonText: string
   href: string
   /**

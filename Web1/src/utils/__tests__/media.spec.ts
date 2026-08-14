@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getMediaUrl } from '../media'
+import { getMediaUrl, getMediaAlt, getMediaTitle } from '../media'
 import type { WordPressMedia } from '../../types/api'
 
 function makeMedia(overrides: Partial<WordPressMedia> = {}): WordPressMedia {
@@ -44,5 +44,49 @@ describe('getMediaUrl', () => {
   it('falls back to the original source_url when media_details is missing entirely', () => {
     const media = makeMedia({ media_details: undefined })
     expect(getMediaUrl(media, 'large')).toBe('https://example.com/original.jpg')
+  })
+})
+
+describe('getMediaAlt', () => {
+  it('uses alt_text when set in WordPress', () => {
+    const media = makeMedia({ alt_text: 'Fachada de la consulta', title: { rendered: 'IMG_001' } })
+    expect(getMediaAlt(media)).toBe('Fachada de la consulta')
+  })
+
+  it('falls back to the media title when alt_text is empty', () => {
+    const media = makeMedia({ alt_text: '', title: { rendered: 'Fachada de la consulta' } })
+    expect(getMediaAlt(media)).toBe('Fachada de la consulta')
+  })
+
+  it('falls back to the given fallback when neither field is set', () => {
+    const media = makeMedia({ alt_text: undefined, title: undefined })
+    expect(getMediaAlt(media, 'María B. Kanbouri')).toBe('María B. Kanbouri')
+  })
+
+  it('treats a whitespace-only value as empty', () => {
+    const media = makeMedia({ alt_text: '   ', title: { rendered: '' } })
+    expect(getMediaAlt(media, 'Respaldo')).toBe('Respaldo')
+  })
+
+  it('returns an empty string when there is no fallback either', () => {
+    expect(getMediaAlt(null)).toBe('')
+    expect(getMediaAlt(undefined)).toBe('')
+  })
+})
+
+describe('getMediaTitle', () => {
+  it('prefers the media title over alt_text', () => {
+    const media = makeMedia({ alt_text: 'Alt', title: { rendered: 'Título' } })
+    expect(getMediaTitle(media)).toBe('Título')
+  })
+
+  it('falls back to alt_text when the title is empty', () => {
+    const media = makeMedia({ alt_text: 'Alt', title: { rendered: '' } })
+    expect(getMediaTitle(media)).toBe('Alt')
+  })
+
+  it('falls back to the given fallback when neither field is set', () => {
+    const media = makeMedia({ alt_text: undefined, title: undefined })
+    expect(getMediaTitle(media, 'Respaldo')).toBe('Respaldo')
   })
 })

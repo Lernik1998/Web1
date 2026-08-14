@@ -23,7 +23,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { fetchHomePage, fetchMediaById, fetchTherapieBySlug } from '../services/dataService'
-import { getMediaUrl, getMediaSrcSet } from '../utils/media'
+import { getMediaUrl, getMediaSrcSet, getMediaAlt, getMediaTitle } from '../utils/media'
 import { useSeoMeta, seoMetaFromYoast } from '../composables/useSeoMeta'
 import { useHydratedAsync } from '../composables/useHydratedAsync'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
@@ -48,6 +48,8 @@ type TherapyCardData = {
   title: string
   description: string
   imageUrl: string
+  imageAlt?: string
+  imageTitle?: string
   buttonText: string
   href: string
   imagePosition?: string
@@ -115,13 +117,17 @@ async function loadHomeData(): Promise<HomeData> {
     .map((therapy, index): TherapyCardData | null => {
       const subAcf = therapy?.acf
       if (!subAcf) return null
+      const title = subAcf.therapy_name || therapy.title.rendered
+      const media = mediaMap[subAcf.therapy_image]
       return {
-        title: subAcf.therapy_name || therapy.title.rendered,
+        title,
         // `card_description` es opcional: si en WordPress se deja vacío,
         // la tarjeta usa el mismo texto que la página propia de la
         // terapia (`therapy_description`) como respaldo.
         description: subAcf.card_description?.trim() || subAcf.therapy_description || '',
-        imageUrl: getMediaUrl(mediaMap[subAcf.therapy_image], 'medium_large') ?? '',
+        imageUrl: getMediaUrl(media, 'medium_large') ?? '',
+        imageAlt: getMediaAlt(media, title),
+        imageTitle: getMediaTitle(media, title),
         buttonText: 'Me interesa',
         href: ADULT_SUB_THERAPIES[index]!.href,
         imagePosition: ADULT_SUB_THERAPIES[index]!.imagePosition,
@@ -145,12 +151,15 @@ const heroProps = computed(() => {
   const acf = data.value?.pageData?.acf
   const mediaById = data.value?.mediaById ?? {}
   if (!acf) return null
+  const heroMedia = mediaById[acf.hero_image]
   return {
     title: acf.hero_title,
     description: acf.hero_description,
     buttonText: acf.hero_button_text,
-    imageUrl: getMediaUrl(mediaById[acf.hero_image], 'large') ?? '',
-    imageSrcset: getMediaSrcSet(mediaById[acf.hero_image]),
+    imageUrl: getMediaUrl(heroMedia, 'large') ?? '',
+    imageSrcset: getMediaSrcSet(heroMedia),
+    imageAlt: getMediaAlt(heroMedia, acf.hero_title),
+    imageTitle: getMediaTitle(heroMedia, acf.hero_title),
   }
 })
 
@@ -174,13 +183,18 @@ const therapyCards = computed(() => {
   ]
   const images = [acf.therapy_1_image, acf.therapy_2_image, acf.therapy_3_image, acf.therapy_4_image]
 
-  const mainCards = titles.map((title, index) => ({
-    title,
-    description: descriptions[index] ?? '',
-    buttonText: buttonTexts[index] ?? 'Me interesa',
-    imageUrl: getMediaUrl(mediaById[images[index] ?? 0], 'medium_large') ?? '',
-    href: therapyHrefs[index] ?? '/',
-  }))
+  const mainCards = titles.map((title, index) => {
+    const media = mediaById[images[index] ?? 0]
+    return {
+      title,
+      description: descriptions[index] ?? '',
+      buttonText: buttonTexts[index] ?? 'Me interesa',
+      imageUrl: getMediaUrl(media, 'medium_large') ?? '',
+      imageAlt: getMediaAlt(media, title),
+      imageTitle: getMediaTitle(media, title),
+      href: therapyHrefs[index] ?? '/',
+    }
+  })
 
   return [...mainCards, ...(data.value?.adultSubTherapyCards ?? [])]
 })

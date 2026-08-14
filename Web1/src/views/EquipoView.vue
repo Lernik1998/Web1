@@ -30,7 +30,8 @@
           <img
             v-if="member.photo && !brokenPhotos.has(member.slug)"
             :src="member.photo.image"
-            :alt="member.name"
+            :alt="member.photo.alt"
+            :title="member.photo.title"
             class="kb-team-card__image"
             loading="lazy"
             @error="brokenPhotos.add(member.slug)"
@@ -54,7 +55,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { fetchProfesionales, fetchMediaById } from '../services/dataService'
-import { getMediaUrl } from '../utils/media'
+import { getMediaUrl, getMediaAlt, getMediaTitle } from '../utils/media'
 import { useSeoMeta } from '../composables/useSeoMeta'
 import { useHydratedAsync } from '../composables/useHydratedAsync'
 import type { ProfesionalPost } from '../types/api'
@@ -75,28 +76,37 @@ useSeoMeta(() => ({
 // que no es un orden que tenga sentido de cara al usuario.
 const FIRST_SLUG = 'maria-b-kanbouri'
 
+type PhotoInfo = { url: string; alt: string; title: string }
+
 type EquipoData = {
   professionals: ProfesionalPost[]
-  photoUrls: Record<number, string>
+  photos: Record<number, PhotoInfo>
 }
 
 async function loadEquipoData(): Promise<EquipoData> {
   const professionals = await fetchProfesionales()
+  const nameById = new Map<number, string>()
+  for (const post of professionals) {
+    if (post.acf.hero_image) nameById.set(post.acf.hero_image, post.title.rendered)
+    if (post.acf.list_image) nameById.set(post.acf.list_image, post.title.rendered)
+  }
 
   const mediaIds = [
     ...new Set(professionals.flatMap((post) => [post.acf.hero_image, post.acf.list_image])),
   ].filter((id): id is number => Boolean(id))
   const mediaResults = await Promise.all(mediaIds.map((id) => fetchMediaById(id)))
-  const photoUrls: Record<number, string> = {}
+  const photos: Record<number, PhotoInfo> = {}
   mediaResults.forEach((media, index) => {
     const id = mediaIds[index]
     // Las fichas del listado son pequeñas (~300px): con "medium_large"
     // (768px) sobra calidad de sobra incluso en pantallas retina.
     const url = getMediaUrl(media, 'medium_large')
-    if (id && url) photoUrls[id] = url
+    if (!id || !url) return
+    const name = nameById.get(id) ?? ''
+    photos[id] = { url, alt: getMediaAlt(media, name), title: getMediaTitle(media, name) }
   })
 
-  return { professionals, photoUrls }
+  return { professionals, photos }
 }
 
 const { data, loading, error } = useHydratedAsync('equipo:page', loadEquipoData)
@@ -119,11 +129,13 @@ const cards = computed(() =>
     // `list_image` es opcional: si no se ha configurado en WordPress, la
     // ficha del listado cae en `hero_image` (la misma foto del perfil).
     const listImageId = post.acf.list_image || post.acf.hero_image
-    const apiPhoto = data.value?.photoUrls[listImageId] ?? null
+    const apiPhoto = data.value?.photos[listImageId] ?? null
     return {
       slug: post.slug,
       name,
-      photo: apiPhoto ? { image: apiPhoto } : null,
+      photo: apiPhoto
+        ? { image: apiPhoto.url, alt: apiPhoto.alt || name, title: apiPhoto.title || name }
+        : null,
       initials: name
         .split(' ')
         .filter(Boolean)

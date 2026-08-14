@@ -42,6 +42,45 @@ describe('Hero', () => {
     expect(paragraphs[1]!.text()).toBe('Segundo parrafo.')
   })
 
+  it('keeps a "|" separator in the title as real text, marked to be hidden visually, breaking the line in its place', () => {
+    const wrapper = mount(Hero, {
+      global: { directives, stubs: { RouterLink: RouterLinkStub } },
+      props: {
+        title: 'Psicóloga en Dénia | Kanbouri Psicología',
+        description: 'Descripcion',
+        imageUrl: '/images/hero.jpg',
+        buttonText: 'Pedir cita',
+      },
+    })
+
+    const title = wrapper.find('.kb-hero__title')
+    expect(title.text()).toContain('Psicóloga en Dénia')
+    expect(title.text()).toContain('Kanbouri Psicología')
+    // El "|" sigue como texto real dentro de un span con la clase que lo
+    // oculta por CSS (.kb-hero__title-sep { display: none }) -- no se ha
+    // quitado del HTML, solo no se pinta en pantalla.
+    const sep = title.find('.kb-hero__title-sep')
+    expect(sep.exists()).toBe(true)
+    expect(sep.text()).toBe('|')
+    expect(title.find('br').exists()).toBe(true)
+  })
+
+  it('renders the title as a single line when it has no "|" separator', () => {
+    const wrapper = mount(Hero, {
+      global: { directives, stubs: { RouterLink: RouterLinkStub } },
+      props: {
+        title: 'Psicóloga en Dénia para adultos y parejas',
+        description: 'Descripcion',
+        imageUrl: '/images/hero.jpg',
+        buttonText: 'Pedir cita',
+      },
+    })
+
+    const title = wrapper.find('.kb-hero__title')
+    expect(title.text()).toBe('Psicóloga en Dénia para adultos y parejas')
+    expect(title.find('br').exists()).toBe(false)
+  })
+
   it('links the CTA to /pedir-cita', () => {
     const wrapper = mount(Hero, {
       global: { directives, stubs: { RouterLink: RouterLinkStub } },

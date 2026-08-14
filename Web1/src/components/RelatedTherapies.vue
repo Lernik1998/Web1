@@ -1,11 +1,13 @@
 <template>
   <div class="kb-related" v-animate-on-scroll>
     <h2 class="kb-related__title text-h2">Terapias relacionadas</h2>
-    <div class="kb-related__pills">
-      <router-link v-for="link in links" :key="link.href" :to="link.href" class="kb-related__pill">
-        {{ link.label }}
-      </router-link>
-    </div>
+    <ul class="kb-related__pills">
+      <li v-for="link in links" :key="link.href">
+        <router-link :to="link.href" class="kb-related__pill">
+          {{ link.label }}
+        </router-link>
+      </li>
+    </ul>
   </div>
 </template>
 
@@ -29,6 +31,12 @@ defineProps<{
   flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
+  /* Reset del <ul>: aquí es una lista real (antes era un <div> con enlaces
+     sueltos, sin estructura), pero visualmente sigue siendo una fila de
+     píldoras, no una lista con topos. */
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .kb-related__pill {

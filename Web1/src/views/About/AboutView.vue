@@ -16,7 +16,8 @@
               <div class="kb-about__media" v-spotlight>
                 <img
                   :src="member.photo"
-                  :alt="member.name"
+                  :alt="member.photoAlt || member.name"
+                  :title="member.photoTitle || member.name"
                   class="kb-about__image"
                   @error="photoLoadFailed = true"
                 />

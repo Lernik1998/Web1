@@ -5,7 +5,8 @@
         <div class="footer-brand">
           <img
             src="/images/logo_kanbouri_2023.png"
-            alt="Kanbouri Psicología"
+            alt="Kanbouri Psicología — Psicóloga en Dénia"
+            title="Kanbouri Psicología — Psicóloga en Dénia"
             class="footer-brand__logo"
             width="350"
             height="159"
@@ -82,14 +83,23 @@
       <!-- <a href> normales a propósito, no <router-link>: ver el comentario
            en Header.vue -- evita que el CLS del footer se acumule sin
            límite al navegar de una página a otra de distinta altura. -->
-      <div class="legal-links">
-        <h2 class="legal-title text-secondary">Legal</h2>
+      <!-- Nada de <h2>/<h3> para "Legal": no es un encabezado de ningún
+           contenido propio de la página (el footer se repite igual en las
+           35), así que cualquier nivel compite con el esquema de
+           encabezados real -- un <h2> choca con los <h2> de contenido, y un
+           <h3> puede saltarse un nivel entero en páginas que no tienen su
+           propio <h2> (p. ej. /pedir-cita: quedaría <h1>...<h3>, detectado
+           como fallo real por axe-core). En vez de eso, es un simple
+           rótulo visual (<p>) y el propio <nav aria-label> ya identifica la
+           sección para quien navega con lector de pantalla. -->
+      <nav class="legal-links" aria-label="Enlaces legales">
+        <p class="legal-title text-secondary">Legal</p>
         <ul>
           <li><a href="/politica-privacidad">Política de privacidad</a></li>
           <li><a href="/aviso-legal">Aviso legal</a></li>
           <li><a href="/politica-cookies">Política de cookies</a></li>
         </ul>
-      </div>
+      </nav>
     </div>
 
     <div class="footer-secondary">

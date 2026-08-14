@@ -12,7 +12,7 @@
       </div>
 
       <article v-else-if="post" class="kb-post__article">
-        <img :src="imageUrl" :alt="imageAlt" class="kb-post__image" />
+        <img :src="imageUrl" :alt="imageAlt" :title="imageTitle" class="kb-post__image" />
 
         <div class="kb-post__body">
           <div class="kb-post__meta text-secondary">
@@ -42,6 +42,7 @@ import {
   extractTextFromHtml,
   reflowSoftLineBreaks,
 } from '../utils/contentProcessor'
+import { getMediaAlt, getMediaTitle } from '../utils/media'
 import { useInternalLinks } from '../composables/useInternalLinks'
 import { useSeoMeta, seoMetaFromYoast } from '../composables/useSeoMeta'
 import { useBreadcrumbSchema } from '../composables/useBreadcrumbSchema'
@@ -94,8 +95,12 @@ const imageUrl = computed(
   () => featuredMediaUrl.value || contentFallbackImageUrl.value || '/images/psicologa-denia-hero.jpg',
 )
 
-const imageAlt = computed(
-  () => post.value?._embedded?.['wp:featuredmedia']?.[0]?.alt_text || post.value?.title.rendered || '',
+const imageAlt = computed(() =>
+  getMediaAlt(post.value?._embedded?.['wp:featuredmedia']?.[0], post.value?.title.rendered ?? ''),
+)
+
+const imageTitle = computed(() =>
+  getMediaTitle(post.value?._embedded?.['wp:featuredmedia']?.[0], post.value?.title.rendered ?? ''),
 )
 
 const categoryName = computed(() => post.value?._embedded?.['wp:term']?.[0]?.[0]?.name ?? null)

@@ -40,3 +40,31 @@ export function getMediaSrcSet(
   if (!entries.length) return undefined
   return entries.map((entry) => `${entry.source_url} ${entry.width}w`).join(', ')
 }
+
+/**
+ * Texto alternativo de una imagen de la biblioteca de medios: usa el
+ * "Texto alternativo" gestionado en WordPress (`alt_text`) si la clínica lo
+ * ha rellenado; si no, cae al "Título" del adjunto (`title.rendered`), y si
+ * tampoco existe, al texto de respaldo que pase cada vista (p. ej. el
+ * nombre de la profesional en una foto de perfil), para que ninguna imagen
+ * se quede sin descripción mientras se van rellenando esos campos en
+ * WordPress.
+ */
+export function getMediaAlt(
+  media: Pick<WordPressMedia, 'alt_text' | 'title'> | null | undefined,
+  fallback = '',
+): string {
+  return media?.alt_text?.trim() || media?.title?.rendered?.trim() || fallback
+}
+
+/**
+ * Igual que `getMediaAlt`, pero mirando primero el "Título" del adjunto
+ * (`title.rendered`) -- el campo que en WordPress se llama literalmente
+ * así -- y cayendo al texto alternativo o al respaldo si no está relleno.
+ */
+export function getMediaTitle(
+  media: Pick<WordPressMedia, 'alt_text' | 'title'> | null | undefined,
+  fallback = '',
+): string {
+  return media?.title?.rendered?.trim() || media?.alt_text?.trim() || fallback
+}

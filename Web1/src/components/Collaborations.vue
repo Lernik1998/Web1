@@ -17,7 +17,13 @@
           v-ripple
           :aria-label="uni.name"
         >
-          <img :src="uni.logo" :alt="uni.name" class="kb-collab__logo" loading="lazy" />
+          <img
+            :src="uni.logo"
+            :alt="uni.alt"
+            :title="uni.title"
+            class="kb-collab__logo"
+            loading="lazy"
+          />
         </a>
       </div>
     </div>
@@ -30,10 +36,34 @@ defineOptions({
 })
 
 const universities = [
-  { name: 'UNIR', logo: '/images/logo-unir.svg', href: 'https://www.unir.net/' },
-  { name: 'UNED', logo: '/images/logo-uned.png', href: 'https://www.uned.es/' },
-  { name: 'Universidad Isabel I', logo: '/images/logo-isabel-i.svg', href: 'https://www.ui1.es/' },
-  { name: 'UNIE', logo: '/images/logo-unie.webp', href: 'https://www.unie.es/' },
+  {
+    name: 'UNIR',
+    logo: '/images/logo-unir.svg',
+    href: 'https://www.unir.net/',
+    alt: 'Logotipo de la Universidad Internacional de La Rioja (UNIR)',
+    title: 'UNIR — Universidad Internacional de La Rioja, colaboradora de Kanbouri Psicología',
+  },
+  {
+    name: 'UNED',
+    logo: '/images/logo-uned.png',
+    href: 'https://www.uned.es/',
+    alt: 'Logotipo de la Universidad Nacional de Educación a Distancia (UNED)',
+    title: 'UNED — Universidad Nacional de Educación a Distancia, colaboradora de Kanbouri Psicología',
+  },
+  {
+    name: 'Universidad Isabel I',
+    logo: '/images/logo-isabel-i.svg',
+    href: 'https://www.ui1.es/',
+    alt: 'Logotipo de la Universidad Isabel I',
+    title: 'Universidad Isabel I, colaboradora de Kanbouri Psicología',
+  },
+  {
+    name: 'UNIE',
+    logo: '/images/logo-unie.webp',
+    href: 'https://www.unie.es/',
+    alt: 'Logotipo de la Universidad Internacional de Empresa (UNIE)',
+    title: 'UNIE — Universidad Internacional de Empresa, colaboradora de Kanbouri Psicología',
+  },
 ]
 </script>
 

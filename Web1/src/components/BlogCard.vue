@@ -1,7 +1,13 @@
 <template>
   <article class="kb-blog-card">
     <router-link :to="`/blog/${post.slug}`" class="kb-blog-card__media">
-      <img :src="imageUrl" :alt="imageAlt" class="kb-blog-card__image" loading="lazy" />
+      <img
+        :src="imageUrl"
+        :alt="imageAlt"
+        :title="imageTitle"
+        class="kb-blog-card__image"
+        loading="lazy"
+      />
     </router-link>
 
     <div class="kb-blog-card__body">
@@ -26,7 +32,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { extractTextFromHtml, extractFirstImageUrl } from '../utils/contentProcessor'
-import { getMediaUrl } from '../utils/media'
+import { getMediaUrl, getMediaAlt, getMediaTitle } from '../utils/media'
 import type { WordPressPost } from '../types/api'
 
 const props = defineProps<{
@@ -40,8 +46,12 @@ const imageUrl = computed(
     '/images/psicologa-denia-hero.jpg',
 )
 
-const imageAlt = computed(
-  () => props.post._embedded?.['wp:featuredmedia']?.[0]?.alt_text || props.post.title.rendered,
+const imageAlt = computed(() =>
+  getMediaAlt(props.post._embedded?.['wp:featuredmedia']?.[0], props.post.title.rendered),
+)
+
+const imageTitle = computed(() =>
+  getMediaTitle(props.post._embedded?.['wp:featuredmedia']?.[0], props.post.title.rendered),
 )
 
 const categoryName = computed(() => props.post._embedded?.['wp:term']?.[0]?.[0]?.name ?? null)

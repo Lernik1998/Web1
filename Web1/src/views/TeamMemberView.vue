@@ -19,7 +19,8 @@
             <img
               v-if="photo && !photoLoadFailed"
               :src="photo.image"
-              :alt="member.name"
+              :alt="photo.alt || member.name"
+              :title="photo.title || member.name"
               class="kb-profile__image"
               @error="photoLoadFailed = true"
             />
@@ -79,7 +80,7 @@
 import { computed, ref } from 'vue'
 import { fetchProfesionalBySlug, fetchMediaById } from '../services/dataService'
 import { parseProfesionalAcf } from '../utils/profesionalAcf'
-import { getMediaUrl } from '../utils/media'
+import { getMediaUrl, getMediaAlt, getMediaTitle } from '../utils/media'
 import { useSeoMeta, seoMetaFromYoast, SITE_ORIGIN } from '../composables/useSeoMeta'
 import { usePersonSchema } from '../composables/usePersonSchema'
 import { useBreadcrumbSchema } from '../composables/useBreadcrumbSchema'
@@ -100,23 +101,33 @@ type TeamMemberData = {
   name: string
   parsed: ReturnType<typeof parseProfesionalAcf> | null
   photo: string | null
+  photoAlt: string
+  photoTitle: string
   yoast: YoastHeadJson | null
 }
 
 async function loadTeamMemberData(): Promise<TeamMemberData> {
   const post = await fetchProfesionalBySlug(props.slug)
-  if (!post) return { name: '', parsed: null, photo: null, yoast: null }
+  if (!post) {
+    return { name: '', parsed: null, photo: null, photoAlt: '', photoTitle: '', yoast: null }
+  }
 
   let photo: string | null = null
+  let photoAlt = ''
+  let photoTitle = ''
   if (post.acf.hero_image) {
     const media = await fetchMediaById(post.acf.hero_image)
     photo = getMediaUrl(media) ?? null
+    photoAlt = getMediaAlt(media, post.title.rendered)
+    photoTitle = getMediaTitle(media, post.title.rendered)
   }
 
   return {
     name: post.title.rendered,
     parsed: parseProfesionalAcf(post.acf),
     photo,
+    photoAlt,
+    photoTitle,
     yoast: post.yoast_head_json ?? null,
   }
 }
@@ -132,7 +143,11 @@ const member = computed(() =>
 )
 // La foto viene de la propia API (`hero_image`, un ID de la biblioteca de
 // medios); si no hay ninguna asignada, se muestra el placeholder de iniciales.
-const photo = computed(() => (data.value?.photo ? { image: data.value.photo } : null))
+const photo = computed(() =>
+  data.value?.photo
+    ? { image: data.value.photo, alt: data.value.photoAlt, title: data.value.photoTitle }
+    : null,
+)
 const initials = computed(() =>
   member.value
     ? member.value.name

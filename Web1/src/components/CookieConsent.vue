@@ -20,7 +20,16 @@
           </svg>
         </button>
 
-        <h2 class="kb-cookie__title text-h3 text-h3--strong">{{ title }}</h2>
+        <!-- Nada de <h2>/<h3> aquí: el banner se repite igual en las 35
+             páginas, así que cualquier nivel de encabezado compite con el
+             esquema real de cada página (un <h3> incluso puede saltarse un
+             nivel entero en páginas sin su propio <h2>, un fallo real
+             detectado con axe-core). El propio contenedor ya lleva
+             role="region" aria-label="Consentimiento de cookies", así que
+             quien navega con lector de pantalla ya identifica esta zona sin
+             necesitar además un encabezado; esto se queda como rótulo
+             visual (<p>). -->
+        <p class="kb-cookie__title text-h3 text-h3--strong">{{ title }}</p>
         <p id="kb-cookie-desc" class="kb-cookie__text text-body">{{ description }}</p>
 
         <div v-if="showDetails" class="kb-cookie__categories">

@@ -1,17 +1,19 @@
 <template>
   <div class="kb-faq">
     <div v-for="(item, index) in items" :key="item.question" class="kb-faq__item">
-      <button
-        type="button"
-        class="kb-faq__question"
-        :aria-expanded="openIndex === index"
-        @click="toggle(index)"
-      >
-        <span>{{ item.question }}</span>
-        <span class="kb-faq__icon" :class="{ 'is-open': openIndex === index }" aria-hidden="true">
-          +
-        </span>
-      </button>
+      <h3 class="kb-faq__question-heading">
+        <button
+          type="button"
+          class="kb-faq__question"
+          :aria-expanded="openIndex === index"
+          @click="toggle(index)"
+        >
+          <span>{{ item.question }}</span>
+          <span class="kb-faq__icon" :class="{ 'is-open': openIndex === index }" aria-hidden="true">
+            +
+          </span>
+        </button>
+      </h3>
 
       <div class="kb-faq__answer-wrapper" :class="{ 'is-open': openIndex === index }">
         <p class="kb-faq__answer">{{ item.answer }}</p>
@@ -46,6 +48,18 @@ function toggle(index: number) {
   border: 1px solid var(--color-line);
   border-radius: var(--radius-md);
   overflow: hidden;
+}
+
+/* Encabezado real (h3) alrededor del botón: cada pregunta necesita su
+   propia etiqueta de encabezado para que la estructura HTML se pueda leer
+   bien (antes solo existía como texto suelto dentro del botón, sin ningún
+   nivel de encabezado). Sin este reset, el h3 traería su propio margin y
+   tamaño de letra por defecto del navegador, duplicando el estilo que ya
+   pone .kb-faq__question. */
+.kb-faq__question-heading {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
 }
 
 .kb-faq__question {
