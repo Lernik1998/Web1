@@ -34,16 +34,30 @@ describe('consentScripts', () => {
       expect(document.querySelectorAll('script[data-consent="statistics"]').length).toBe(0)
     })
 
-    it('injects the Google Analytics scripts when allowed and a measurement id is configured', async () => {
+    it('injects the Google Analytics loader script when allowed and a measurement id is configured', async () => {
       vi.stubEnv('VITE_GA_MEASUREMENT_ID', 'G-TEST123')
       const { applyStatisticsConsent } = await import('../consentScripts')
 
       applyStatisticsConsent(true)
 
+      // Solo el loader externo (gtag/js) es un <script> real -- ver el
+      // comentario en consentScripts.ts sobre por qué la configuración ya
+      // no se inyecta como un <script> inline (lo bloquearía la CSP).
       const scripts = document.querySelectorAll('script[data-consent="statistics"]')
-      expect(scripts.length).toBe(2)
-      const loader = Array.from(scripts).find((el) => el.getAttribute('src'))
-      expect(loader?.getAttribute('src')).toContain('G-TEST123')
+      expect(scripts.length).toBe(1)
+      expect(scripts[0]?.getAttribute('src')).toContain('G-TEST123')
+    })
+
+    it('sets up window.gtag/dataLayer directly (not via an injected inline script, which the CSP blocks)', async () => {
+      vi.stubEnv('VITE_GA_MEASUREMENT_ID', 'G-TEST123')
+      const { applyStatisticsConsent } = await import('../consentScripts')
+
+      applyStatisticsConsent(true)
+
+      expect(typeof window.gtag).toBe('function')
+      expect(window.dataLayer?.some((entry) => Array.isArray(entry) && entry[0] === 'config')).toBe(
+        true,
+      )
     })
 
     it('does not inject Google Analytics twice on repeated calls', async () => {
@@ -53,7 +67,7 @@ describe('consentScripts', () => {
       applyStatisticsConsent(true)
       applyStatisticsConsent(true)
 
-      expect(document.querySelectorAll('script[data-consent="statistics"]').length).toBe(2)
+      expect(document.querySelectorAll('script[data-consent="statistics"]').length).toBe(1)
     })
 
     it('removes injected scripts and purges _ga/sbjs_ cookies when not allowed', async () => {

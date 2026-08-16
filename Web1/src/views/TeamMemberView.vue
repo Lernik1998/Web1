@@ -77,14 +77,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { fetchProfesionalBySlug, fetchMediaById } from '../services/dataService'
 import { parseProfesionalAcf } from '../utils/profesionalAcf'
 import { getMediaUrl, getMediaAlt, getMediaTitle } from '../utils/media'
 import { useSeoMeta, seoMetaFromYoast, SITE_ORIGIN } from '../composables/useSeoMeta'
 import { usePersonSchema } from '../composables/usePersonSchema'
 import { useBreadcrumbSchema } from '../composables/useBreadcrumbSchema'
-import { useHydratedAsync } from '../composables/useHydratedAsync'
+import { getEmbeddedHydration, recordHydration } from '../utils/hydration'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import Breadcrumbs from '../components/Breadcrumbs.vue'
 import type { YoastHeadJson } from '../types/api'
@@ -106,8 +106,8 @@ type TeamMemberData = {
   yoast: YoastHeadJson | null
 }
 
-async function loadTeamMemberData(): Promise<TeamMemberData> {
-  const post = await fetchProfesionalBySlug(props.slug)
+async function fetchTeamMemberData(slug: string): Promise<TeamMemberData> {
+  const post = await fetchProfesionalBySlug(slug)
   if (!post) {
     return { name: '', parsed: null, photo: null, photoAlt: '', photoTitle: '', yoast: null }
   }
@@ -132,11 +132,59 @@ async function loadTeamMemberData(): Promise<TeamMemberData> {
   }
 }
 
-const { data, loading, error } = useHydratedAsync(`team:${props.slug}`, loadTeamMemberData)
+// No usa useHydratedAsync (composables/useHydratedAsync.ts): esta vista
+// puede volver a pedir datos DESPUÉS del montaje inicial (al navegar de una
+// ficha a otra sin recargar la página, ver el `watch` de más abajo -- mismo
+// caso que BlogPostView.vue), algo que ese composable no contempla (solo
+// hidrata la primera carga). Sin este `watch`, cambiar de "/equipo/maria..."
+// a "/equipo/beatriz..." por navegación cliente (Vue Router reutiliza el
+// mismo componente al ser la misma ruta con solo el parámetro distinto) se
+// quedaba mostrando los datos de la persona anterior, con la URL ya
+// actualizada -- comprobado de verdad, no una suposición.
+const initialEmbedded = getEmbeddedHydration()?.[`team:${props.slug}`] as TeamMemberData | undefined
+
+const data = ref<TeamMemberData | undefined>(initialEmbedded)
+const loading = ref(initialEmbedded === undefined)
+const error = ref<string | null>(null)
 // Si la URL de la foto llega rota (404, medio borrado en WordPress...), se
 // trata igual que si no hubiera foto: cae al placeholder de iniciales en vez
-// de mostrar el icono de imagen rota del navegador.
+// de mostrar el icono de imagen rota del navegador. Se resetea al cambiar de
+// profesional (ver `watch` más abajo): la foto de la siguiente persona
+// merece su propia oportunidad de cargar, no heredar el fallo de la anterior.
 const photoLoadFailed = ref(false)
+
+async function loadTeamMember(slug: string) {
+  const key = `team:${slug}`
+  const embedded = getEmbeddedHydration()?.[key] as TeamMemberData | undefined
+
+  if (embedded !== undefined) {
+    data.value = embedded
+    loading.value = false
+    recordHydration(key, embedded)
+    return
+  }
+
+  loading.value = true
+  error.value = null
+  try {
+    data.value = await fetchTeamMemberData(slug)
+    recordHydration(key, data.value)
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Error desconocido'
+    console.error(`Error cargando datos hidratados (${key}):`, err)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => loadTeamMember(props.slug))
+watch(
+  () => props.slug,
+  (slug) => {
+    photoLoadFailed.value = false
+    loadTeamMember(slug)
+  },
+)
 
 const member = computed(() =>
   data.value?.parsed ? { name: data.value.name, ...data.value.parsed } : null,

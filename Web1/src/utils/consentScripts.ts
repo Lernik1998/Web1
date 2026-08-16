@@ -9,8 +9,26 @@ import { deleteCookiesByPrefix } from './cookies'
 
 const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined
 
+declare global {
+  interface Window {
+    dataLayer?: unknown[]
+    gtag?: (...args: unknown[]) => void
+  }
+}
+
 let gaLoaded = false
 
+/**
+ * El bloque de configuración de gtag ("dataLayer + gtag('config', ...)")
+ * tiene que ejecutarse como código normal de este módulo, NO como un
+ * `<script>` inyectado con `textContent` (como se hacía antes): la CSP del
+ * sitio (ver public/.htaccess e index.html) no lleva 'unsafe-inline' en
+ * script-src a propósito, así que el navegador bloquea cualquier <script>
+ * inline sin más -- Analytics se quedaba sin iniciar nunca, en silencio, sin
+ * ningún error visible salvo un aviso de CSP en la consola. Solo el loader
+ * externo (gtag/js, un script.src real) necesita seguir siendo un elemento
+ * <script>, ya que ese dominio sí está permitido en script-src.
+ */
 function loadGoogleAnalytics(): void {
   if (gaLoaded || !GA_MEASUREMENT_ID) return
 
@@ -20,15 +38,12 @@ function loadGoogleAnalytics(): void {
   loader.dataset.consent = 'statistics'
   document.head.appendChild(loader)
 
-  const init = document.createElement('script')
-  init.dataset.consent = 'statistics'
-  init.textContent = `
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){ window.dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', '${GA_MEASUREMENT_ID}');
-  `
-  document.head.appendChild(init)
+  window.dataLayer = window.dataLayer || []
+  window.gtag = function gtag(...args: unknown[]) {
+    window.dataLayer!.push(args)
+  }
+  window.gtag('js', new Date())
+  window.gtag('config', GA_MEASUREMENT_ID)
 
   gaLoaded = true
 }

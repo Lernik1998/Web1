@@ -21,9 +21,24 @@ export function useInternalLinks(containerRef: Ref<HTMLElement | null>) {
   const router = useRouter()
 
   function resolveInternalPath(href: string): string | null {
-    if (href.startsWith('/')) return href
-    if (href.startsWith(SITE_ORIGIN)) return href.slice(SITE_ORIGIN.length) || '/'
-    return null
+    let path: string | null = null
+    if (href.startsWith('/')) path = href
+    else if (href.startsWith(SITE_ORIGIN)) path = href.slice(SITE_ORIGIN.length) || '/'
+    if (path === null) return null
+
+    // No basta con que la URL sea del propio dominio: un enlace de WordPress
+    // a un archivo real alojado ahí (p. ej. un PDF en
+    // "/wp-content/uploads/...", o cualquier ruta que vue-router no
+    // reconozca) NO es una ruta de la SPA. Sin esta comprobación, ese click
+    // se interceptaba igualmente (preventDefault + router.push a una URL sin
+    // ninguna vista real detrás), mostrando "Página no encontrada" en vez de
+    // dejar que el navegador abriera/descargara el archivo como toca. Solo
+    // se intercepta si vue-router resuelve la ruta a algo que NO es su
+    // "catch-all" de 404 (ver router/index.ts, name: 'not-found').
+    const resolved = router.resolve(path)
+    if (resolved.name === 'not-found') return null
+
+    return path
   }
 
   function handleClick(event: MouseEvent) {

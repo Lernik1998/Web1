@@ -5,7 +5,7 @@ import router from '../../router'
 import type { ProfesionalPost, WordPressMedia } from '../../types/api'
 
 const { fetchProfesionalBySlugMock, fetchMediaByIdMock } = vi.hoisted(() => ({
-  fetchProfesionalBySlugMock: vi.fn<() => Promise<ProfesionalPost | null>>(),
+  fetchProfesionalBySlugMock: vi.fn<(slug: string) => Promise<ProfesionalPost | null>>(),
   fetchMediaByIdMock: vi.fn<() => Promise<WordPressMedia | null>>(),
 }))
 
@@ -128,5 +128,50 @@ describe('TeamMemberView', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('Error: network down')
+  })
+
+  // Vue Router reutiliza la misma instancia del componente al navegar entre
+  // dos URLs de la misma ruta ("/equipo/:slug") con solo el parámetro
+  // distinto -- sin este caso cubierto, la ficha se quedaba mostrando a la
+  // persona anterior con la URL ya actualizada a la nueva (comprobado de
+  // verdad en un navegador real antes de corregirlo, no solo en teoría).
+  it('reloads the profile when the slug prop changes without the component remounting', async () => {
+    fetchProfesionalBySlugMock.mockImplementation(async (slug: string) =>
+      makePost({ slug, title: { rendered: slug === 'ana-garcia' ? 'Ana García' : 'Beatriz Donet' } }),
+    )
+    await router.push('/equipo/ana-garcia')
+    await router.isReady()
+
+    const wrapper = mount(TeamMemberView, { props: { slug: 'ana-garcia' }, global: globalStubs })
+    await flushPromises()
+    expect(wrapper.text()).toContain('Ana García')
+
+    await wrapper.setProps({ slug: 'beatriz-donet' })
+    await flushPromises()
+
+    expect(fetchProfesionalBySlugMock).toHaveBeenCalledWith('beatriz-donet')
+    expect(wrapper.text()).toContain('Beatriz Donet')
+    expect(wrapper.text()).not.toContain('Ana García')
+  })
+
+  it('resets a previous photo-load failure when navigating to a different profile', async () => {
+    fetchProfesionalBySlugMock.mockImplementation(async (slug: string) =>
+      makePost({ slug, acf: { ...makePost().acf, hero_image: 42 } }),
+    )
+    fetchMediaByIdMock.mockResolvedValue({ id: 42, source_url: 'https://example.com/photo.jpg' })
+    await router.push('/equipo/ana-garcia')
+    await router.isReady()
+
+    const wrapper = mount(TeamMemberView, { props: { slug: 'ana-garcia' }, global: globalStubs })
+    await flushPromises()
+
+    await wrapper.find('.kb-profile__image').trigger('error')
+    expect(wrapper.find('.kb-profile__placeholder').exists()).toBe(true)
+
+    await wrapper.setProps({ slug: 'beatriz-donet' })
+    await flushPromises()
+
+    expect(wrapper.find('.kb-profile__image').exists()).toBe(true)
+    expect(wrapper.find('.kb-profile__placeholder').exists()).toBe(false)
   })
 })

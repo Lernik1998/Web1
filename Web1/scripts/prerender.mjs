@@ -160,6 +160,7 @@ function startServer() {
 
 async function prerenderRoute(browser, route) {
   const page = await browser.newPage()
+  let ok = true
   try {
     await page.goto(`http://localhost:${PORT}${route}`, { waitUntil: 'networkidle' })
     // Señal de que la app ya renderizó datos reales (no solo el spinner de
@@ -196,9 +197,11 @@ async function prerenderRoute(browser, route) {
     console.log(`  ✔ ${route}`)
   } catch (err) {
     console.warn(`  ✘ ${route}: ${err.message}`)
+    ok = false
   } finally {
     await page.close()
   }
+  return ok
 }
 
 // Las tipografías (@fontsource, ver src/main.ts) solo se descubren cuando el
@@ -270,16 +273,33 @@ async function main() {
   const server = await startServer()
   const browser = await chromium.launch()
 
+  const failedRoutes = []
   try {
     // Secuencial (no en paralelo): cada página comparte el mismo servidor
     // estático local y limita el riesgo de saturar la API de WordPress con
     // decenas de peticiones simultáneas durante el build.
     for (const route of routes) {
-      await prerenderRoute(browser, route)
+      const ok = await prerenderRoute(browser, route)
+      if (!ok) failedRoutes.push(route)
     }
   } finally {
     await browser.close()
     server.close()
+  }
+
+  // Antes, un fallo puntual en una sola ruta (una API de WordPress lenta ese
+  // momento, un timeout de red) solo se avisaba por consola como "✘", pero
+  // el script seguía terminando con éxito (código de salida 0) igualmente:
+  // el build "pasaba" aunque faltara una página entera en dist/, y nadie se
+  // enteraba hasta que esa URL diera 404 ya en producción. Con esto, un
+  // fallo real en el pre-renderizado hace fallar el build entero, tal como
+  // haría cualquier otro paso (type-check, tests...).
+  if (failedRoutes.length > 0) {
+    console.error(
+      `\n✘ Fallaron ${failedRoutes.length} de ${routes.length} rutas al pre-renderizar:`,
+    )
+    failedRoutes.forEach((route) => console.error(`    ${route}`))
+    process.exit(1)
   }
 
   console.log(`✔ Pre-renderizado ${routes.length} rutas (${dynamicRoutes.length} dinámicas).`)

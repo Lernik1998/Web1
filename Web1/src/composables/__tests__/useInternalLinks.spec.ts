@@ -3,8 +3,14 @@ import { defineComponent, h, nextTick, ref } from 'vue'
 import { mount } from '@vue/test-utils'
 
 const push = vi.fn<(path: string) => void>()
+// Simula el comportamiento real: cualquier ruta que no sea una de las
+// "conocidas" cae en el catch-all 404 (ver router/index.ts, name:
+// 'not-found'), igual que le pasaría a un archivo real como un PDF de
+// WordPress ("/wp-content/uploads/...") que no tiene ninguna vista propia.
+const KNOWN_PATHS = new Set(['/pedir-cita', '/blog', '/politica-privacidad'])
+const resolve = vi.fn((path: string) => ({ name: KNOWN_PATHS.has(path) ? 'known' : 'not-found' }))
 vi.mock('vue-router', () => ({
-  useRouter: () => ({ push }),
+  useRouter: () => ({ push, resolve }),
 }))
 
 import { useInternalLinks } from '../useInternalLinks'
@@ -85,6 +91,26 @@ describe('useInternalLinks', () => {
 
     expect(push).toHaveBeenCalledWith('/politica-privacidad')
     expect(event.defaultPrevented).toBe(true)
+  })
+
+  it('does not intercept a same-origin link to a real file with no matching SPA route (e.g. a WordPress upload)', async () => {
+    const wrapper = mount(
+      makeHost(
+        '<a href="https://kanbouripsicologia.com/wp-content/uploads/2024/guia.pdf">Descargar guía</a>',
+      ),
+    )
+    await nextTick()
+
+    const link = wrapper.find('a')
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true })
+    link.element.dispatchEvent(event)
+
+    // Sin esto, el click se interceptaba igualmente (preventDefault +
+    // router.push a una URL sin ninguna vista real detrás), mostrando
+    // "Página no encontrada" en vez de dejar que el navegador abriera o
+    // descargara el archivo.
+    expect(push).not.toHaveBeenCalled()
+    expect(event.defaultPrevented).toBe(false)
   })
 
   it('ignores clicks on links with target="_blank"', async () => {

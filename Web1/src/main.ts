@@ -51,6 +51,29 @@ if (hydrationEl?.textContent) {
 // mayor que cualquier otro, y evitable: router.isReady() no resuelve hasta
 // que la navegación inicial (con su chunk) esté lista, así que esperarlo
 // aquí hace que el primer pintado real del cliente ya salga completo.
-router.isReady().then(() => {
-  app.mount('#app')
-})
+//
+// El `.catch()`: router.isReady() puede rechazar (p. ej. el chunk de la
+// ruta ya no existe en el servidor porque hay un despliegue más reciente --
+// alguien tenía la pestaña abierta desde antes de esa actualización). Sin
+// este manejo, app.mount() nunca se llegaba a ejecutar: la página se
+// quedaba congelada mostrando solo el HTML pre-renderizado, sin ninguna
+// interactividad, sin ningún aviso visible para nadie. Recargar una vez
+// trae el index.html actual (con las referencias a los chunks correctas);
+// si el fallo persistiera igualmente, se monta la app tal cual antes que
+// dejarla muerta del todo.
+const RELOAD_ONCE_FLAG = 'kb-reload-after-router-error'
+router
+  .isReady()
+  .then(() => {
+    sessionStorage.removeItem(RELOAD_ONCE_FLAG)
+    app.mount('#app')
+  })
+  .catch((err) => {
+    console.error('Error preparando la navegación inicial:', err)
+    if (!sessionStorage.getItem(RELOAD_ONCE_FLAG)) {
+      sessionStorage.setItem(RELOAD_ONCE_FLAG, '1')
+      location.reload()
+    } else {
+      app.mount('#app')
+    }
+  })
