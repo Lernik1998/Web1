@@ -527,11 +527,13 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: stretch;
   border-radius: 10px;
+  overflow: hidden;
 }
 
 .kb-dropdown__row .kb-dropdown__link {
   flex: 1;
   min-width: 0;
+  border-radius: 0;
 }
 
 .kb-dropdown__chevron-btn {
@@ -543,7 +545,6 @@ onBeforeUnmount(() => {
   border: none;
   border-left: 2px solid transparent;
   background: none;
-  border-radius: 10px;
   color: var(--color-rose-hover);
   cursor: pointer;
   transition: background-color 220ms var(--ease-base);
@@ -555,7 +556,13 @@ onBeforeUnmount(() => {
   padding-left: 18px;
 }
 
-.kb-dropdown__chevron-btn[aria-expanded='true'],
+/* El fondo del botón NO depende de "aria-expanded" (estado JS que se
+   mantiene mientras el submenú está abierto): en ratón se apagaba con
+   retraso respecto al texto (ver más abajo, ":hover" del item se apaga al
+   instante) y en táctil se quedaba pintado mientras el acordeón seguía
+   abierto, como un "hover" que no se suelta al levantar el dedo. Que la
+   flecha esté rotada y el contenido ya desplegado es suficiente para ver
+   que está abierto -- no hace falta además un recuadro resaltado fijo. */
 .kb-dropdown__chevron-btn:focus-visible {
   background: var(--color-rose-soft-wash);
 }
@@ -563,7 +570,7 @@ onBeforeUnmount(() => {
 /* Submenú (nivel 2) — "Psicología para Adultos" */
 .kb-submenu-wrap {
   position: absolute;
-  top: -10px;
+  top: 0;
   left: calc(100% + 10px);
   opacity: 0;
   visibility: hidden;
