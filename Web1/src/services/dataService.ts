@@ -1,4 +1,4 @@
-import apiClient from './api'
+import apiClient, { cachedGet } from './api'
 import type {
   WordPressPage,
   WordPressPost,
@@ -18,14 +18,14 @@ import type {
 // contenido real (rol, biografía, formación) vive en los campos ACF, no en
 // `content.rendered` (que WordPress deja vacío para este tipo de post).
 export const fetchProfesionales = async (): Promise<ProfesionalPost[]> => {
-  const response = await apiClient.get<ProfesionalPost[]>(
+  const response = await cachedGet<ProfesionalPost[]>(
     '/wp-json/wp/v2/profesional?_embed&per_page=100',
   )
   return response.data
 }
 
 export const fetchProfesionalBySlug = async (slug: string): Promise<ProfesionalPost | null> => {
-  const response = await apiClient.get<ProfesionalPost[]>(
+  const response = await cachedGet<ProfesionalPost[]>(
     `/wp-json/wp/v2/profesional?slug=${slug}&_embed`,
   )
   return response.data.length > 0 ? (response.data[0] ?? null) : null
@@ -35,7 +35,7 @@ export const fetchProfesionalBySlug = async (slug: string): Promise<ProfesionalP
 // el contenido real (intro, listas, textos) vive en los campos ACF, no en
 // `content.rendered`.
 export const fetchTherapieBySlug = async (slug: string): Promise<TherapiePost | null> => {
-  const response = await apiClient.get<TherapiePost[]>(
+  const response = await cachedGet<TherapiePost[]>(
     `/wp-json/wp/v2/therapie?slug=${slug}&_embed`,
   )
   return response.data.length > 0 ? (response.data[0] ?? null) : null
@@ -44,7 +44,7 @@ export const fetchTherapieBySlug = async (slug: string): Promise<TherapiePost | 
 // Textos y ajustes del banner de cookies (custom post type "setting", un
 // único post con slug "cookie-kanbouri"), editable desde WordPress.
 export const fetchCookieSetting = async (): Promise<CookieSettingPost | null> => {
-  const response = await apiClient.get<CookieSettingPost[]>(
+  const response = await cachedGet<CookieSettingPost[]>(
     '/wp-json/wp/v2/setting?slug=cookie-kanbouri',
   )
   return response.data.length > 0 ? (response.data[0] ?? null) : null
@@ -53,14 +53,14 @@ export const fetchCookieSetting = async (): Promise<CookieSettingPost | null> =>
 // Activar/desactivar el mapa del footer y el enlace de Google Maps que debe
 // mostrar (custom post type "setting", único post con slug "maps").
 export const fetchMapsSetting = async (): Promise<MapsSettingPost | null> => {
-  const response = await apiClient.get<MapsSettingPost[]>('/wp-json/wp/v2/setting?slug=maps')
+  const response = await cachedGet<MapsSettingPost[]>('/wp-json/wp/v2/setting?slug=maps')
   return response.data.length > 0 ? (response.data[0] ?? null) : null
 }
 
 // Datos de contacto del footer (dirección, teléfono, email, horario):
 // custom post type "footer-information", único post con slug "footer".
 export const fetchFooterInformation = async (): Promise<FooterInformationPost | null> => {
-  const response = await apiClient.get<FooterInformationPost[]>(
+  const response = await cachedGet<FooterInformationPost[]>(
     '/wp-json/wp/v2/footer-information?slug=footer',
   )
   return response.data.length > 0 ? (response.data[0] ?? null) : null
@@ -68,7 +68,7 @@ export const fetchFooterInformation = async (): Promise<FooterInformationPost | 
 
 // Fetch WordPress page by slug
 export const fetchPageBySlug = async (slug: PageSlug): Promise<WordPressPage[]> => {
-  const response = await apiClient.get<WordPressPage[]>(`/wp-json/wp/v2/pages?slug=${slug}`)
+  const response = await cachedGet<WordPressPage[]>(`/wp-json/wp/v2/pages?slug=${slug}`)
   return response.data
 }
 
@@ -105,7 +105,7 @@ export const fetchHomePage = async (): Promise<WordPressHomePage | null> => {
 export const fetchMediaById = async (id: number): Promise<WordPressMedia | null> => {
   if (!id) return null
   try {
-    const response = await apiClient.get<WordPressMedia>(`/wp-json/wp/v2/media/${id}`)
+    const response = await cachedGet<WordPressMedia>(`/wp-json/wp/v2/media/${id}`)
     return response.data
   } catch (error) {
     console.error(`Error fetching media ${id}:`, error)
@@ -133,7 +133,7 @@ export interface BlogPostsPage {
 // cambie sin darse cuenta). `X-WP-TotalPages` es la cabecera que WordPress
 // devuelve con el nº de páginas real para ese `per_page`.
 export const fetchBlogPosts = async (page = 1, perPage = 3): Promise<BlogPostsPage> => {
-  const response = await apiClient.get<WordPressPost[]>(
+  const response = await cachedGet<WordPressPost[]>(
     `/wp-json/wp/v2/posts?_embed&orderby=date&order=desc&per_page=${perPage}&page=${page}`,
   )
   const totalPages = Number(response.headers['x-wp-totalpages']) || 1
@@ -141,13 +141,13 @@ export const fetchBlogPosts = async (page = 1, perPage = 3): Promise<BlogPostsPa
 }
 
 export const fetchBlogPostBySlug = async (slug: string): Promise<WordPressPost | null> => {
-  const response = await apiClient.get<WordPressPost[]>(`/wp-json/wp/v2/posts?slug=${slug}&_embed`)
+  const response = await cachedGet<WordPressPost[]>(`/wp-json/wp/v2/posts?slug=${slug}&_embed`)
   return response.data.length > 0 ? (response.data[0] ?? null) : null
 }
 
 // Reseñas de Google (endpoint propio del WordPress, no la API estándar).
 export const fetchGoogleReviews = async (): Promise<GoogleReview[]> => {
-  const response = await apiClient.get<GoogleReview[]>('/wp-json/kanbouri/v1/reviews')
+  const response = await cachedGet<GoogleReview[]>('/wp-json/kanbouri/v1/reviews')
   return response.data
 }
 

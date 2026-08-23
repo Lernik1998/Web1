@@ -32,11 +32,14 @@ import Footer from './components/Footer.vue'
 import CookieConsent from './components/CookieConsent.vue'
 import WhatsAppButton from './components/WhatsAppButton.vue'
 import MaintenanceView from './views/MaintenanceView.vue'
+import { useLinkPrefetch } from './composables/useLinkPrefetch'
 
 // Interruptor general de mantenimiento (ver .env, VITE_MAINTENANCE_MODE):
 // activado, sustituye toda la web -- cualquier URL -- por el aviso, sin
 // cabecera, pie ni el resto de la navegación normal.
 const maintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE === 'true'
+
+useLinkPrefetch()
 </script>
 
 <style scoped>

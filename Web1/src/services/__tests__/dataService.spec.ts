@@ -1,11 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-vi.mock('../api', () => ({
-  default: {
-    get: vi.fn<(...args: unknown[]) => Promise<{ data: unknown }>>(),
-    post: vi.fn<(...args: unknown[]) => Promise<{ data: unknown }>>(),
-  },
-}))
+// `dataService` llama a `cachedGet` (no a `apiClient.get` directamente) para
+// las peticiones GET -- ver services/api.ts. En los tests no hace falta
+// reproducir la caché en sí (cada test resetea los mocks y hace sus propias
+// aserciones sobre el número de llamadas), así que `cachedGet` es
+// simplemente el mismo mock que `apiClient.get`.
+vi.mock('../api', () => {
+  const get = vi.fn<(...args: unknown[]) => Promise<{ data: unknown }>>()
+  const post = vi.fn<(...args: unknown[]) => Promise<{ data: unknown }>>()
+  return {
+    default: { get, post },
+    cachedGet: get,
+  }
+})
 
 import apiClient from '../api'
 import {
