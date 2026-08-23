@@ -67,6 +67,7 @@ import FaqAccordion from '../../components/FaqAccordion.vue'
 import RelatedTherapies from '../../components/RelatedTherapies.vue'
 import { useSeoMeta } from '../../composables/useSeoMeta'
 import { useFaqSchema } from '../../composables/useFaqSchema'
+import { ADULT_THERAPIES, adultTherapyPath } from '../../data/adultTherapies.mjs'
 
 defineOptions({
   name: 'AdultosView',
@@ -79,12 +80,10 @@ useSeoMeta(() => ({
   siteName: 'María B. Kanbouri',
 }))
 
-const areas = [
-  { label: 'Ansiedad', href: '/terapias/adultos/ansiedad' },
-  { label: 'Depresión y estado de ánimo', href: '/terapias/adultos/depresion' },
-  { label: 'Autoestima y desarrollo personal', href: '/terapias/adultos/autoestima' },
-  { label: 'Duelo y pérdidas', href: '/terapias/adultos/duelo' },
-]
+const areas = ADULT_THERAPIES.map((therapy) => ({
+  label: therapy.label,
+  href: adultTherapyPath(therapy.slug),
+}))
 
 const relatedLinks = [
   { label: 'Psicóloga infantil', href: '/terapias/infantil' },

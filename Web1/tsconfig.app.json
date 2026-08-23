@@ -3,6 +3,12 @@
   "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {
+    // Permite importar `src/data/adultTherapies.mjs` (JS liso a propósito,
+    // para que los scripts de build en Node -- que no pasan por Vite/tsc --
+    // puedan importar exactamente el mismo fichero sin necesitar un
+    // compilador aparte).
+    "allowJs": true,
+
     // Extra safety for array and object lookups, but may have false positives.
     "noUncheckedIndexedAccess": true,
 

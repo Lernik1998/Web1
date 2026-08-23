@@ -15,6 +15,7 @@
 import { writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { ADULT_THERAPIES, adultTherapyPath } from '../src/data/adultTherapies.mjs'
 
 const SITE_ORIGIN = 'https://kanbouripsicologia.com'
 const API_BASE_URL = process.env.VITE_API_BASE_URL || SITE_ORIGIN
@@ -40,6 +41,10 @@ function buildContent(team) {
       ? team.map((member) => `- [${member.name}](${SITE_ORIGIN}/equipo/${member.slug})`).join('\n')
       : `- [Nuestro equipo](${SITE_ORIGIN}/equipo)`
 
+  const adultTherapyLines = ADULT_THERAPIES.map(
+    (therapy) => `  - [${therapy.label}](${SITE_ORIGIN}${adultTherapyPath(therapy.slug)})`,
+  ).join('\n')
+
   return `# Kanbouri Psicología
 
 > Centro de psicología en Dénia (Alicante, España) especializado en terapia infantil, adolescentes, adultos y pareja, con atención presencial en Dénia y online para toda España.
@@ -51,10 +56,7 @@ Centro de psicología dirigido por María B. Kanbouri, Psicóloga General Sanita
 - [Psicóloga infantil](${SITE_ORIGIN}/terapias/infantil)
 - [Psicóloga para adolescentes](${SITE_ORIGIN}/terapias/adolescentes)
 - [Psicóloga para adultos](${SITE_ORIGIN}/terapias/adultos)
-  - [Ansiedad](${SITE_ORIGIN}/terapias/adultos/ansiedad)
-  - [Depresión y estado de ánimo](${SITE_ORIGIN}/terapias/adultos/depresion)
-  - [Autoestima y desarrollo personal](${SITE_ORIGIN}/terapias/adultos/autoestima)
-  - [Duelo y pérdidas](${SITE_ORIGIN}/terapias/adultos/duelo)
+${adultTherapyLines}
 - [Psicóloga para padres y familia](${SITE_ORIGIN}/terapias/padres-familia)
 - [Supervisión para psicólogos](${SITE_ORIGIN}/para-psicologos)
 

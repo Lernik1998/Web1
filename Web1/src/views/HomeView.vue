@@ -31,6 +31,7 @@ import Hero from '../components/Hero.vue'
 import TherapyCards from '../components/TherapyCards.vue'
 import GoogleReviews from '../components/GoogleReviews.vue'
 import Collaborations from '../components/Collaborations.vue'
+import { ADULT_THERAPIES, adultTherapyPath } from '../data/adultTherapies.mjs'
 import type { WordPressHomePage, WordPressMedia } from '../types/api'
 
 defineOptions({
@@ -58,18 +59,15 @@ type TherapyCardData = {
 // Terapias específicas dentro de "Psicóloga para adultos" (custom post type
 // "therapie" en WordPress, no las páginas ACF de home): se muestran además
 // de las 4 tarjetas principales, no en su lugar, para que el carrusel
-// enlace directamente a cada página concreta.
-//
-// "Duelo y pérdidas" usa un `imagePosition` propio porque su foto en
-// WordPress es vertical, con el punto de interés (las manos entrelazadas)
-// en la parte baja: con el recorte por defecto ("center 20%", pensado para
-// fotos horizontales) las manos quedaban fuera del encuadre.
-const ADULT_SUB_THERAPIES: Array<{ slug: string; href: string; imagePosition?: string }> = [
-  { slug: 'ansiedad', href: '/terapias/adultos/ansiedad' },
-  { slug: 'depresion-y-estado-de-animo', href: '/terapias/adultos/depresion' },
-  { slug: 'autoestima-y-desarrollo-personal', href: '/terapias/adultos/autoestima' },
-  { slug: 'duelo-y-perdidas', href: '/terapias/adultos/duelo', imagePosition: 'center 85%' },
-]
+// enlace directamente a cada página concreta. Lista única en
+// ../data/adultTherapies.mjs -- aquí solo se adapta su forma a lo que
+// necesita `loadHomeData` (slug de WordPress, no el de la ruta).
+const ADULT_SUB_THERAPIES: Array<{ slug: string; href: string; imagePosition?: string }> =
+  ADULT_THERAPIES.map((therapy) => ({
+    slug: therapy.wpSlug,
+    href: adultTherapyPath(therapy.slug),
+    imagePosition: therapy.imagePosition,
+  }))
 
 type HomeData = {
   pageData: WordPressHomePage | null

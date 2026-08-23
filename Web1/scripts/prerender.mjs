@@ -28,6 +28,7 @@ import { readFile, stat, writeFile, mkdir, copyFile, readdir } from 'node:fs/pro
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
+import { ADULT_THERAPIES, adultTherapyPath } from '../src/data/adultTherapies.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const DIST_DIR = path.join(ROOT, 'dist')
@@ -60,10 +61,7 @@ const STATIC_ROUTES = [
   '/terapias/infantil',
   '/terapias/adolescentes',
   '/terapias/adultos',
-  '/terapias/adultos/ansiedad',
-  '/terapias/adultos/depresion',
-  '/terapias/adultos/autoestima',
-  '/terapias/adultos/duelo',
+  ...ADULT_THERAPIES.map((therapy) => adultTherapyPath(therapy.slug)),
   '/terapias/padres-familia',
   '/para-psicologos',
   '/blog',

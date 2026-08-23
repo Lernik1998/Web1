@@ -158,6 +158,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, defineComponent, h } from 'vue'
+import { ADULT_THERAPIES, adultTherapyPath } from '../data/adultTherapies.mjs'
 
 defineOptions({
   name: 'TheHeader',
@@ -191,12 +192,10 @@ const terapiaItems = [
   {
     label: 'Psicología para Adultos',
     href: '/terapias/adultos',
-    children: [
-      { label: 'Ansiedad', href: '/terapias/adultos/ansiedad' },
-      { label: 'Depresión y estado de ánimo', href: '/terapias/adultos/depresion' },
-      { label: 'Autoestima y desarrollo personal', href: '/terapias/adultos/autoestima' },
-      { label: 'Duelo y pérdidas', href: '/terapias/adultos/duelo' },
-    ],
+    children: ADULT_THERAPIES.map((therapy) => ({
+      label: therapy.label,
+      href: adultTherapyPath(therapy.slug),
+    })),
   },
   { label: 'Psicología para Padres y Familia', href: '/terapias/padres-familia' },
 ]

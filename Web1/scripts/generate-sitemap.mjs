@@ -15,6 +15,7 @@
 import { writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { ADULT_THERAPIES, adultTherapyPath } from '../src/data/adultTherapies.mjs'
 
 const SITE_ORIGIN = 'https://kanbouripsicologia.com'
 const API_BASE_URL = process.env.VITE_API_BASE_URL || SITE_ORIGIN
@@ -52,30 +53,12 @@ const STATIC_ROUTES = [
     yoast: { endpoint: 'therapie', slug: 'psicologia-para-adolescentes' },
   },
   { path: '/terapias/adultos', changefreq: 'monthly', priority: '0.9' },
-  {
-    path: '/terapias/adultos/ansiedad',
+  ...ADULT_THERAPIES.map((therapy) => ({
+    path: adultTherapyPath(therapy.slug),
     changefreq: 'monthly',
     priority: '0.8',
-    yoast: { endpoint: 'therapie', slug: 'ansiedad' },
-  },
-  {
-    path: '/terapias/adultos/depresion',
-    changefreq: 'monthly',
-    priority: '0.8',
-    yoast: { endpoint: 'therapie', slug: 'depresion-y-estado-de-animo' },
-  },
-  {
-    path: '/terapias/adultos/autoestima',
-    changefreq: 'monthly',
-    priority: '0.8',
-    yoast: { endpoint: 'therapie', slug: 'autoestima-y-desarrollo-personal' },
-  },
-  {
-    path: '/terapias/adultos/duelo',
-    changefreq: 'monthly',
-    priority: '0.8',
-    yoast: { endpoint: 'therapie', slug: 'duelo-y-perdidas' },
-  },
+    yoast: { endpoint: 'therapie', slug: therapy.wpSlug },
+  })),
   {
     path: '/terapias/padres-familia',
     changefreq: 'monthly',

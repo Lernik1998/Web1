@@ -67,6 +67,7 @@ import { useSeoMeta, seoMetaFromYoast } from '../../../composables/useSeoMeta'
 import { useFaqSchema } from '../../../composables/useFaqSchema'
 import { useBreadcrumbSchema } from '../../../composables/useBreadcrumbSchema'
 import { useHydratedAsync } from '../../../composables/useHydratedAsync'
+import { getRelatedAdultTherapies } from '../../../data/adultTherapies.mjs'
 import FaqAccordion from '../../../components/FaqAccordion.vue'
 import LoadingSpinner from '../../../components/LoadingSpinner.vue'
 import RelatedTherapies from '../../../components/RelatedTherapies.vue'
@@ -103,11 +104,7 @@ const content = computed(() => data.value?.content ?? null)
 // esta ficha: se usan tal cual, no se construyen aquí.
 useSeoMeta(computed(() => seoMetaFromYoast(data.value?.yoast ?? null)))
 
-const relatedLinks = [
-  { label: 'Depresión y estado de ánimo', href: '/terapias/adultos/depresion' },
-  { label: 'Autoestima y desarrollo personal', href: '/terapias/adultos/autoestima' },
-  { label: 'Duelo y pérdidas', href: '/terapias/adultos/duelo' },
-]
+const relatedLinks = getRelatedAdultTherapies('ansiedad')
 
 // `computed`, no un array suelto: `title` empieza con un valor de repuesto
 // ('Ansiedad') y se actualiza de forma asíncrona en onMounted con el título

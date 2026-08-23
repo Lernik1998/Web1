@@ -1,4 +1,17 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { ADULT_THERAPIES } from '../data/adultTherapies.mjs'
+
+// Un componente por cada slug de `ADULT_THERAPIES` (../data/adultTherapies.mjs).
+// No se genera dinámicamente a partir del slug porque `import()` necesita una
+// ruta de fichero literal para que Vite pueda trocear cada vista en su propio
+// chunk -- así que una terapia nueva sí requiere añadir su entrada aquí, además
+// de la entrada en `ADULT_THERAPIES` y crear el fichero de la vista.
+const ADULT_THERAPY_COMPONENTS = {
+  ansiedad: () => import('../views/terapias/adultos/AnsiedadView.vue'),
+  depresion: () => import('../views/terapias/adultos/DepresionView.vue'),
+  autoestima: () => import('../views/terapias/adultos/AutoestimaView.vue'),
+  duelo: () => import('../views/terapias/adultos/DueloView.vue'),
+} as const
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -49,26 +62,12 @@ const router = createRouter({
           name: 'adultos',
           component: () => import('../views/terapias/AdultosView.vue'),
         },
-        {
-          path: 'adultos/ansiedad',
-          name: 'ansiedad',
-          component: () => import('../views/terapias/adultos/AnsiedadView.vue'),
-        },
-        {
-          path: 'adultos/depresion',
-          name: 'depresion',
-          component: () => import('../views/terapias/adultos/DepresionView.vue'),
-        },
-        {
-          path: 'adultos/autoestima',
-          name: 'autoestima',
-          component: () => import('../views/terapias/adultos/AutoestimaView.vue'),
-        },
-        {
-          path: 'adultos/duelo',
-          name: 'duelo',
-          component: () => import('../views/terapias/adultos/DueloView.vue'),
-        },
+        ...ADULT_THERAPIES.map((therapy) => ({
+          path: `adultos/${therapy.slug}`,
+          name: therapy.slug,
+          component:
+            ADULT_THERAPY_COMPONENTS[therapy.slug as keyof typeof ADULT_THERAPY_COMPONENTS],
+        })),
         {
           path: 'padres-familia',
           name: 'padres-familia',
