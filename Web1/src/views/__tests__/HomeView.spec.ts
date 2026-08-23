@@ -270,6 +270,39 @@ describe('HomeView', () => {
     expect(wrapper.text()).toContain('Texto de la página propia de Ansiedad.')
   })
 
+  // El texto (título, tarjetas) se pide por separado de las imágenes, para
+  // que el Hero pueda mostrar su contenido real cuanto antes en vez de
+  // esperar a que también lleguen las fotos -- ver HomeView.vue, `loadMedia`
+  // se dispara DESPUÉS de que `loadHomeContent` resuelva, no a la vez.
+  it('shows the hero title and therapy card text before the images resolve', async () => {
+    vi.mocked(fetchHomePage).mockResolvedValue(makeHomePage())
+    let resolveMedia: (value: WordPressMedia | null) => void = () => {}
+    vi.mocked(fetchMediaById).mockReturnValue(
+      new Promise((resolve) => {
+        resolveMedia = resolve
+      }),
+    )
+
+    await router.push('/')
+    await router.isReady()
+    const wrapper = mount(HomeView, { global: globalStubs })
+
+    // El texto ya resuelto (fetchHomePage) espera solo un tick de las
+    // promesas, no a que las imágenes (todavía pendientes) lo hagan.
+    await flushPromises()
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('Bienvenida a Kanbouri')
+    expect(wrapper.text()).toContain('Infantil')
+    // Sin foto todavía: no debe haber ningún <img> real esperando una URL
+    // vacía (ver el `v-if="imageUrl"` de Hero.vue).
+    expect(wrapper.find('.kb-hero__image').exists()).toBe(true)
+    expect(wrapper.find('img.kb-hero__image').exists()).toBe(false)
+
+    resolveMedia(makeMedia(10))
+    await flushPromises()
+  })
+
   it('shows the "no data" message when the page is not found', async () => {
     vi.mocked(fetchHomePage).mockResolvedValue(null)
     vi.mocked(fetchMediaById).mockResolvedValue(null)

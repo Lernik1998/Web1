@@ -21,18 +21,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { fetchHomePage, fetchMediaById, fetchTherapieBySlug } from '../services/dataService'
 import { getMediaUrl, getMediaSrcSet, getMediaAlt, getMediaTitle } from '../utils/media'
 import { useSeoMeta, seoMetaFromYoast } from '../composables/useSeoMeta'
 import { useHydratedAsync } from '../composables/useHydratedAsync'
+import { getEmbeddedHydration, recordHydration } from '../utils/hydration'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import Hero from '../components/Hero.vue'
 import TherapyCards from '../components/TherapyCards.vue'
 import GoogleReviews from '../components/GoogleReviews.vue'
 import Collaborations from '../components/Collaborations.vue'
 import { ADULT_THERAPIES, adultTherapyPath } from '../data/adultTherapies.mjs'
-import type { WordPressHomePage, WordPressMedia } from '../types/api'
+import type { WordPressHomePage, WordPressMedia, TherapiePost } from '../types/api'
 
 defineOptions({
   name: 'InicioView',
@@ -69,24 +70,49 @@ const ADULT_SUB_THERAPIES: Array<{ slug: string; href: string; imagePosition?: s
     imagePosition: therapy.imagePosition,
   }))
 
-type HomeData = {
+type HomeContent = {
   pageData: WordPressHomePage | null
-  // Se guarda el objeto de media completo (no una URL ya resuelta) para poder
-  // elegir un tamaño distinto según dónde se use cada imagen: el Hero ocupa
-  // todo el ancho y necesita una imagen grande, pero las tarjetas de terapia
-  // son mucho más pequeñas -- pedir siempre el tamaño "large" (1024px) para
-  // una tarjeta de ~300-500px descarga varias veces más peso del necesario.
-  mediaById: Record<number, WordPressMedia>
-  adultSubTherapyCards: TherapyCardData[]
+  subTherapies: Array<TherapiePost | null>
 }
 
-async function loadHomeData(): Promise<HomeData> {
-  const [response, subTherapies] = await Promise.all([
+// Solo texto (títulos, descripciones): nada de imágenes todavía. Así el
+// Hero (y las tarjetas) pueden pintar su contenido real en cuanto llega
+// esto, sin esperar a que además se resuelvan las fotos -- ver `mediaById`
+// más abajo, que llega después y por su cuenta.
+async function loadHomeContent(): Promise<HomeContent> {
+  const [pageData, subTherapies] = await Promise.all([
     fetchHomePage(),
     Promise.all(ADULT_SUB_THERAPIES.map((entry) => fetchTherapieBySlug(entry.slug))),
   ])
+  return { pageData, subTherapies }
+}
 
-  const acf = response?.acf
+const { data, loading, error } = useHydratedAsync('home:page', loadHomeContent)
+
+// Se guarda el objeto de media completo (no una URL ya resuelta) para poder
+// elegir un tamaño distinto según dónde se use cada imagen: el Hero ocupa
+// todo el ancho y necesita una imagen grande, pero las tarjetas de terapia
+// son mucho más pequeñas -- pedir siempre el tamaño "large" (1024px) para
+// una tarjeta de ~300-500px descarga varias veces más peso del necesario.
+//
+// Va en un `ref` aparte (no dentro de `data`, ver arriba) y se resuelve en
+// un segundo paso, después del texto: el Hero y las tarjetas ya pueden
+// mostrar su título/descripción real mientras las imágenes siguen en
+// camino, en vez de esperar a tenerlo todo para pintar cualquier cosa.
+const mediaById = ref<Record<number, WordPressMedia>>(
+  (getEmbeddedHydration()?.['home:media'] as Record<number, WordPressMedia> | undefined) ?? {},
+)
+
+async function loadMedia(content: HomeContent) {
+  const key = 'home:media'
+  const embedded = getEmbeddedHydration()?.[key] as Record<number, WordPressMedia> | undefined
+  if (embedded !== undefined) {
+    mediaById.value = embedded
+    recordHydration(key, embedded)
+    return
+  }
+
+  const acf = content.pageData?.acf
   const mediaIds = new Set<number>()
   if (acf) {
     ;[
@@ -99,24 +125,75 @@ async function loadHomeData(): Promise<HomeData> {
       .filter(Boolean)
       .forEach((id) => mediaIds.add(id))
   }
-  subTherapies.forEach((therapy) => {
+  content.subTherapies.forEach((therapy) => {
     if (therapy?.acf.therapy_image) mediaIds.add(therapy.acf.therapy_image)
   })
 
   const idList = [...mediaIds]
-  const mediaResults = await Promise.all(idList.map((id) => fetchMediaById(id)))
-  const mediaMap: Record<number, WordPressMedia> = {}
-  mediaResults.forEach((media, index) => {
-    const id = idList[index]
-    if (id && media) mediaMap[id] = media
-  })
+  try {
+    const mediaResults = await Promise.all(idList.map((id) => fetchMediaById(id)))
+    const mediaMap: Record<number, WordPressMedia> = {}
+    mediaResults.forEach((media, index) => {
+      const id = idList[index]
+      if (id && media) mediaMap[id] = media
+    })
+    mediaById.value = mediaMap
+    recordHydration(key, mediaMap)
+  } catch (err) {
+    // Un fallo aquí no debe tumbar la página entera (ya visible gracias al
+    // texto, que llegó por separado): las imágenes se quedan con su
+    // placeholder, igual que si tardaran mucho en llegar.
+    console.error('Error cargando las imágenes de la portada:', err)
+  }
+}
 
-  const adultSubTherapyCards = subTherapies
+watch(
+  data,
+  (content) => {
+    if (content) loadMedia(content)
+  },
+  { immediate: true },
+)
+
+// Título/descripción de Yoast SEO (ya escritos a mano en WordPress, campo
+// "yoast_head_json" de la página "home"): se usan tal cual, en vez de
+// construir un título propio en el código, para que el equipo del centro
+// pueda cambiarlos desde WordPress sin tocar nada aquí. Distinto del
+// titular del Hero, que es para la persona que ya está en la página.
+useSeoMeta(() => seoMetaFromYoast(data.value?.pageData?.yoast_head_json))
+
+const heroProps = computed(() => {
+  const acf = data.value?.pageData?.acf
+  if (!acf) return null
+  // `mediaById` puede seguir vacío en este punto (llega después, ver
+  // `loadMedia`): con `heroMedia` `undefined`, `imageUrl` queda como '' y el
+  // Hero ya sabe mostrarse sin foto todavía (ver Hero.vue) -- el titular y
+  // la descripción no esperan a que la imagen esté lista.
+  const heroMedia = mediaById.value[acf.hero_image]
+  return {
+    title: acf.hero_title,
+    description: acf.hero_description,
+    buttonText: acf.hero_button_text,
+    imageUrl: getMediaUrl(heroMedia, 'large') ?? '',
+    imageSrcset: getMediaSrcSet(heroMedia),
+    imageAlt: getMediaAlt(heroMedia, acf.hero_title),
+    imageTitle: getMediaTitle(heroMedia, acf.hero_title),
+  }
+})
+
+// Tarjetas de las 4 terapias específicas de "Psicóloga para adultos": el
+// texto (título/descripción) sale de `data.value.subTherapies`, que llega
+// en el primer paso (rápido); la imagen sale de `mediaById`, que llega
+// después -- la tarjeta se muestra con su texto real y un hueco de imagen
+// (ver TherapyCards.vue) hasta que la foto esté lista.
+const adultSubTherapyCards = computed<TherapyCardData[]>(() => {
+  const subTherapies = data.value?.subTherapies ?? []
+  return subTherapies
     .map((therapy, index): TherapyCardData | null => {
       const subAcf = therapy?.acf
       if (!subAcf) return null
       const title = subAcf.therapy_name || therapy.title.rendered
-      const media = mediaMap[subAcf.therapy_image]
+      const media = mediaById.value[subAcf.therapy_image]
       return {
         title,
         // `card_description` es opcional: si en WordPress se deja vacío,
@@ -132,38 +209,10 @@ async function loadHomeData(): Promise<HomeData> {
       }
     })
     .filter((card): card is TherapyCardData => card !== null)
-
-  return { pageData: response, mediaById: mediaMap, adultSubTherapyCards }
-}
-
-const { data, loading, error } = useHydratedAsync('home:page', loadHomeData)
-
-// Título/descripción de Yoast SEO (ya escritos a mano en WordPress, campo
-// "yoast_head_json" de la página "home"): se usan tal cual, en vez de
-// construir un título propio en el código, para que el equipo del centro
-// pueda cambiarlos desde WordPress sin tocar nada aquí. Distinto del
-// titular del Hero, que es para la persona que ya está en la página.
-useSeoMeta(() => seoMetaFromYoast(data.value?.pageData?.yoast_head_json))
-
-const heroProps = computed(() => {
-  const acf = data.value?.pageData?.acf
-  const mediaById = data.value?.mediaById ?? {}
-  if (!acf) return null
-  const heroMedia = mediaById[acf.hero_image]
-  return {
-    title: acf.hero_title,
-    description: acf.hero_description,
-    buttonText: acf.hero_button_text,
-    imageUrl: getMediaUrl(heroMedia, 'large') ?? '',
-    imageSrcset: getMediaSrcSet(heroMedia),
-    imageAlt: getMediaAlt(heroMedia, acf.hero_title),
-    imageTitle: getMediaTitle(heroMedia, acf.hero_title),
-  }
 })
 
 const therapyCards = computed(() => {
   const acf = data.value?.pageData?.acf
-  const mediaById = data.value?.mediaById ?? {}
   if (!acf) return []
 
   const titles = [acf.therapy_1_title, acf.therapy_2_title_, acf.therapy_3_title, acf.therapy_4_title]
@@ -182,7 +231,7 @@ const therapyCards = computed(() => {
   const images = [acf.therapy_1_image, acf.therapy_2_image, acf.therapy_3_image, acf.therapy_4_image]
 
   const mainCards = titles.map((title, index) => {
-    const media = mediaById[images[index] ?? 0]
+    const media = mediaById.value[images[index] ?? 0]
     return {
       title,
       description: descriptions[index] ?? '',
@@ -194,7 +243,7 @@ const therapyCards = computed(() => {
     }
   })
 
-  return [...mainCards, ...(data.value?.adultSubTherapyCards ?? [])]
+  return [...mainCards, ...adultSubTherapyCards.value]
 })
 </script>
 

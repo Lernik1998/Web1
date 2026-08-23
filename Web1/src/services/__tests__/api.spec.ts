@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import type { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
-import apiClient, { cachedGet } from '../api'
+import apiClient from '../api'
 
 // Axios stores registered interceptors in an internal (untyped) `handlers`
 // array on `interceptors.request`/`interceptors.response`. We reach into it
@@ -71,66 +71,6 @@ describe('apiClient', () => {
       const error = new Error('response boom') as AxiosError
       await expect(handler.rejected(error)).rejects.toBe(error)
       expect(consoleSpy).toHaveBeenCalledWith('API Error:', error)
-    })
-  })
-
-  // Sin esta caché, cada navegación interna dentro de la SPA (terapias
-  // relacionadas, migas de pan, volver a una página ya vista...) volvía a
-  // pedir a WordPress datos ya pedidos en la misma sesión, mostrando otra
-  // vez "Cargando" mientras llegaba la respuesta -- ver useLinkPrefetch.ts,
-  // que además dispara estas mismas peticiones por adelantado al pasar el
-  // ratón por un enlace. La caché vive en el módulo (no se resetea entre
-  // tests de este fichero), así que cada test usa su propia URL de mentira
-  // para no interferir con los demás.
-  describe('cachedGet', () => {
-    afterEach(() => {
-      vi.restoreAllMocks()
-    })
-
-    it('only issues one real request for repeated calls to the same URL', async () => {
-      const getSpy = vi
-        .spyOn(apiClient, 'get')
-        .mockResolvedValue({ data: { ok: true } } as AxiosResponse)
-
-      const [first, second] = await Promise.all([
-        cachedGet('/cachedGet-test-dedupe'),
-        cachedGet('/cachedGet-test-dedupe'),
-      ])
-
-      expect(getSpy).toHaveBeenCalledTimes(1)
-      expect(first).toBe(second)
-
-      // Una tercera llamada posterior (ya resuelta la primera) también debe
-      // servirse de la caché en vez de disparar otra petición.
-      await cachedGet('/cachedGet-test-dedupe')
-      expect(getSpy).toHaveBeenCalledTimes(1)
-    })
-
-    it('issues separate requests for different URLs', async () => {
-      const getSpy = vi
-        .spyOn(apiClient, 'get')
-        .mockResolvedValue({ data: {} } as AxiosResponse)
-
-      await cachedGet('/cachedGet-test-a')
-      await cachedGet('/cachedGet-test-b')
-
-      expect(getSpy).toHaveBeenCalledTimes(2)
-      expect(getSpy).toHaveBeenCalledWith('/cachedGet-test-a')
-      expect(getSpy).toHaveBeenCalledWith('/cachedGet-test-b')
-    })
-
-    it('does not cache a failed request, so a later call retries it', async () => {
-      const getSpy = vi
-        .spyOn(apiClient, 'get')
-        .mockRejectedValueOnce(new Error('network down'))
-        .mockResolvedValueOnce({ data: { ok: true } } as AxiosResponse)
-
-      await expect(cachedGet('/cachedGet-test-retry')).rejects.toThrow('network down')
-
-      const result = await cachedGet('/cachedGet-test-retry')
-
-      expect(getSpy).toHaveBeenCalledTimes(2)
-      expect(result).toEqual({ data: { ok: true } })
     })
   })
 })

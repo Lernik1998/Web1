@@ -153,7 +153,7 @@
           :src="mapSrc"
           loading="lazy"
           referrerpolicy="no-referrer-when-downgrade"
-          allow="fullscreen"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         ></iframe>
       </div>
     </div>

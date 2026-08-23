@@ -25,6 +25,26 @@ describe('Hero', () => {
     expect(img.attributes('alt')).toBe('Terapia psicologica en Denia')
   })
 
+  // El texto llega antes que la foto (ver HomeView.vue: se piden por
+  // separado a propósito). Con `imageUrl` todavía vacío no debe renderizarse
+  // ningún <img> real -- un `src=""` hace que el navegador pida de nuevo la
+  // propia URL de la página como si fuera una imagen.
+  it('renders a placeholder instead of an <img> when imageUrl is still empty', () => {
+    const wrapper = mount(Hero, {
+      global: { directives, stubs: { RouterLink: RouterLinkStub } },
+      props: {
+        title: 'Terapia psicologica en Denia',
+        description: 'Primer parrafo de la descripcion.',
+        imageUrl: '',
+        buttonText: 'Pedir cita',
+      },
+    })
+
+    expect(wrapper.text()).toContain('Terapia psicologica en Denia')
+    expect(wrapper.find('img.kb-hero__image').exists()).toBe(false)
+    expect(wrapper.find('div.kb-hero__image').exists()).toBe(true)
+  })
+
   it('splits the description into multiple paragraphs on blank lines', () => {
     const wrapper = mount(Hero, {
       global: { directives, stubs: { RouterLink: RouterLinkStub } },

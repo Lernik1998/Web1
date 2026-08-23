@@ -102,6 +102,19 @@ describe('TherapyCards', () => {
       expect(images[0]!.attributes('alt')).toBe('Psicologia infantil')
     })
 
+    // El texto llega antes que la foto (ver HomeView.vue: se piden por
+    // separado a propósito, para no esperar a la imagen para mostrar
+    // contenido real) -- mientras tanto se ve un esqueleto en vez de un
+    // <img> con una URL vacía.
+    it('shows a loading skeleton in place of the image while imageUrl is still empty', async () => {
+      const wrapper = await mountCards([{ ...twoCards[0]!, imageUrl: '' }, twoCards[1]!])
+
+      expect(wrapper.text()).toContain('Psicologia infantil')
+      const media = wrapper.findAll('.kb-card__media')[0]!
+      expect(media.find('img').exists()).toBe(false)
+      expect(media.find('.kb-card__image-skeleton').exists()).toBe(true)
+    })
+
     it('links each card to its href', async () => {
       const wrapper = await mountCards(twoCards)
 

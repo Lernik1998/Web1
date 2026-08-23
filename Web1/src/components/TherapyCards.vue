@@ -43,7 +43,15 @@
                 v-spotlight
               >
                 <div class="kb-card__media">
+                  <!-- El texto de la tarjeta llega antes que su foto (ver
+                       HomeView.vue: el texto y las imágenes se piden por
+                       separado, para que el Hero y estas tarjetas puedan
+                       mostrar su contenido real cuanto antes). Mientras
+                       `imageUrl` sigue vacío, se ve un esqueleto en su lugar
+                       en vez de un hueco totalmente vacío o un icono de
+                       imagen rota. -->
                   <img
+                    v-if="slide.card.imageUrl"
                     :src="slide.card.imageUrl"
                     :alt="slide.card.imageAlt || slide.card.title"
                     :title="slide.card.imageTitle || slide.card.title"
@@ -51,6 +59,7 @@
                     loading="lazy"
                     :style="slide.card.imagePosition ? { objectPosition: slide.card.imagePosition } : undefined"
                   />
+                  <div v-else class="kb-card__image kb-card__image-skeleton" aria-hidden="true"></div>
                 </div>
 
                 <div class="kb-card__body">
@@ -540,6 +549,28 @@ onBeforeUnmount(() => {
 @media (hover: hover) and (pointer: fine) {
   .kb-card:hover .kb-card__image {
     transform: scale(1.06);
+  }
+}
+
+.kb-card__image-skeleton {
+  background: linear-gradient(100deg, #ded4c2 25%, #efe9dd 50%, #ded4c2 75%);
+  background-size: 250% 100%;
+  animation: kb-card-image-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes kb-card-image-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kb-card__image-skeleton {
+    animation: none;
+    background: #ded4c2;
   }
 }
 

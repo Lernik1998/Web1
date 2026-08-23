@@ -32,7 +32,14 @@
 
       <div class="kb-hero__media kb-hero__reveal" style="animation-delay: 120ms">
         <div class="kb-hero__blob" aria-hidden="true"></div>
+        <!-- El texto del Hero llega antes que la foto (ver HomeView.vue,
+             `mediaById` se resuelve en un segundo paso, después del texto):
+             sin este `v-if`, un `src=""` mientras tanto hace que el
+             navegador pida de nuevo la propia URL de la página como si
+             fuera una imagen. El fondo de `.kb-hero__image` (más abajo) ya
+             sirve de hueco/placeholder hasta que la foto real esté lista. -->
         <img
+          v-if="imageUrl"
           :src="imageUrl"
           :srcset="imageSrcset"
           sizes="(max-width: 860px) 280px, 460px"
@@ -41,6 +48,7 @@
           class="kb-hero__image"
           fetchpriority="high"
         />
+        <div v-else class="kb-hero__image" aria-hidden="true"></div>
       </div>
     </div>
   </section>
