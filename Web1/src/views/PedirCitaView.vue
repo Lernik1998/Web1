@@ -156,88 +156,6 @@
           <span v-if="modalidadInvalid" class="kb-field-error">Selecciona una opción.</span>
         </fieldset>
 
-        <!-- Preferencia por profesional -->
-        <fieldset class="kb-field-group">
-          <legend class="kb-field-group__title text-h3">
-            ¿Tienes preferencia por alguna de las profesionales?
-          </legend>
-
-          <div class="kb-pill-group">
-            <label
-              v-for="pro in professionals"
-              :key="pro.value"
-              class="kb-pill"
-              :class="{ 'is-selected': form.profesional === pro.value }"
-            >
-              <input
-                v-model="form.profesional"
-                type="radio"
-                name="profesional"
-                :value="pro.value"
-                class="kb-pill__input"
-              />
-              <span>{{ pro.label }}</span>
-            </label>
-          </div>
-        </fieldset>
-
-        <!-- Días de la semana -->
-        <fieldset class="kb-field-group">
-          <legend class="kb-field-group__title text-h3">Días de la semana</legend>
-
-          <div class="kb-pill-group">
-            <label
-              v-for="day in weekdays"
-              :key="day.value"
-              class="kb-pill"
-              :class="{
-                'is-selected': form.dia === day.value,
-                'is-disabled': isDayDisabled(day.value),
-              }"
-            >
-              <input
-                v-model="form.dia"
-                type="radio"
-                name="dias"
-                :value="day.value"
-                :disabled="isDayDisabled(day.value)"
-                class="kb-pill__input"
-              />
-              <span>{{ day.label }}</span>
-            </label>
-          </div>
-          <span v-if="diasInvalid" class="kb-field-error">Selecciona al menos un día.</span>
-        </fieldset>
-
-        <!-- Disponibilidad horaria -->
-        <fieldset class="kb-field-group">
-          <legend class="kb-field-group__title text-h3">Disponibilidad horaria</legend>
-
-          <div class="kb-pill-group">
-            <label
-              v-for="slot in timeSlots"
-              :key="slot.value"
-              class="kb-pill kb-pill--stacked"
-              :class="{
-                'is-selected': form.horario === slot.value,
-                'is-disabled': isSlotDisabled(slot.value),
-              }"
-            >
-              <input
-                v-model="form.horario"
-                type="radio"
-                name="horarios"
-                :value="slot.value"
-                :disabled="isSlotDisabled(slot.value)"
-                class="kb-pill__input"
-              />
-              <span class="kb-pill__label">{{ slot.label }}</span>
-              <span class="kb-pill__hint">{{ slotHint(slot) }}</span>
-            </label>
-          </div>
-          <span v-if="horariosInvalid" class="kb-field-error">Selecciona al menos una franja horaria.</span>
-        </fieldset>
-
         <!-- Cómo nos conociste -->
         <fieldset class="kb-field-group">
           <legend class="kb-field-group__title text-h3">¿Cómo nos has conocido?</legend>
@@ -394,28 +312,6 @@ const modalityOptions = [
   { value: 'online', label: 'Online' },
 ]
 
-const professionals = [
-  { value: 'sin-preferencia', label: 'Sin preferencia' },
-  { value: 'maria', label: 'María B. Kanbouri' },
-  { value: 'beatriz', label: 'Beatriz Donet' },
-  { value: 'ester', label: 'Ester Pinedo Gil' },
-  { value: 'maria-antaryami', label: 'Maria Antaryami Alcántara' },
-]
-
-const weekdays = [
-  { value: 'lunes', label: 'Lunes' },
-  { value: 'martes', label: 'Martes' },
-  { value: 'miercoles', label: 'Miércoles' },
-  { value: 'jueves', label: 'Jueves' },
-  { value: 'viernes', label: 'Viernes' },
-]
-
-const timeSlots = [
-  { value: 'manana', label: 'Mañana', hint: '9:00 – 12:00' },
-  { value: 'mediodia', label: 'Mediodía', hint: '12:00 – 15:00' },
-  { value: 'tarde', label: 'Tarde', hint: '15:00 – 20:00' },
-]
-
 const howFoundOptions = [
   { value: 'instagram', label: 'Instagram' },
   { value: 'internet', label: 'Internet' },
@@ -442,9 +338,6 @@ type PedirCitaForm = {
   telefono: string
   servicio: string
   modalidad: string
-  profesional: string
-  dia: string
-  horario: string
   comoNosConociste: string
   mensaje: string
   privacidad: boolean
@@ -469,9 +362,6 @@ const form = reactive<PedirCitaForm>({
   telefono: savedForm?.telefono ?? '',
   servicio: savedForm?.servicio || initialServicio,
   modalidad: savedForm?.modalidad ?? '',
-  profesional: savedForm?.profesional ?? 'sin-preferencia',
-  dia: savedForm?.dia ?? '',
-  horario: savedForm?.horario ?? '',
   comoNosConociste: savedForm?.comoNosConociste ?? '',
   mensaje: savedForm?.mensaje ?? '',
   privacidad: savedForm?.privacidad ?? false,
@@ -509,30 +399,6 @@ const attempted = ref(false)
 // para que no se guarde en sessionStorage.
 const honeypot = ref('')
 
-// María B. Kanbouri no atiende jueves ni viernes, ni por las tardes, y los
-// mediodías solo hasta las 13:30.
-const isMariaSelected = computed(() => form.profesional === 'maria')
-
-function isSlotDisabled(slotValue: string) {
-  return isMariaSelected.value && slotValue === 'tarde'
-}
-
-function isDayDisabled(dayValue: string) {
-  return isMariaSelected.value && (dayValue === 'jueves' || dayValue === 'viernes')
-}
-
-function slotHint(slot: { value: string; hint: string }) {
-  if (isMariaSelected.value && slot.value === 'mediodia') return '12:00 – 13:30'
-  return slot.hint
-}
-
-watch(isMariaSelected, (selected) => {
-  if (selected) {
-    if (form.horario === 'tarde') form.horario = ''
-    if (form.dia === 'jueves' || form.dia === 'viernes') form.dia = ''
-  }
-})
-
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const nombreInvalid = computed(() => attempted.value && !form.nombre.trim())
@@ -545,8 +411,6 @@ const emailInvalid = computed(() => emailEmpty.value || emailMalformed.value)
 const telefonoInvalid = computed(() => attempted.value && !form.telefono.trim())
 const servicioInvalid = computed(() => attempted.value && !form.servicio)
 const modalidadInvalid = computed(() => attempted.value && !form.modalidad)
-const diasInvalid = computed(() => attempted.value && !form.dia)
-const horariosInvalid = computed(() => attempted.value && !form.horario)
 const privacidadInvalid = computed(() => attempted.value && !form.privacidad)
 const contactoInvalid = computed(() => attempted.value && !form.contacto)
 
@@ -558,8 +422,6 @@ const hasErrors = computed(
     telefonoInvalid.value ||
     servicioInvalid.value ||
     modalidadInvalid.value ||
-    diasInvalid.value ||
-    horariosInvalid.value ||
     privacidadInvalid.value ||
     contactoInvalid.value,
 )
@@ -597,10 +459,6 @@ async function handleSubmit() {
       appointment_type:
         modalityOptions.find((modality) => modality.value === form.modalidad)?.label ??
         form.modalidad,
-      psychologist:
-        professionals.find((pro) => pro.value === form.profesional)?.label ?? form.profesional,
-      weekdays: [weekdays.find((day) => day.value === form.dia)?.label ?? form.dia],
-      schedule: [timeSlots.find((slot) => slot.value === form.horario)?.label ?? form.horario],
       source:
         howFoundOptions.find((option) => option.value === form.comoNosConociste)?.label ??
         form.comoNosConociste,

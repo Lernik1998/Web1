@@ -132,7 +132,7 @@ describe('Footer', () => {
     expect(wrapper.text()).toContain('C/ Sant Josep 31, Planta Baja Izquierda · Dénia (Alicante)')
     expect(wrapper.text()).toContain('+34 629 538 062')
     expect(wrapper.text()).toContain('gabinete@kanbouripsicologia.com')
-    expect(wrapper.text()).toContain('Lunes a Viernes · 12:00 a 20:00 ·')
+    expect(wrapper.text()).toContain('Lunes a Viernes · 10:00 a 20:00 ·')
     expect(wrapper.find('a[href="tel:+34629538062"]').exists()).toBe(true)
     expect(wrapper.find('a[href="mailto:gabinete@kanbouripsicologia.com"]').exists()).toBe(true)
   })

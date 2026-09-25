@@ -152,10 +152,8 @@ export const fetchGoogleReviews = async (): Promise<GoogleReview[]> => {
 }
 
 // Forma exacta que espera `kanbouri_send_appointment_email()` en el plugin
-// de WordPress (`services/mail.php`): nombres de campo en inglés, y
-// `weekdays`/`schedule` como arrays (aunque el formulario solo deje elegir
-// un día y una franja horaria, se envían como array de un elemento porque
-// el backend los recorre con `implode(', ', ...)`).
+// de WordPress (`services/mail.php`): los campos que ya no se utilizan se
+// omiten para no enviarlos por correo.
 export interface AppointmentRequestPayload {
   name: string
   surname: string
@@ -163,9 +161,6 @@ export interface AppointmentRequestPayload {
   phone: string
   therapy: string
   appointment_type: string
-  psychologist: string
-  weekdays: string[]
-  schedule: string[]
   source: string
   message: string
   // Token de reCAPTCHA v3 (o `null` si el sitio no tiene configurada

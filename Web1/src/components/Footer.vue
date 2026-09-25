@@ -193,7 +193,7 @@ const DEFAULTS = {
     'https://www.google.com/maps/search/?api=1&query=C%2F%20Sant%20Josep%2031%2C%20D%C3%A9nia%20(Alicante)',
   phone: '+34 629 538 062',
   email: 'gabinete@kanbouripsicologia.com',
-  schedule: 'Lunes a Viernes · 12:00 a 20:00 ·',
+  schedule: 'Lunes a Viernes · 10:00 a 20:00 ·',
 }
 
 type FooterData = typeof DEFAULTS

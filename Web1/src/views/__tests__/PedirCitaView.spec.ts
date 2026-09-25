@@ -31,8 +31,6 @@ async function fillRequiredFields(wrapper: Awaited<ReturnType<typeof mountView>>
   await wrapper.find('input[name="telefono"]').setValue('600000000')
   await wrapper.find('select[name="servicio"]').setValue('adultos')
   await wrapper.find('input[name="modalidad"][value="online"]').setValue()
-  await wrapper.find('input[name="dias"][value="lunes"]').setValue()
-  await wrapper.find('input[name="horarios"][value="manana"]').setValue()
   await wrapper.find('input[name="privacidad"]').setValue(true)
   await wrapper.find('input[name="contacto"]').setValue(true)
 }
@@ -78,6 +76,14 @@ describe('PedirCitaView', () => {
     expect(wrapper.text()).toContain('Ana')
   })
 
+  it('does not render the removed professional/day/time preference sections', async () => {
+    const wrapper = await mountView()
+
+    expect(wrapper.text()).not.toContain('¿Tienes preferencia por alguna de las profesionales?')
+    expect(wrapper.text()).not.toContain('Días de la semana')
+    expect(wrapper.text()).not.toContain('Disponibilidad horaria')
+  })
+
   it('calls getRecaptchaToken with the pedir_cita action on submit', async () => {
     const wrapper = await mountView()
 
@@ -87,7 +93,7 @@ describe('PedirCitaView', () => {
     expect(getRecaptchaToken).toHaveBeenCalledWith('pedir_cita')
   })
 
-  it('sends the form data and the reCAPTCHA token to the backend', async () => {
+  it('sends the form data and the reCAPTCHA token to the backend without removed fields', async () => {
     vi.mocked(getRecaptchaToken).mockResolvedValue('a-recaptcha-token')
     const wrapper = await mountView()
 
@@ -103,11 +109,15 @@ describe('PedirCitaView', () => {
         phone: '600000000',
         therapy: 'Psicóloga para adultos',
         appointment_type: 'Online',
-        weekdays: ['Lunes'],
-        schedule: ['Mañana'],
         recaptcha_token: 'a-recaptcha-token',
       }),
     )
+
+    const calls = vi.mocked(submitAppointmentRequest).mock.calls
+    const payload = calls[calls.length - 1]?.[0]
+    expect(payload).not.toHaveProperty('psychologist')
+    expect(payload).not.toHaveProperty('weekdays')
+    expect(payload).not.toHaveProperty('schedule')
   })
 
   it('blocks submission with an error when reCAPTCHA verification fails', async () => {
@@ -149,14 +159,4 @@ describe('PedirCitaView', () => {
     expect(getRecaptchaToken).not.toHaveBeenCalled()
   })
 
-  it('disables Thursday/Friday and the afternoon slot when María is selected', async () => {
-    const wrapper = await mountView()
-
-    await wrapper.find('input[name="profesional"][value="maria"]').setValue()
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.find('input[name="dias"][value="jueves"]').attributes('disabled')).toBeDefined()
-    expect(wrapper.find('input[name="dias"][value="viernes"]').attributes('disabled')).toBeDefined()
-    expect(wrapper.find('input[name="horarios"][value="tarde"]').attributes('disabled')).toBeDefined()
-  })
 })
