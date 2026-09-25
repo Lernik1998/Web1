@@ -30,7 +30,7 @@ function makeFooterInformation(
       address_link: { title: '', url: 'https://maps.example.com/kanbouri', target: '_blank' },
       phone: '+34 629 538 062',
       email: 'gabinete@kanbouripsicologia.com',
-      schedule: 'Lunes a Viernes · 12:00 a 20:00 ·',
+      schedule: 'Lunes a Viernes · 10:00 a 20:00 ·',
       ...acf,
     },
   } as FooterInformationPost
@@ -55,6 +55,7 @@ describe('Footer', () => {
   })
 
   it('renders brand, contact info and legal links', async () => {
+    vi.mocked(fetchFooterInformation).mockResolvedValue(makeFooterInformation())
     const wrapper = await mountFooter()
 
     expect(wrapper.text()).toContain('Kanbouri')
@@ -126,15 +127,16 @@ describe('Footer', () => {
     expect(src).toContain('cbll=38.8386523,0.1060985')
   })
 
-  it('uses the hardcoded contact defaults when there is no WordPress footer-information setting yet', async () => {
+  it('does not render contact information when WordPress has not returned it', async () => {
     const wrapper = await mountFooter()
 
-    expect(wrapper.text()).toContain('C/ Sant Josep 31, Planta Baja Izquierda · Dénia (Alicante)')
-    expect(wrapper.text()).toContain('+34 629 538 062')
-    expect(wrapper.text()).toContain('gabinete@kanbouripsicologia.com')
-    expect(wrapper.text()).toContain('Lunes a Viernes · 10:00 a 20:00 ·')
-    expect(wrapper.find('a[href="tel:+34629538062"]').exists()).toBe(true)
-    expect(wrapper.find('a[href="mailto:gabinete@kanbouripsicologia.com"]').exists()).toBe(true)
+    expect(wrapper.findAll('.contact-line__group')).toHaveLength(0)
+    expect(wrapper.text()).not.toContain('C/ Sant Josep 31')
+    expect(wrapper.text()).not.toContain('+34 629 538 062')
+    expect(wrapper.text()).not.toContain('gabinete@kanbouripsicologia.com')
+    expect(wrapper.text()).not.toContain('Lunes a Viernes')
+    expect(wrapper.find('a[href^="tel:"]').exists()).toBe(false)
+    expect(wrapper.find('a[href^="mailto:"]').exists()).toBe(false)
   })
 
   it('replaces the contact info with the values from the WordPress "footer-information" post', async () => {
@@ -165,15 +167,17 @@ describe('Footer', () => {
     expect(wrapper.find('a[href="mailto:nuevo@kanbouripsicologia.com"]').exists()).toBe(true)
   })
 
-  it('keeps the hardcoded defaults for any field left empty in WordPress instead of showing a blank value', async () => {
+  it('does not show contact fields left empty in WordPress', async () => {
     vi.mocked(fetchFooterInformation).mockResolvedValue(
       makeFooterInformation({ phone: '', email: '' }),
     )
 
     const wrapper = await mountFooter()
 
-    expect(wrapper.text()).toContain('+34 629 538 062')
-    expect(wrapper.text()).toContain('gabinete@kanbouripsicologia.com')
+    expect(wrapper.text()).not.toContain('+34 629 538 062')
+    expect(wrapper.text()).not.toContain('gabinete@kanbouripsicologia.com')
+    expect(wrapper.find('a[href^="tel:"]').exists()).toBe(false)
+    expect(wrapper.find('a[href^="mailto:"]').exists()).toBe(false)
   })
 
   it('does not break the rest of the footer when fetchFooterInformation rejects', async () => {
@@ -181,7 +185,7 @@ describe('Footer', () => {
 
     const wrapper = await mountFooter()
 
-    expect(wrapper.text()).toContain('+34 629 538 062')
+    expect(wrapper.findAll('.contact-line__group')).toHaveLength(0)
     expect(wrapper.find('.footer-map').exists()).toBe(true)
   })
 })

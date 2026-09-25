@@ -104,9 +104,10 @@
 
     <div class="footer-secondary">
       <div class="contact-line">
-        <div class="contact-line__group">
+        <div v-if="address" class="contact-line__group">
           <p class="contact-line__label text-secondary">Dirección</p>
           <a
+            v-if="addressMapUrl"
             class="contact-line__value contact-line__link"
             :href="addressMapUrl"
             target="_blank"
@@ -114,23 +115,24 @@
           >
             {{ address }}
           </a>
+          <p v-else class="contact-line__value">{{ address }}</p>
         </div>
 
-        <div class="contact-line__group">
+        <div v-if="phone" class="contact-line__group">
           <p class="contact-line__label text-secondary">Teléfono</p>
           <a class="contact-line__value contact-line__link" :href="phoneHref">
             {{ phone }}
           </a>
         </div>
 
-        <div class="contact-line__group">
+        <div v-if="email" class="contact-line__group">
           <p class="contact-line__label text-secondary">Email</p>
           <a class="contact-line__value contact-line__link" :href="emailHref">
             {{ email }}
           </a>
         </div>
 
-        <div class="contact-line__group">
+        <div v-if="schedule" class="contact-line__group">
           <p class="contact-line__label text-secondary">Horario</p>
           <p class="contact-line__value">
             {{ schedule }}
@@ -181,22 +183,18 @@ defineOptions({
 const FALLBACK_STREET_VIEW_SRC =
   'https://www.google.com/maps?layer=c&cbll=38.8386523,0.1060985&cbp=12,95,,0,0&output=svembed'
 
-// Valores por defecto (los reales, ya publicados): se usan tal cual si no
-// hay datos incrustados del pre-renderizado y la petición aún no ha vuelto,
-// para que la web nunca dependa de que la API responda a tiempo para
-// mostrar algo correcto.
 const DEFAULTS = {
   mapEnabled: true,
   mapSrc: FALLBACK_STREET_VIEW_SRC,
-  address: 'C/ Sant Josep 31, Planta Baja Izquierda · Dénia (Alicante)',
-  addressMapUrl:
-    'https://www.google.com/maps/search/?api=1&query=C%2F%20Sant%20Josep%2031%2C%20D%C3%A9nia%20(Alicante)',
-  phone: '+34 629 538 062',
-  email: 'gabinete@kanbouripsicologia.com',
-  schedule: 'Lunes a Viernes · 10:00 a 20:00 ·',
 }
 
-type FooterData = typeof DEFAULTS
+type FooterData = typeof DEFAULTS & {
+  address?: string
+  addressMapUrl?: string
+  phone?: string
+  email?: string
+  schedule?: string
+}
 
 async function loadFooterData(): Promise<FooterData> {
   const result: FooterData = { ...DEFAULTS }
@@ -239,11 +237,11 @@ const { data } = useHydratedAsync('footer:info', loadFooterData)
 
 const mapEnabled = computed(() => data.value?.mapEnabled ?? DEFAULTS.mapEnabled)
 const mapSrc = computed(() => data.value?.mapSrc ?? DEFAULTS.mapSrc)
-const address = computed(() => data.value?.address ?? DEFAULTS.address)
-const addressMapUrl = computed(() => data.value?.addressMapUrl ?? DEFAULTS.addressMapUrl)
-const phone = computed(() => data.value?.phone ?? DEFAULTS.phone)
-const email = computed(() => data.value?.email ?? DEFAULTS.email)
-const schedule = computed(() => data.value?.schedule ?? DEFAULTS.schedule)
+const address = computed(() => data.value?.address ?? '')
+const addressMapUrl = computed(() => data.value?.addressMapUrl ?? '')
+const phone = computed(() => data.value?.phone ?? '')
+const email = computed(() => data.value?.email ?? '')
+const schedule = computed(() => data.value?.schedule ?? '')
 
 const phoneHref = computed(() => `tel:${phone.value.replace(/\s+/g, '')}`)
 const emailHref = computed(() => `mailto:${email.value}`)
