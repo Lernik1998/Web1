@@ -127,11 +127,11 @@ describe('Footer', () => {
     expect(src).toContain('cbll=38.8386523,0.1060985')
   })
 
-  it('does not render contact information when WordPress has not returned it', async () => {
+  it('does not render address or contact information when WordPress has not returned it', async () => {
     const wrapper = await mountFooter()
 
     expect(wrapper.findAll('.contact-line__group')).toHaveLength(0)
-    expect(wrapper.text()).not.toContain('C/ Sant Josep 31')
+    expect(wrapper.text()).not.toContain('C/ Sant Josep, 31')
     expect(wrapper.text()).not.toContain('+34 629 538 062')
     expect(wrapper.text()).not.toContain('gabinete@kanbouripsicologia.com')
     expect(wrapper.text()).not.toContain('Lunes a Viernes')
@@ -139,11 +139,15 @@ describe('Footer', () => {
     expect(wrapper.find('a[href^="mailto:"]').exists()).toBe(false)
   })
 
-  it('replaces the contact info with the values from the WordPress "footer-information" post', async () => {
+  it('loads the address and Google Maps link from the WordPress footer-information post', async () => {
     vi.mocked(fetchFooterInformation).mockResolvedValue(
       makeFooterInformation({
-        address: 'Calle Nueva 42, Dénia',
-        address_link: { title: '', url: 'https://maps.example.com/nueva', target: '_blank' },
+        address: 'C/ Sant Josep, 31, PLANTA BAJA IZQUIERDA, 03700 Dénia, Alicante',
+        address_link: {
+          title: '',
+          url: 'https://www.google.com/maps/search/?api=1&query=C%2F%20Sant%20Josep%2C%2031%2C%20PLANTA%20BAJA%20IZQUIERDA%2C%2003700%20D%C3%A9nia%2C%20Alicante',
+          target: '_blank',
+        },
         phone: '+34 600 111 222',
         email: 'nuevo@kanbouripsicologia.com',
         schedule: 'Lunes a Sábado · 09:00 a 21:00 ·',
@@ -152,14 +156,16 @@ describe('Footer', () => {
 
     const wrapper = await mountFooter()
 
-    expect(wrapper.text()).toContain('Calle Nueva 42, Dénia')
-    expect(wrapper.text()).not.toContain('C/ Sant Josep 31')
+    expect(wrapper.text()).toContain('C/ Sant Josep, 31, PLANTA BAJA IZQUIERDA, 03700 Dénia, Alicante')
     expect(wrapper.text()).toContain('+34 600 111 222')
     expect(wrapper.text()).toContain('nuevo@kanbouripsicologia.com')
     expect(wrapper.text()).toContain('Lunes a Sábado · 09:00 a 21:00 ·')
 
-    const addressLink = wrapper.find('a[href="https://maps.example.com/nueva"]')
+    const addressLink = wrapper.find('a[href^="https://www.google.com/maps/"]')
     expect(addressLink.exists()).toBe(true)
+    expect(addressLink.attributes('href')).toBe(
+      'https://www.google.com/maps/search/?api=1&query=C%2F%20Sant%20Josep%2C%2031%2C%20PLANTA%20BAJA%20IZQUIERDA%2C%2003700%20D%C3%A9nia%2C%20Alicante',
+    )
     expect(addressLink.attributes('target')).toBe('_blank')
     expect(addressLink.attributes('rel')).toBe('noopener noreferrer')
 
@@ -186,6 +192,7 @@ describe('Footer', () => {
     const wrapper = await mountFooter()
 
     expect(wrapper.findAll('.contact-line__group')).toHaveLength(0)
+    expect(wrapper.text()).not.toContain('C/ Sant Josep, 31')
     expect(wrapper.find('.footer-map').exists()).toBe(true)
   })
 })
